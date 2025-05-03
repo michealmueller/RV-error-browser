@@ -28,11 +28,13 @@ def app(qapp):
     yield app
     app.close()
 
+@pytest.mark.timeout(10)
 def test_application_startup(app):
     """Test that the application starts up correctly."""
     assert app.isVisible()
     assert app.windowTitle() == "PostgreSQL Viewer"
 
+@pytest.mark.timeout(30)
 def test_database_connection(app, qtbot):
     """Test connecting to the database."""
     # Set connection details
@@ -49,6 +51,7 @@ def test_database_connection(app, qtbot):
     # Verify connection
     assert "Connected to database" in app.log_output.toPlainText()
 
+@pytest.mark.timeout(30)
 def test_query_execution(app, qtbot):
     """Test executing a query."""
     # Connect to database first
@@ -61,6 +64,7 @@ def test_query_execution(app, qtbot):
     assert app.results_table.rowCount() > 0
     assert app.results_table.columnCount() > 0
 
+@pytest.mark.timeout(20)
 def test_connection_management(app, qtbot):
     """Test managing database connections."""
     # Add a connection
@@ -75,6 +79,7 @@ def test_connection_management(app, qtbot):
     app.delete_connection()
     assert app.connection_combo.count() == 0
 
+@pytest.mark.timeout(15)
 def test_error_handling(app, qtbot):
     """Test error handling."""
     # Try to connect with invalid credentials
