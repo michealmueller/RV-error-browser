@@ -53,6 +53,7 @@ jobs:
       run: |
         export QT_QPA_PLATFORM=offscreen
         export QT_XCB_GL_INTEGRATION=xcb_egl
+        export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/mesa:$LD_LIBRARY_PATH
         sleep 5
         xvfb-run -a python -m pytest -n auto --maxfail=1 --durations=10 --timeout=30 --timeout_method=thread
 
@@ -83,7 +84,10 @@ jobs:
           libqt6svg6 \
           libqt6printsupport6 \
           xvfb \
+          libegl1 \
+          libegl1-mesa \
           libegl1-mesa-dev \
+          libgl1-mesa-glx \
           libgl1-mesa-dev \
           libglu1-mesa-dev \
           mesa-common-dev \
