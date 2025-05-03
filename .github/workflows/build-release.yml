@@ -47,8 +47,14 @@ jobs:
           libxcb-xkb1 \
           libxkbcommon-x11-0 \
           libxcb-xinput0 \
+          libegl1 \
+          libegl1-mesa \
+          libgl1-mesa-glx \
           postgresql-client \
           libpq-dev
+        # Ensure EGL libraries are in the correct location
+        sudo ln -sf /usr/lib/x86_64-linux-gnu/libEGL.so.1 /usr/lib/libEGL.so.1
+        sudo ldconfig
 
     - name: Install Python dependencies
       run: |
@@ -69,6 +75,7 @@ jobs:
     - name: Run tests
       run: |
         export DISPLAY=:99
+        export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
         Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
         sleep 5
         python -m pytest -n auto --maxfail=1 --durations=10 --timeout=30 --timeout_method=thread || true
