@@ -11,9 +11,10 @@ from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QTextBrowser, QTableWidget,
     QTableWidgetItem, QFormLayout, QComboBox, QMessageBox,
-    QSplitter
+    QSplitter, QDialog, QMenuBar, QMenu, QDialogButtonBox, QTextEdit
 )
 from PySide6.QtCore import Qt, QSettings
+from PySide6.QtGui import QAction
 
 from delegates import DetailsDelegate, format_details
 from dialogs import ConnectionDialog
@@ -52,6 +53,9 @@ class DatabaseApp(QMainWindow):
         main_layout.setSpacing(10)
         main_layout.setContentsMargins(20, 20, 20, 20)
         
+        # Create menu bar
+        self.create_menu_bar()
+        
         # Create left panel with fixed width
         left_panel = QWidget()
         left_panel.setMaximumWidth(600)
@@ -64,6 +68,7 @@ class DatabaseApp(QMainWindow):
         connection_layout.setSpacing(10)
         
         self.connection_combo = QComboBox()
+        self.connection_combo.setMinimumWidth(200)  # Make combo box wider
         self.connection_combo.addItem("")
         self.connection_combo.currentIndexChanged.connect(self.connection_changed)
         self.update_connection_combo()
@@ -71,6 +76,11 @@ class DatabaseApp(QMainWindow):
         self.add_connection_btn = QPushButton("Add Connection")
         self.edit_connection_btn = QPushButton("Edit Connection")
         self.delete_connection_btn = QPushButton("Delete Connection")
+        
+        # Set fixed width for buttons
+        self.add_connection_btn.setFixedWidth(120)
+        self.edit_connection_btn.setFixedWidth(120)
+        self.delete_connection_btn.setFixedWidth(120)
         
         self.add_connection_btn.clicked.connect(self.handle_add_connection)
         self.edit_connection_btn.clicked.connect(self.handle_edit_connection)
@@ -91,8 +101,15 @@ class DatabaseApp(QMainWindow):
         self.dbname_input = QLineEdit()
         self.user_input = QLineEdit()
         self.password_input = QLineEdit()
-        self.table_input = QLineEdit()
+        self.table_input = QLineEdit("error_logs")
         self.password_input.setEchoMode(QLineEdit.Password)
+        
+        # Make connection fields read-only
+        self.host_input.setReadOnly(True)
+        self.port_input.setReadOnly(True)
+        self.dbname_input.setReadOnly(True)
+        self.user_input.setReadOnly(True)
+        self.password_input.setReadOnly(True)
         
         form_layout.addRow("Host:", self.host_input)
         form_layout.addRow("Port:", self.port_input)
@@ -106,14 +123,26 @@ class DatabaseApp(QMainWindow):
         button_layout.setSpacing(10)
         
         self.connect_btn = QPushButton("Connect")
+        self.disconnect_btn = QPushButton("Disconnect")
         self.query_btn = QPushButton("Get Logs")
         self.clear_log_btn = QPushButton("Clear All")
         
+        # Set fixed width for buttons
+        self.disconnect_btn.setFixedWidth(100)
+        self.query_btn.setFixedWidth(100)
+        self.clear_log_btn.setFixedWidth(100)
+        
         self.connect_btn.clicked.connect(self.handle_connect)
+        self.disconnect_btn.clicked.connect(self.handle_disconnect)
         self.query_btn.clicked.connect(self.handle_query)
         self.clear_log_btn.clicked.connect(self.handle_clear_all)
         
+        # Initially disable disconnect and query buttons
+        self.disconnect_btn.setEnabled(False)
+        self.query_btn.setEnabled(False)
+        
         button_layout.addWidget(self.connect_btn)
+        button_layout.addWidget(self.disconnect_btn)
         button_layout.addWidget(self.query_btn)
         button_layout.addWidget(self.clear_log_btn)
         
@@ -181,6 +210,9 @@ class DatabaseApp(QMainWindow):
             
     def connection_changed(self, index):
         """Handle connection selection change"""
+        if not hasattr(self, 'host_input'):
+            return
+            
         if index <= 0:
             self.host_input.clear()
             self.port_input.setText("5432")
@@ -207,6 +239,8 @@ class DatabaseApp(QMainWindow):
                 self.save_connections()
                 self.update_connection_combo()
                 self.connection_combo.setCurrentText(new_conn['name'])
+                # Force update of connection fields
+                self.connection_changed(self.connection_combo.currentIndex())
                 
     def handle_edit_connection(self):
         """Edit selected connection"""
@@ -220,6 +254,8 @@ class DatabaseApp(QMainWindow):
                     self.save_connections()
                     self.update_connection_combo()
                     self.connection_combo.setCurrentText(new_conn['name'])
+                    # Force update of connection fields
+                    self.connection_changed(self.connection_combo.currentIndex())
                     
     def handle_delete_connection(self):
         """Delete selected connection"""
@@ -265,6 +301,12 @@ class DatabaseApp(QMainWindow):
         password = self.password_input.text()
         
         try:
+            self.log_message(f'Attempting to connect to database...', "INFO")
+            self.log_message(f'Connection details:', "INFO")
+            self.log_message(f'  Host: {host}:{port}', "INFO")
+            self.log_message(f'  Database: {dbname}', "INFO")
+            self.log_message(f'  User: {user}', "INFO")
+            
             self.conn = psycopg2.connect(
                 host=host,
                 port=port,
@@ -272,13 +314,30 @@ class DatabaseApp(QMainWindow):
                 user=user,
                 password=password
             )
-            self.log_message(f'Connected to database: {dbname}', "SUCCESS")
-            self.log_message(f'Host: {host}:{port}')
-            self.log_message(f'User: {user}')
+            self.log_message(f'Successfully connected to database: {dbname}', "SUCCESS")
+            self.log_message(f'Connection established at: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', "INFO")
             self.query_btn.setEnabled(True)
+            self.disconnect_btn.setEnabled(True)
+            self.connect_btn.setText("Connected!")
+            self.connect_btn.setEnabled(False)
         except Error as e:
             self.log_message(f'Error connecting to database: {str(e)}', "ERROR")
+            self.log_message(f'Connection attempt failed at: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', "ERROR")
             self.query_btn.setEnabled(False)
+            self.disconnect_btn.setEnabled(False)
+            
+    def handle_disconnect(self):
+        """Handle database disconnection"""
+        if self.conn:
+            self.log_message(f'Attempting to disconnect from database...', "INFO")
+            self.conn.close()
+            self.conn = None
+            self.log_message('Successfully disconnected from database', "INFO")
+            self.log_message(f'Disconnected at: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', "INFO")
+            self.query_btn.setEnabled(False)
+            self.disconnect_btn.setEnabled(False)
+            self.connect_btn.setText("Connect")
+            self.connect_btn.setEnabled(True)
             
     def handle_query(self):
         """Handle table query"""
@@ -288,10 +347,17 @@ class DatabaseApp(QMainWindow):
             
         table_name = self.table_input.text()
         try:
+            self.log_message(f'Executing query on table: {table_name}', "INFO")
+            self.log_message(f'Query: SELECT type, message, details FROM public.{table_name}', "INFO")
+            
             cursor = self.conn.cursor()
             cursor.execute(f'SELECT type, message, details FROM public.{table_name}')
             columns = [desc[0] for desc in cursor.description]
             data = cursor.fetchall()
+            
+            self.log_message(f'Query executed successfully', "SUCCESS")
+            self.log_message(f'Retrieved {len(data)} rows', "INFO")
+            self.log_message(f'Columns: {", ".join(columns)}', "INFO")
             
             # Update table widget
             self.results_table.setColumnCount(len(columns))
@@ -315,20 +381,81 @@ class DatabaseApp(QMainWindow):
             self.results_table.resizeColumnsToContents()
             self.results_table.resizeRowsToContents()
             
-            self.log_message(f'Retrieved {len(data)} rows from {table_name}', "SUCCESS")
+            self.log_message(f'Results displayed in table', "SUCCESS")
             
         except Error as e:
             self.log_message(f'Error querying table: {str(e)}', "ERROR")
+            self.log_message(f'Query failed at: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', "ERROR")
             
     def handle_clear_all(self):
         """Clear both the log window and results table"""
+        if self.conn:
+            self.log_message(f'Attempting to disconnect from database...', "INFO")
+            self.conn.close()
+            self.conn = None
+            self.log_message("Successfully disconnected from database", "INFO")
+            self.log_message(f'Disconnected at: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', "INFO")
+            self.query_btn.setEnabled(False)
+            self.disconnect_btn.setEnabled(False)
+            self.connect_btn.setText("Connect")
+            self.connect_btn.setEnabled(True)
+        self.log_message("Clearing all output...", "INFO")
         self.log_window.clear()
         self.results_table.setRowCount(0)
         self.results_table.setColumnCount(0)
-        self.log_message("Cleared all output", "INFO")
+        self.log_message("All output cleared", "INFO")
         
     def closeEvent(self, event):
         """Handle window close event"""
         if self.conn:
             self.conn.close()
-        event.accept() 
+        event.accept()
+
+    def create_menu_bar(self):
+        menubar = self.menuBar()
+        
+        # File menu
+        file_menu = menubar.addMenu("File")
+        
+        new_action = QAction("New Connection", self)
+        new_action.triggered.connect(self.handle_add_connection)
+        file_menu.addAction(new_action)
+        
+        edit_action = QAction("Edit Connection", self)
+        edit_action.triggered.connect(self.handle_edit_connection)
+        file_menu.addAction(edit_action)
+        
+        delete_action = QAction("Delete Connection", self)
+        delete_action.triggered.connect(self.handle_delete_connection)
+        file_menu.addAction(delete_action)
+        
+        file_menu.addSeparator()
+        
+        exit_action = QAction("Exit", self)
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
+        
+        # View menu
+        view_menu = menubar.addMenu("View")
+        
+        clear_action = QAction("Clear Log", self)
+        clear_action.triggered.connect(self.handle_clear_all)
+        view_menu.addAction(clear_action)
+        
+        # Help menu
+        help_menu = menubar.addMenu("Help")
+        
+        about_action = QAction("About", self)
+        about_action.triggered.connect(self.show_about)
+        help_menu.addAction(about_action)
+    
+    def show_about(self):
+        QMessageBox.about(self, "About PostgreSQL Viewer",
+                         "PostgreSQL Viewer v1.0\n\n"
+                         "A tool for browsing PostgreSQL error logs.")
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = DatabaseApp()
+    window.show()
+    sys.exit(app.exec()) 

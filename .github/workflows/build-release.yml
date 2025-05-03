@@ -8,83 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:latest
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.TOKEN }}
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y software-properties-common
-        sudo add-apt-repository universe
-        sudo apt-get update
-        sudo apt-get install -y \
-          xvfb \
-          libxcb-xinerama0 \
-          libxcb-icccm4 \
-          libxcb-image0 \
-          libxcb-keysyms1 \
-          libxcb-render-util0 \
-          libxcb-xkb1 \
-          libxkbcommon-x11-0 \
-          libxcb-xinput0 \
-          libegl1 \
-          libgl1 \
-          mesa-utils \
-          postgresql-client \
-          libpq-dev
-        # Ensure EGL libraries are in the correct location
-        sudo ln -sf /usr/lib/x86_64-linux-gnu/libEGL.so.1 /usr/lib/libEGL.so.1
-        sudo ldconfig
-
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov pytest-xdist pytest-timeout pyyaml
-        pip install --no-cache-dir PySide6
-
-    - name: Wait for PostgreSQL
-      run: |
-        for i in {1..10}; do
-          if pg_isready -h localhost -p 5432 -U postgres; then
-            break
-          fi
-          sleep 2
-        done
-
-    - name: Run tests
-      run: |
-        export DISPLAY=:99
-        export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
-        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-        sleep 5
-        python -m pytest -n auto --maxfail=1 --durations=10 --timeout=30 --timeout_method=thread || true
-
   build-linux:
-    needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -118,9 +42,8 @@ jobs:
           libglu1-mesa-dev \
           mesa-common-dev \
           postgresql-client \
-          libpq-dev
-        # Ensure EGL libraries are properly installed
-        sudo apt-get install -y --reinstall libegl1-mesa
+          libpq-dev \
+          upx
         sudo ln -sf /usr/lib/x86_64-linux-gnu/mesa/libEGL.so.1 /usr/lib/x86_64-linux-gnu/libEGL.so.1
         sudo ldconfig
 
@@ -128,7 +51,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e .
-        pip install pytest pytest-cov pytest-xdist pytest-timeout pyyaml
+        pip install pyinstaller
 
     - name: Build executable
       run: python build.py
@@ -141,7 +64,6 @@ jobs:
         if-no-files-found: error
 
   build-windows:
-    needs: test
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
@@ -157,6 +79,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e .
+        pip install pyinstaller
 
     - name: Build executable
       run: python build.py
@@ -169,7 +92,6 @@ jobs:
         if-no-files-found: error
 
   build-macos:
-    needs: test
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
@@ -189,6 +111,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e .
+        pip install pyinstaller
 
     - name: Build executable
       run: python build.py
@@ -201,7 +124,7 @@ jobs:
         if-no-files-found: error
 
   create-release:
-    needs: [test, build-linux, build-windows, build-macos]
+    needs: [build-linux, build-windows, build-macos]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
 

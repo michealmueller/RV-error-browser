@@ -6,12 +6,21 @@ from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
 
+# Add all local Python files
+local_files = [
+    ('main.py', '.'),
+    ('app.py', '.'),
+    ('theme.py', '.'),
+    ('dialogs.py', '.'),
+    ('delegates.py', '.'),
+]
+
 a = Analysis(
     ['main.py'],
-    pathex=[],
+    pathex=[os.getcwd()],  # Use current working directory
     binaries=[],
-    datas=collect_data_files('PySide6') + [('version.txt', '.')],
-    hiddenimports=[],
+    datas=collect_data_files('PySide6') + [('version.txt', '.')] + local_files,
+    hiddenimports=['app', 'theme', 'dialogs', 'delegates'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -38,7 +47,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
+    console=True,  # Keep True for now to see error messages
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
