@@ -54,8 +54,10 @@ jobs:
         export QT_QPA_PLATFORM=offscreen
         export QT_XCB_GL_INTEGRATION=xcb_egl
         export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/mesa:$LD_LIBRARY_PATH
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
         sleep 5
-        xvfb-run -a python -m pytest -n auto --maxfail=1 --durations=10 --timeout=30 --timeout_method=thread
+        python -m pytest -n auto --maxfail=1 --durations=10 --timeout=30 --timeout_method=thread
 
   build-linux:
     needs: test
