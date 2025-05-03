@@ -204,4 +204,5 @@ jobs:
 
     - name: Run tests
       run: |
-        python -m pytest -n auto --maxfail=1 --durations=10 --timeout=30 --timeout_method=thread -k "not gui" 
+        export QT_QPA_PLATFORM=minimal
+        python -m pytest -n auto --maxfail=1 --durations=10 --timeout=30 --timeout_method=thread 

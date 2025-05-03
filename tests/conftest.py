@@ -9,12 +9,14 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 @pytest.fixture(scope="session")
-@pytest.mark.gui
 def qapp():
     """Create a QApplication instance."""
-    app = QApplication(sys.argv)
-    yield app
-    app.quit()
+    if QApplication.instance() is None:
+        app = QApplication(sys.argv)
+        yield app
+        app.quit()
+    else:
+        yield QApplication.instance()
 
 @pytest.fixture
 def temp_settings():
