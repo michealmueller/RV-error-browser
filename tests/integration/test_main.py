@@ -2,25 +2,31 @@ import pytest
 import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtTest import QTest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from app import DatabaseApp
 from ..utils import create_test_database, drop_test_database, get_test_connection
 from ..db_config import DB_CONFIG
+import os
 
 @pytest.fixture(scope="session")
 def qapp():
-    """Create a QApplication instance."""
-    app = QApplication.instance()
-    if app is None:
+    """Create a QApplication instance for testing."""
+    if QApplication.instance() is None:
         app = QApplication(sys.argv)
-    yield app
+        # Set environment variable to indicate we're running in a test environment
+        os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+        yield app
+        app.quit()
+    else:
+        yield QApplication.instance()
 
 @pytest.fixture
-def app(qtbot, qapp):
-    """Create the application window."""
-    window = DatabaseApp()
-    qtbot.addWidget(window)
-    return window
+def app(qapp):
+    """Create a DatabaseApp instance for testing."""
+    from app import DatabaseApp
+    app = DatabaseApp()
+    yield app
+    app.close()
 
 def test_application_startup(app):
     """Test that the application starts up correctly."""
