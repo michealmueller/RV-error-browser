@@ -38,23 +38,24 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
-          qt6-base-dev \
-          libqt6gui6 \
-          libqt6core6 \
-          libqt6widgets6 \
-          libqt6network6 \
-          libqt6opengl6 \
-          libqt6openglwidgets6 \
-          libqt6svg6 \
-          libqt6printsupport6 \
+          xvfb \
+          libxcb-xinerama0 \
+          libxcb-icccm4 \
+          libxcb-image0 \
+          libxcb-keysyms1 \
+          libxcb-render-util0 \
+          libxcb-xkb1 \
+          libxkbcommon-x11-0 \
+          libxcb-xinput0 \
           postgresql-client \
           libpq-dev
 
-    - name: Install dependencies
+    - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pytest pytest-cov pytest-xdist pytest-timeout pyyaml
+        pip install --no-cache-dir PySide6
 
     - name: Wait for PostgreSQL
       run: |
@@ -67,7 +68,9 @@ jobs:
 
     - name: Run tests
       run: |
-        export QT_QPA_PLATFORM=minimal
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        sleep 5
         python -m pytest -n auto --maxfail=1 --durations=10 --timeout=30 --timeout_method=thread
 
   build-linux:
