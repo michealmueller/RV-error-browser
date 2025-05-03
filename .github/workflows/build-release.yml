@@ -1,6 +1,8 @@
 name: Build and Release
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -21,6 +23,20 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Increment version
+      id: version
+      run: |
+        VERSION=$(cat version.txt)
+        IFS='.' read -r major minor patch <<< "$VERSION"
+        NEW_VERSION="$major.$minor.$((patch + 1))"
+        echo "$NEW_VERSION" > version.txt
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add version.txt
+        git commit -m "Bump version to $NEW_VERSION"
+        git push
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -38,14 +54,14 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: PostgreSQL_Viewer_${{ runner.os }}_${{ matrix.python-version }}
+        name: PostgreSQL_Viewer_${{ runner.os }}_${{ matrix.python-version }}_${{ steps.version.outputs.version }}
         path: dist/
         if-no-files-found: error
 
   create-release:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
 
     steps:
     - name: Download all artifacts
@@ -58,9 +74,11 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          artifacts/PostgreSQL_Viewer_ubuntu-latest_3.8/*
-          artifacts/PostgreSQL_Viewer_windows-latest_3.8/*
-          artifacts/PostgreSQL_Viewer_macos-latest_3.8/*
+          artifacts/PostgreSQL_Viewer_ubuntu-latest_3.8_${{ needs.build.outputs.version }}/*
+          artifacts/PostgreSQL_Viewer_windows-latest_3.8_${{ needs.build.outputs.version }}/*
+          artifacts/PostgreSQL_Viewer_macos-latest_3.8_${{ needs.build.outputs.version }}/*
+        tag_name: v${{ needs.build.outputs.version }}
+        name: PostgreSQL Viewer v${{ needs.build.outputs.version }}
         generate_release_notes: true
         draft: false
         prerelease: false
