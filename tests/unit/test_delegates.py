@@ -1,7 +1,7 @@
 import pytest
-from PySide6.QtWidgets import QApplication, QTableWidget, QTableWidgetItem
+from PySide6.QtWidgets import QApplication, QTableWidget, QTableWidgetItem, QStyleOptionViewItem
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QPainter, QStyleOptionViewItem
+from PySide6.QtGui import QPainter
 from delegates import DetailsDelegate
 
 @pytest.fixture
