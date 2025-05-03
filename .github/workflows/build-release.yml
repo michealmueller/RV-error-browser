@@ -10,6 +10,20 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
     - uses: actions/checkout@v4
       with:
@@ -33,6 +47,8 @@ jobs:
 
     - name: Run tests with Xvfb
       run: |
+        # Wait for Xvfb to be ready
+        sleep 5
         xvfb-run -a python -m pytest -n auto --maxfail=1 --durations=10 --timeout=30 --timeout_method=thread || true
       continue-on-error: true
 

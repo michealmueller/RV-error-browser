@@ -67,5 +67,8 @@ def test_github_workflow():
     assert "name: Build and Release" in workflow
     assert "on:" in workflow
     assert "jobs:" in workflow
-    assert "build:" in workflow
-    assert "steps:" in workflow 
+    assert "test:" in workflow
+    assert "build-linux:" in workflow
+    assert "build-windows:" in workflow
+    assert "build-macos:" in workflow
+    assert "create-release:" in workflow 
