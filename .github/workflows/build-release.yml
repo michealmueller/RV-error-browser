@@ -54,7 +54,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: PostgreSQL_Viewer_${{ runner.os }}_${{ matrix.python-version }}_${{ steps.version.outputs.version }}
+        name: RosieVision_Error_Browser_${{ runner.os }}_${{ matrix.python-version }}_${{ steps.version.outputs.version }}
         path: dist/
         if-no-files-found: error
 
@@ -74,11 +74,11 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          artifacts/PostgreSQL_Viewer_ubuntu-latest_3.8_${{ needs.build.outputs.version }}/*
-          artifacts/PostgreSQL_Viewer_windows-latest_3.8_${{ needs.build.outputs.version }}/*
-          artifacts/PostgreSQL_Viewer_macos-latest_3.8_${{ needs.build.outputs.version }}/*
+          artifacts/RosieVision_Error_Browser_ubuntu-latest_3.8_${{ needs.build.outputs.version }}/*
+          artifacts/RosieVision_Error_Browser_windows-latest_3.8_${{ needs.build.outputs.version }}/*
+          artifacts/RosieVision_Error_Browser_macos-latest_3.8_${{ needs.build.outputs.version }}/*
         tag_name: v${{ needs.build.outputs.version }}
-        name: PostgreSQL Viewer v${{ needs.build.outputs.version }}
+        name: RosieVision Error Browser v${{ needs.build.outputs.version }}
         generate_release_notes: true
         draft: false
         prerelease: false

@@ -35,14 +35,14 @@ def build_executable():
         "pyinstaller",
         "--clean",
         "--noconfirm",
-        "postgresql_viewer.spec"
+        "rosievision_error_browser.spec"
     ]
     
     # Platform-specific options
     if current_platform == "windows":
         cmd.extend(["--icon", "icon.ico"])
     elif current_platform == "darwin":  # macOS
-        cmd.extend(["--osx-bundle-identifier", "com.postgresqlviewer.app"])
+        cmd.extend(["--osx-bundle-identifier", "com.rosievision.errorbrowser"])
     
     # Run the build
     print(f"Building for {current_platform}...")
@@ -50,7 +50,7 @@ def build_executable():
     
     # Create a zip file of the distribution
     print("Creating distribution package...")
-    dist_name = f"PostgreSQL_Viewer_{current_platform}_{platform.machine()}"
+    dist_name = f"RosieVision_Error_Browser_{current_platform}_{platform.machine()}"
     shutil.make_archive(dist_name, 'zip', dist_dir)
     
     print(f"\nBuild complete! Executable is in the 'dist' directory.")

@@ -2,6 +2,7 @@
 dist/
 build/
 *.spec
+!rosievision_error_browser.spec
 
 # Python bytecode
 __pycache__/
@@ -51,4 +52,7 @@ coverage.xml
 
 # Build directories
 *.egg-info/
-*.egg 
+*.egg
+
+# Distribution packages
+*.zip 
