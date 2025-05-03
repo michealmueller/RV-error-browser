@@ -8,7 +8,31 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.TOKEN }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+
+    - name: Run tests
+      run: |
+        python run_tests.py
+      continue-on-error: false
+
   build-linux:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -36,12 +60,12 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: RosieVision_Error_Browser_linux
+        name: postgresql-viewer_linux
         path: dist/
         if-no-files-found: error
 
   build-windows:
-    needs: build-linux
+    needs: test
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
@@ -64,12 +88,12 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: RosieVision_Error_Browser_windows
+        name: postgresql-viewer_windows
         path: dist/
         if-no-files-found: error
 
   build-macos:
-    needs: build-windows
+    needs: test
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
@@ -96,12 +120,12 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: RosieVision_Error_Browser_macos
+        name: postgresql-viewer_macos
         path: dist/
         if-no-files-found: error
 
   create-release:
-    needs: build-macos
+    needs: [test, build-linux, build-windows, build-macos]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
 
@@ -116,11 +140,11 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          artifacts/RosieVision_Error_Browser_linux/*
-          artifacts/RosieVision_Error_Browser_windows/*
-          artifacts/RosieVision_Error_Browser_macos/*
+          artifacts/postgresql-viewer_linux/*
+          artifacts/postgresql-viewer_windows/*
+          artifacts/postgresql-viewer_macos/*
         tag_name: latest
-        name: RosieVision Error Browser
+        name: PostgreSQL Viewer
         generate_release_notes: true
         draft: false
         prerelease: false

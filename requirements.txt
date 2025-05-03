@@ -1,3 +1,5 @@
-pyside6
-psycopg2-binary
-pyinstaller
+PySide6>=6.5.0
+psycopg2-binary>=2.9.9
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pyinstaller>=6.0.0

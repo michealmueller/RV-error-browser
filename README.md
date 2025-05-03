@@ -1,18 +1,15 @@
-# PostgreSQL Database Viewer
+# PostgreSQL Viewer
 
-A modern PySide6-based application for viewing PostgreSQL database tables with real-time logging functionality.
+A modern PostgreSQL database viewer application built with PySide6.
 
 ## Features
 
 - Connect to PostgreSQL databases
-- Query and display table data
-- Real-time logging with timestamps
-- Clear log functionality
-- Auto-scrolling log window
-- Dynamic table column headers
-- Pre-configured database connections
-- Modern UI with resizable panels
-- JSON formatting for details column
+- Execute queries and view results
+- Manage multiple database connections
+- Real-time logging
+- Modern UI with dark theme
+- Cross-platform support (Windows, macOS, Linux)
 
 ## Installation
 
@@ -34,46 +31,51 @@ pip install -r requirements.txt
 python main.py
 ```
 
-### Using pip
+### From Package
 
 ```bash
 pip install postgresql-viewer
 postgresql-viewer
 ```
 
-## Building Executable
-
-To build a standalone executable:
-
-```bash
-pyinstaller postgresql_viewer.spec
-```
-
-The executable will be created in the `dist` directory.
-
-## Usage
-
-1. Enter PostgreSQL connection details
-2. Enter the table name to query
-3. Click 'Connect' to establish database connection
-4. Click 'Get Logs' to fetch and display table data
-5. Use 'Clear All' to reset the log window and results
-
 ## Development
 
-### Project Structure
+### Running Tests
 
+The project uses pytest for testing. To run the tests:
+
+```bash
+python run_tests.py
 ```
-postgresql-viewer/
-├── main.py              # Application entry point
-├── app.py               # Main application window and logic
-├── theme.py             # Modern theme configuration
-├── delegates.py         # Custom table delegates
-├── dialogs.py           # Dialog windows
-├── requirements.txt     # Python dependencies
-├── postgresql_viewer.spec  # PyInstaller configuration
-└── README.md            # Project documentation
+
+The test suite includes:
+- Unit tests for all components
+- Integration tests for database operations
+- Build process tests
+- GitHub Actions workflow tests
+
+### CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration and deployment. The pipeline:
+
+1. Runs the test suite
+2. Builds executables for Windows, macOS, and Linux
+3. Creates a release with the built executables
+
+The pipeline will fail if:
+- Any tests fail
+- The build process fails
+- The release creation fails
+
+### Building Executables
+
+To build executables locally:
+
+```bash
+python build.py
 ```
+
+This will create platform-specific executables in the `dist` directory.
 
 ## License
 
@@ -81,4 +83,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run the test suite
+5. Submit a pull request
+
+All pull requests must pass the CI/CD pipeline before being merged.
