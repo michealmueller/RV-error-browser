@@ -1,0 +1,3 @@
+"""
+PostgreSQL Database Viewer package
+""" 
