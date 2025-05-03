@@ -71,7 +71,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y upx qt6-base-dev libqt6gui6 libqt6core6 libqt6widgets6 libqt6network6 libqt6opengl6 libqt6openglwidgets6 libqt6svg6 libqt6printsupport6
+        sudo apt-get install -y qt6-base-dev libqt6gui6 libqt6core6 libqt6widgets6 libqt6network6 libqt6opengl6 libqt6openglwidgets6 libqt6svg6 libqt6printsupport6 xvfb libegl1 libgl1-mesa-glx
 
     - name: Install Python dependencies
       run: |
