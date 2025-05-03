@@ -19,17 +19,19 @@ def test_workflow_structure():
     
     # Check triggers
     assert "on" in workflow
-    assert "push" in workflow["on"]
-    assert "pull_request" in workflow["on"]
-    assert "workflow_dispatch" in workflow["on"]
+    triggers = workflow["on"]
+    assert "push" in triggers
+    assert "pull_request" in triggers
+    assert "workflow_dispatch" in triggers
     
     # Check jobs
     assert "jobs" in workflow
-    assert "test" in workflow["jobs"]
-    assert "build-linux" in workflow["jobs"]
-    assert "build-windows" in workflow["jobs"]
-    assert "build-macos" in workflow["jobs"]
-    assert "create-release" in workflow["jobs"]
+    jobs = workflow["jobs"]
+    assert "test" in jobs
+    assert "build-linux" in jobs
+    assert "build-windows" in jobs
+    assert "build-macos" in jobs
+    assert "create-release" in jobs
 
 def test_workflow_dependencies():
     """Test that the GitHub workflow installs all necessary dependencies."""
