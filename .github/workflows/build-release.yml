@@ -200,4 +200,8 @@ jobs:
         draft: false
         prerelease: false
       env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN }} 
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+
+    - name: Run tests
+      run: |
+        python -m pytest -n auto --maxfail=1 --durations=10 --timeout=30 --timeout_method=thread -k "not gui" 
