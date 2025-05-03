@@ -9,7 +9,6 @@ on:
 
 jobs:
   build-linux:
-    if: ${{ !contains(github.event.head_commit.message, 'Bump version to') }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -20,20 +19,6 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.8'
-
-    - name: Increment version
-      id: version
-      run: |
-        VERSION=$(cat version.txt)
-        IFS='.' read -r major minor patch <<< "$VERSION"
-        NEW_VERSION="$major.$minor.$((patch + 1))"
-        echo "$NEW_VERSION" > version.txt
-        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-        git config --global user.email "action@github.com"
-        git config --global user.name "GitHub Action"
-        git add version.txt
-        git commit -m "Bump version to $NEW_VERSION"
-        git push https://x-access-token:${{ secrets.TOKEN }}@github.com/${{ github.repository }}.git
 
     - name: Install system dependencies
       run: |
@@ -51,7 +36,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: RosieVision_Error_Browser_linux_${{ steps.version.outputs.version }}
+        name: RosieVision_Error_Browser_linux
         path: dist/
         if-no-files-found: error
 
@@ -79,7 +64,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: RosieVision_Error_Browser_windows_${{ needs.build-linux.outputs.version }}
+        name: RosieVision_Error_Browser_windows
         path: dist/
         if-no-files-found: error
 
@@ -111,7 +96,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: RosieVision_Error_Browser_macos_${{ needs.build-windows.outputs.version }}
+        name: RosieVision_Error_Browser_macos
         path: dist/
         if-no-files-found: error
 
@@ -131,11 +116,11 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          artifacts/RosieVision_Error_Browser_linux_${{ needs.build-macos.outputs.version }}/*
-          artifacts/RosieVision_Error_Browser_windows_${{ needs.build-macos.outputs.version }}/*
-          artifacts/RosieVision_Error_Browser_macos_${{ needs.build-macos.outputs.version }}/*
-        tag_name: v${{ needs.build-macos.outputs.version }}
-        name: RosieVision Error Browser v${{ needs.build-macos.outputs.version }}
+          artifacts/RosieVision_Error_Browser_linux/*
+          artifacts/RosieVision_Error_Browser_windows/*
+          artifacts/RosieVision_Error_Browser_macos/*
+        tag_name: latest
+        name: RosieVision Error Browser
         generate_release_notes: true
         draft: false
         prerelease: false
