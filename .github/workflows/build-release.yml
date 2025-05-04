@@ -99,7 +99,13 @@ jobs:
 
     - name: Install PostgreSQL
       run: |
-        choco install postgresql --version=15.6.0 -y
+        # Download and install PostgreSQL 15
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Uri "https://get.enterprisedb.com/postgresql/postgresql-15.6-1-windows-x64.exe" -OutFile "postgresql-installer.exe"
+        Start-Process -FilePath ".\postgresql-installer.exe" -ArgumentList "--mode unattended --superpassword postgres --serverport 5432" -Wait
+        Remove-Item "postgresql-installer.exe"
+        
+        # Set environment variables
         $env:PATH = "C:\Program Files\PostgreSQL\15\bin;$env:PATH"
         $env:PG_LIB_DIR = "C:\Program Files\PostgreSQL\15\lib"
         $env:PG_INCLUDE_DIR = "C:\Program Files\PostgreSQL\15\include"
@@ -138,6 +144,7 @@ jobs:
         brew install postgresql@15 upx
         echo 'export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH"' >> ~/.bash_profile
         source ~/.bash_profile
+        export PG_CONFIG="/opt/homebrew/opt/postgresql@15/bin/pg_config"
 
     - name: Install Python dependencies
       run: |
