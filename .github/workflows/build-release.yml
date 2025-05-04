@@ -111,6 +111,9 @@ jobs:
         $env:PG_INCLUDE_DIR = "C:\Program Files\PostgreSQL\15\include"
         $env:LIB = "C:\Program Files\PostgreSQL\15\lib;$env:LIB"
         $env:INCLUDE = "C:\Program Files\PostgreSQL\15\include;$env:INCLUDE"
+        
+        # Copy libpq.lib to the correct location
+        Copy-Item "C:\Program Files\PostgreSQL\15\lib\libpq.lib" -Destination "C:\Program Files\PostgreSQL\15\lib\libpq.lib"
 
     - name: Install Python dependencies
       run: |
