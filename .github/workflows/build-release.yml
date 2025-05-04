@@ -99,16 +99,18 @@ jobs:
 
     - name: Install PostgreSQL
       run: |
-        # Download and install PostgreSQL 15
+        # Download and install PostgreSQL
         $ProgressPreference = 'SilentlyContinue'
         Invoke-WebRequest -Uri "https://get.enterprisedb.com/postgresql/postgresql-15.6-1-windows-x64.exe" -OutFile "postgresql-installer.exe"
-        Start-Process -FilePath ".\postgresql-installer.exe" -ArgumentList "--mode unattended --superpassword postgres --serverport 5432" -Wait
+        Start-Process -FilePath ".\postgresql-installer.exe" -ArgumentList "--mode unattended --superpassword postgres --serverport 5432 --install_runtimes 1" -Wait
         Remove-Item "postgresql-installer.exe"
         
         # Set environment variables
         $env:PATH = "C:\Program Files\PostgreSQL\15\bin;$env:PATH"
         $env:PG_LIB_DIR = "C:\Program Files\PostgreSQL\15\lib"
         $env:PG_INCLUDE_DIR = "C:\Program Files\PostgreSQL\15\include"
+        $env:LIB = "C:\Program Files\PostgreSQL\15\lib;$env:LIB"
+        $env:INCLUDE = "C:\Program Files\PostgreSQL\15\include;$env:INCLUDE"
 
     - name: Install Python dependencies
       run: |
