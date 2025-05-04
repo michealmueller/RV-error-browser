@@ -24,7 +24,7 @@ class ConnectionDialog(QDialog):
         self.dbname_input = QLineEdit(self.connection.get('dbname', ''))
         self.user_input = QLineEdit(self.connection.get('user', ''))
         self.password_input = QLineEdit(self.connection.get('password', ''))
-        self.table_input = QLineEdit(self.connection.get('table', ''))
+        self.table_input = QLineEdit(self.connection.get('table', 'error_logs'))
         self.password_input.setEchoMode(QLineEdit.Password)
         
         layout.addRow("Connection Name:", self.name_input)
