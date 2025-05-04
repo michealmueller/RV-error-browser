@@ -141,13 +141,19 @@ jobs:
 
     - name: Install system dependencies
       run: |
-        brew install postgresql@15 upx
-        echo 'export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH"' >> ~/.bash_profile
+        # Install UPX
+        brew install upx
+        
+        # Download and install PostgreSQL
+        curl -O https://get.enterprisedb.com/postgresql/postgresql-15.6-1-osx.dmg
+        hdiutil attach postgresql-15.6-1-osx.dmg
+        sudo installer -pkg /Volumes/PostgreSQL\ 15.6-1/postgresql-15.6-1-osx.app/Contents/Resources/postgresql-15.6-1-osx.app/Contents/Resources/installer.pkg -target /
+        hdiutil detach /Volumes/PostgreSQL\ 15.6-1
+        
+        # Set up environment
+        echo 'export PATH="/Library/PostgreSQL/15/bin:$PATH"' >> ~/.bash_profile
+        echo 'export DYLD_LIBRARY_PATH="/Library/PostgreSQL/15/lib:$DYLD_LIBRARY_PATH"' >> ~/.bash_profile
         source ~/.bash_profile
-        # Create symlinks for PostgreSQL libraries
-        sudo mkdir -p /usr/local/lib
-        sudo ln -sf /opt/homebrew/opt/postgresql@15/lib/*.dylib /usr/local/lib/
-        sudo ln -sf /opt/homebrew/opt/postgresql@15/lib/*.a /usr/local/lib/
 
     - name: Install Python dependencies
       run: |
