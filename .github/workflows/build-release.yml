@@ -102,11 +102,11 @@ jobs:
         # Download and install PostgreSQL
         $ProgressPreference = 'SilentlyContinue'
         Invoke-WebRequest -Uri "https://get.enterprisedb.com/postgresql/postgresql-15.6-1-windows-x64.exe" -OutFile "postgresql-installer.exe"
-        Start-Process -FilePath ".\postgresql-installer.exe" -ArgumentList "--mode unattended --superpassword postgres --serverport 5432 --install_runtimes 1" -Wait
+        Start-Process -FilePath ".\postgresql-installer.exe" -ArgumentList "--mode unattended --superpassword postgres --serverport 5432 --install_runtimes 1 --enable_acledit 1" -Wait
         Remove-Item "postgresql-installer.exe"
         
         # Set environment variables
-        $env:PATH = "C:\Program Files\PostgreSQL\15\bin;$env:PATH"
+        $env:PATH = "C:\Program Files\PostgreSQL\15\bin;C:\Program Files\PostgreSQL\15\lib;$env:PATH"
         $env:PG_LIB_DIR = "C:\Program Files\PostgreSQL\15\lib"
         $env:PG_INCLUDE_DIR = "C:\Program Files\PostgreSQL\15\include"
         $env:LIB = "C:\Program Files\PostgreSQL\15\lib;$env:LIB"
@@ -117,7 +117,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e .
         pip install pyinstaller
-        pip install psycopg2-binary --no-binary :all:
+        pip install psycopg2-binary
 
     - name: Build executable
       run: python build.py
