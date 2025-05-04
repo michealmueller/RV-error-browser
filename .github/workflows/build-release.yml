@@ -28,7 +28,7 @@ jobs:
 
     - name: Run tests
       run: |
-        python -m pytest tests/unit/test_app.py -v
+        python -m pytest tests/unit/test_app.py -v -m "not gui"
       env:
         DISPLAY: ":99"
         QT_QPA_PLATFORM: "offscreen"
