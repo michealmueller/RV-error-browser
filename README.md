@@ -111,3 +111,32 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 5. Submit a pull request
 
 All pull requests must pass the CI/CD pipeline before being merged.
+
+## Development Timeline
+
+### May 3, 2025 (5 hours total)
+- 18:01 - 18:16: Initial setup and versioning
+  - Added automated versioning system
+  - Set up release workflow
+  - Renamed application to RosieVision Error Browser
+
+- 18:26 - 19:48: CI/CD Pipeline Development
+  - Fixed Qt dependencies for Linux
+  - Added Xvfb support for GUI tests
+  - Improved test reliability with PostgreSQL
+  - Added pytest-timeout configuration
+
+- 19:48 - 20:46: UI and Test Improvements
+  - Added menu bar
+  - Moved connection management to separate window
+  - Improved layout
+  - Fixed connection persistence
+  - Enhanced test coverage
+
+- 20:46 - 23:02: Pipeline Optimization
+  - Disabled GUI tests in CI
+  - Fixed package dependencies
+  - Added proper PostgreSQL support for Windows/macOS
+  - Optimized build process
+
+### Current Version: 0.1.55

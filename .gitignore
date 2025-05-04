@@ -55,4 +55,5 @@ coverage.xml
 *.egg
 
 # Distribution packages
-*.zip 
+*.zip
+**/.cursorrules
