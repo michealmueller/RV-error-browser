@@ -149,8 +149,8 @@ jobs:
         # Download and install PostgreSQL
         curl -O https://get.enterprisedb.com/postgresql/postgresql-15.6-1-osx.dmg
         hdiutil attach postgresql-15.6-1-osx.dmg
-        sudo installer -pkg /Volumes/PostgreSQL\ 15.6-1/postgresql-15.6-1-osx.app/Contents/Resources/postgresql-15.6-1-osx.app/Contents/Resources/installer.pkg -target /
-        hdiutil detach /Volumes/PostgreSQL\ 15.6-1
+        sudo installer -pkg "/Volumes/PostgreSQL 15.6-1/postgresql-15.6-1-osx.app/Contents/Resources/installer.pkg" -target /
+        hdiutil detach "/Volumes/PostgreSQL 15.6-1"
         
         # Set up environment
         echo 'export PATH="/Library/PostgreSQL/15/bin:$PATH"' >> ~/.bash_profile
