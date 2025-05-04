@@ -60,9 +60,6 @@ jobs:
           libqt6printsupport6 \
           xvfb \
           libegl1 \
-          libegl1-mesa \
-          libegl1-mesa-dev \
-          libgl1-mesa-glx \
           libgl1-mesa-dev \
           libglu1-mesa-dev \
           mesa-common-dev \
