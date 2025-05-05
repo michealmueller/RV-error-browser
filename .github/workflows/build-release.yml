@@ -8,198 +8,144 @@ on:
   workflow_dispatch:
 
 jobs:
-  # test:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #     with:
-  #       token: ${{ secrets.TOKEN }}
-
-  #   - name: Set up Python
-  #     uses: actions/setup-python@v5
-  #     with:
-  #       python-version: '3.8'
-
-  #   - name: Install Python dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install -e .
-  #       pip install pytest pytest-cov pytest-qt
-
-  #   - name: Run tests
-  #     run: |
-  #       python -m pytest tests/unit/test_app.py -v -m "not gui"
-  #     env:
-  #       DISPLAY: ":99"
-  #       QT_QPA_PLATFORM: "offscreen"
-
-  build-linux:
+  test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.8'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          qt6-base-dev \
-          libqt6gui6 \
-          libqt6core6 \
-          libqt6widgets6 \
-          libqt6network6 \
-          libqt6opengl6 \
-          libqt6openglwidgets6 \
-          libqt6svg6 \
-          libqt6printsupport6 \
-          xvfb \
-          libegl1 \
-          libgl1-mesa-dev \
-          libglu1-mesa-dev \
-          mesa-common-dev \
-          postgresql-client \
-          libpq-dev \
-          upx
-        sudo ln -sf /usr/lib/x86_64-linux-gnu/mesa/libEGL.so.1 /usr/lib/x86_64-linux-gnu/libEGL.so.1
-        sudo ldconfig
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest pytest-cov pytest-qt
 
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .
-        pip install pyinstaller
+      - name: Run tests
+        run: |
+          python -m pytest tests/unit/test_app.py -v -m "not gui"
+        env:
+          DISPLAY: ":99"
+          QT_QPA_PLATFORM: "offscreen"
 
-    - name: Build executable
-      run: python build.py
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: postgresql-viewer_linux
-        path: dist/
-        if-no-files-found: error
-
-  build-windows:
-    runs-on: windows-latest
+  build:
+    needs: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: postgresql-viewer_linux
+          - os: windows-latest
+            artifact_name: postgresql-viewer_windows
+          - os: macos-latest
+            artifact_name: postgresql-viewer_macos
     steps:
-    - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.8'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
 
-    - name: Install PostgreSQL
-      run: |
-        # Download and install PostgreSQL
-        $ProgressPreference = 'SilentlyContinue'
-        Invoke-WebRequest -Uri "https://get.enterprisedb.com/postgresql/postgresql-15.6-1-windows-x64.exe" -OutFile "postgresql-installer.exe"
-        Start-Process -FilePath ".\postgresql-installer.exe" -ArgumentList "--mode unattended --superpassword postgres --serverport 5432 --install_runtimes 1 --enable_acledit 1" -Wait
-        Remove-Item "postgresql-installer.exe"
-        
-        # Set environment variables
-        $env:PATH = "C:\Program Files\PostgreSQL\15\bin;C:\Program Files\PostgreSQL\15\lib;$env:PATH"
-        $env:PG_LIB_DIR = "C:\Program Files\PostgreSQL\15\lib"
-        $env:PG_INCLUDE_DIR = "C:\Program Files\PostgreSQL\15\include"
-        $env:LIB = "C:\Program Files\PostgreSQL\15\lib;$env:LIB"
-        $env:INCLUDE = "C:\Program Files\PostgreSQL\15\include;$env:INCLUDE"
-        
-        # Copy libpq.lib to the correct location
-        Copy-Item "C:\Program Files\PostgreSQL\15\lib\libpq.lib" -Destination "C:\Program Files\PostgreSQL\15\lib\libpq.lib"
+      - name: Install system dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            qt6-base-dev \
+            libqt6gui6 \
+            libqt6core6 \
+            libqt6widgets6 \
+            libqt6network6 \
+            libqt6opengl6 \
+            libqt6openglwidgets6 \
+            libqt6svg6 \
+            libqt6printsupport6 \
+            xvfb \
+            libegl1 \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            mesa-common-dev \
+            postgresql-client \
+            libpq-dev \
+            upx
+          sudo ln -sf /usr/lib/x86_64-linux-gnu/mesa/libEGL.so.1 /usr/lib/x86_64-linux-gnu/libEGL.so.1
+          sudo ldconfig
 
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .
-        pip install pyinstaller
-        pip install psycopg2-binary
+      - name: Install PostgreSQL (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri "https://get.enterprisedb.com/postgresql/postgresql-15.6-1-windows-x64.exe" -OutFile "postgresql-installer.exe"
+          Start-Process -FilePath ".\postgresql-installer.exe" -ArgumentList "--mode unattended --superpassword postgres --serverport 5432 --install_runtimes 1 --enable_acledit 1" -Wait
+          Remove-Item "postgresql-installer.exe"
+          $env:PATH = "C:\Program Files\PostgreSQL\15\bin;C:\Program Files\PostgreSQL\15\lib;$env:PATH"
+          $env:PG_LIB_DIR = "C:\Program Files\PostgreSQL\15\lib"
+          $env:PG_INCLUDE_DIR = "C:\Program Files\PostgreSQL\15\include"
+          $env:LIB = "C:\Program Files\PostgreSQL\15\lib;$env:LIB"
+          $env:INCLUDE = "C:\Program Files\PostgreSQL\15\include;$env:INCLUDE"
+          Copy-Item "C:\Program Files\PostgreSQL\15\lib\libpq.lib" -Destination "C:\Program Files\PostgreSQL\15\lib\libpq.lib"
 
-    - name: Build executable
-      run: python build.py
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install upx
+          curl -O https://get.enterprisedb.com/postgresql/postgresql-15.6-1-osx.dmg
+          hdiutil attach postgresql-15.6-1-osx.dmg
+          sudo installer -pkg "/Volumes/PostgreSQL 15.6-1/postgresql-15.6-1-osx.app/Contents/Resources/installer.pkg" -target /
+          hdiutil detach "/Volumes/PostgreSQL 15.6-1"
+          echo 'export PATH="/Library/PostgreSQL/15/bin:$PATH"' >> ~/.bash_profile
+          echo 'export DYLD_LIBRARY_PATH="/Library/PostgreSQL/15/lib:$DYLD_LIBRARY_PATH"' >> ~/.bash_profile
+          source ~/.bash_profile
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: postgresql-viewer_windows
-        path: dist/
-        if-no-files-found: error
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pyinstaller
+          pip install psycopg2-binary
 
-  build-macos:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.TOKEN }}
+      - name: Build executable
+        run: python build.py
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.8'
-
-    - name: Install system dependencies
-      run: |
-        # Install UPX
-        brew install upx
-        
-        # Download and install PostgreSQL
-        curl -O https://get.enterprisedb.com/postgresql/postgresql-15.6-1-osx.dmg
-        hdiutil attach postgresql-15.6-1-osx.dmg
-        sudo installer -pkg "/Volumes/PostgreSQL 15.6-1/postgresql-15.6-1-osx.app/Contents/Resources/installer.pkg" -target /
-        hdiutil detach "/Volumes/PostgreSQL 15.6-1"
-        
-        # Set up environment
-        echo 'export PATH="/Library/PostgreSQL/15/bin:$PATH"' >> ~/.bash_profile
-        echo 'export DYLD_LIBRARY_PATH="/Library/PostgreSQL/15/lib:$DYLD_LIBRARY_PATH"' >> ~/.bash_profile
-        source ~/.bash_profile
-
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .
-        pip install pyinstaller
-        pip install psycopg2-binary
-
-    - name: Build executable
-      run: python build.py
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: postgresql-viewer_macos
-        path: dist/
-        if-no-files-found: error
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/
+          if-no-files-found: error
 
   create-release:
-    needs: [build-linux, build-windows, build-macos]
+    needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
-
     steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4l
-      with:
-        path: artifacts
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
-    - name: Create Release
-      id: create_release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          artifacts/postgresql-viewer_linux/*
-          artifacts/postgresql-viewer_windows/*
-          artifacts/postgresql-viewer_macos/*
-        tag_name: latest
-        name: PostgreSQL Viewer
-        generate_release_notes: true
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN }} 
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/postgresql-viewer_linux/*
+            artifacts/postgresql-viewer_windows/*
+            artifacts/postgresql-viewer_macos/*
+          tag_name: latest
+          name: PostgreSQL Viewer
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
