@@ -1,0 +1,2026 @@
+[
+    {
+        "id": "7f3233da-96bf-49b1-8896-e1f471b6de4e",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/gGZoZRiDyt929FZw2XBoEj.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/gGZoZRiDyt929FZw2XBoEj.apk"
+        },
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "157",
+        "gitCommitHash": "3113dd327cdd31e0405b1424f3d2c80c1ffa0356",
+        "gitCommitMessage": "Merged PR 608: Deployment fix",
+        "priority": "HIGH",
+        "createdAt": "2025-05-23T19:29:14.512Z",
+        "updatedAt": "2025-05-23T19:49:28.144Z",
+        "completedAt": "2025-05-23T19:49:13.872Z",
+        "expirationDate": "2025-08-21T19:29:14.601Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 255,
+            "buildQueueTime": 37297,
+            "buildDuration": 1161522
+        }
+    },
+    {
+        "id": "92e98d39-48d8-466c-a133-627a90096f3b",
+        "status": "ERRORED",
+        "platform": "ANDROID",
+        "error": {
+            "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+            "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+        },
+        "artifacts": {},
+        "initiatingActor": {
+            "id": "f5f07b09-959c-4d4f-990d-96d6804be7e3",
+            "displayName": "philip.i"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "STORE",
+        "buildProfile": "preview",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "156",
+        "gitCommitHash": "041c0e0bb162082408e260c66e934aa8e2e8f793",
+        "gitCommitMessage": "Updated Assets styles",
+        "priority": "HIGH",
+        "createdAt": "2025-05-23T16:31:55.562Z",
+        "updatedAt": "2025-05-23T16:35:58.543Z",
+        "completedAt": "2025-05-23T16:35:53.524Z",
+        "expirationDate": "2025-06-22T16:31:55.701Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 386,
+            "buildQueueTime": 37280,
+            "buildDuration": 200002
+        }
+    },
+    {
+        "id": "734ab131-2d81-4482-b55c-eac0d50258e4",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/feJjFt8Bq7YzV1YqJcmYKW.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/feJjFt8Bq7YzV1YqJcmYKW.apk"
+        },
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "155",
+        "gitCommitHash": "4e1b028ae052e7f826a7561440347ddd5d4489f0",
+        "gitCommitMessage": "Merge branch 'development' into deploy-ios",
+        "priority": "HIGH",
+        "createdAt": "2025-05-23T16:31:32.858Z",
+        "updatedAt": "2025-05-23T16:50:56.021Z",
+        "completedAt": "2025-05-23T16:50:51.281Z",
+        "expirationDate": "2025-08-21T16:31:32.919Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 314,
+            "buildQueueTime": 45361,
+            "buildDuration": 1111428
+        }
+    },
+    {
+        "id": "f27379ba-d8ff-4761-ba3e-dbfc8b52b554",
+        "status": "ERRORED",
+        "platform": "ANDROID",
+        "error": {
+            "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+            "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+        },
+        "artifacts": {},
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "154",
+        "gitCommitHash": "4e1b028ae052e7f826a7561440347ddd5d4489f0",
+        "gitCommitMessage": "Merge branch 'development' into deploy-ios",
+        "priority": "HIGH",
+        "createdAt": "2025-05-23T16:16:22.206Z",
+        "updatedAt": "2025-05-23T16:21:02.627Z",
+        "completedAt": "2025-05-23T16:21:00.395Z",
+        "expirationDate": "2025-08-21T16:16:22.287Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 344,
+            "buildQueueTime": 33538,
+            "buildDuration": 243980
+        }
+    },
+    {
+        "id": "3d576d13-2e28-4c4a-811a-70ef9bb553d3",
+        "status": "ERRORED",
+        "platform": "ANDROID",
+        "error": {
+            "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+            "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+        },
+        "artifacts": {},
+        "initiatingActor": {
+            "id": "f5f07b09-959c-4d4f-990d-96d6804be7e3",
+            "displayName": "philip.i"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "STORE",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "153",
+        "gitCommitHash": "041c0e0bb162082408e260c66e934aa8e2e8f793",
+        "gitCommitMessage": "Updated Assets styles",
+        "priority": "HIGH",
+        "createdAt": "2025-05-23T15:17:52.938Z",
+        "updatedAt": "2025-05-23T15:21:52.893Z",
+        "completedAt": "2025-05-23T15:21:44.498Z",
+        "expirationDate": "2025-06-22T15:17:53.076Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 485,
+            "buildQueueTime": 30862,
+            "buildDuration": 199941
+        }
+    },
+    {
+        "id": "455cfb4f-8a8e-4e78-ba19-b844ad5a36bf",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/9yMxXmudXRJiVtoVUkhofc.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/9yMxXmudXRJiVtoVUkhofc.apk"
+        },
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "152",
+        "gitCommitHash": "1bb3bdcd05821c0c623457d040ac703e67016b95",
+        "gitCommitMessage": "Merge branch 'development' into deploy-ios",
+        "priority": "HIGH",
+        "createdAt": "2025-05-23T02:34:38.786Z",
+        "updatedAt": "2025-05-23T02:53:03.885Z",
+        "completedAt": "2025-05-23T02:53:00.968Z",
+        "expirationDate": "2025-08-21T02:34:38.904Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 316,
+            "buildQueueTime": 31589,
+            "buildDuration": 1070035
+        }
+    },
+    {
+        "id": "c9304fbc-f037-4521-8e11-894f76ee3c1f",
+        "status": "ERRORED",
+        "platform": "ANDROID",
+        "error": {
+            "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+            "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+        },
+        "artifacts": {},
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "151",
+        "gitCommitHash": "1bb3bdcd05821c0c623457d040ac703e67016b95",
+        "gitCommitMessage": "Merge branch 'development' into deploy-ios",
+        "priority": "HIGH",
+        "createdAt": "2025-05-23T02:25:25.272Z",
+        "updatedAt": "2025-05-23T02:30:01.342Z",
+        "completedAt": "2025-05-23T02:29:58.525Z",
+        "expirationDate": "2025-08-21T02:25:25.329Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 213,
+            "buildQueueTime": 39211,
+            "buildDuration": 233488
+        }
+    },
+    {
+        "id": "62d5877b-e151-4cef-8019-82cb0a1d95d1",
+        "status": "ERRORED",
+        "platform": "ANDROID",
+        "error": {
+            "errorCode": "UNKNOWN_ERROR",
+            "message": "Unknown error. See logs of the Bundle JavaScript build phase for more information."
+        },
+        "artifacts": {},
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "150",
+        "gitCommitHash": "1bb3bdcd05821c0c623457d040ac703e67016b95",
+        "gitCommitMessage": "Merge branch 'development' into deploy-ios",
+        "priority": "HIGH",
+        "createdAt": "2025-05-23T02:18:27.802Z",
+        "updatedAt": "2025-05-23T02:21:24.459Z",
+        "completedAt": "2025-05-23T02:21:22.923Z",
+        "expirationDate": "2025-08-21T02:18:27.860Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 203,
+            "buildQueueTime": 32823,
+            "buildDuration": 141787
+        }
+    },
+    {
+        "id": "b089daab-aaf2-4e60-9375-282a4c61b768",
+        "status": "ERRORED",
+        "platform": "ANDROID",
+        "error": {
+            "errorCode": "UNKNOWN_ERROR",
+            "message": "Unknown error. See logs of the Bundle JavaScript build phase for more information."
+        },
+        "artifacts": {},
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "149",
+        "gitCommitHash": "1bb3bdcd05821c0c623457d040ac703e67016b95",
+        "gitCommitMessage": "Merge branch 'development' into deploy-ios",
+        "priority": "HIGH",
+        "createdAt": "2025-05-23T02:09:43.281Z",
+        "updatedAt": "2025-05-23T02:12:40.195Z",
+        "completedAt": "2025-05-23T02:12:38.633Z",
+        "expirationDate": "2025-08-21T02:09:43.339Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 289,
+            "buildQueueTime": 36358,
+            "buildDuration": 138371
+        }
+    },
+    {
+        "id": "7f4a26d5-0c7b-4ac9-95a7-5eb6cf1b5693",
+        "status": "ERRORED",
+        "platform": "ANDROID",
+        "error": {
+            "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+            "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+        },
+        "artifacts": {},
+        "initiatingActor": {
+            "id": "f5f07b09-959c-4d4f-990d-96d6804be7e3",
+            "displayName": "philip.i"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "STORE",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "148",
+        "gitCommitHash": "0bbfd4baa588c3c194f52e1547758bc2c6e7da61",
+        "gitCommitMessage": "Fixed Bottom nav on IOS",
+        "priority": "HIGH",
+        "createdAt": "2025-05-22T19:03:17.111Z",
+        "updatedAt": "2025-05-22T19:07:27.590Z",
+        "completedAt": "2025-05-22T19:07:24.179Z",
+        "expirationDate": "2025-06-21T19:03:17.433Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 751,
+            "buildQueueTime": 55236,
+            "buildDuration": 190749
+        }
+    },
+    {
+        "id": "a07fec71-a8e2-404b-b25a-d6c683792a3f",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/kPvKhWvbgqyRT3Ys9JdMZ2.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/kPvKhWvbgqyRT3Ys9JdMZ2.apk"
+        },
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "147",
+        "gitCommitHash": "8d391c82cd9f65d22e245b45b9d22b0fe5015325",
+        "gitCommitMessage": "Merged PR 602: added Default Flag\n\nadded Default Flag",
+        "priority": "HIGH",
+        "createdAt": "2025-05-22T16:21:25.918Z",
+        "updatedAt": "2025-05-22T16:40:50.138Z",
+        "completedAt": "2025-05-22T16:40:43.950Z",
+        "expirationDate": "2025-08-20T16:21:26.020Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 420,
+            "buildQueueTime": 51090,
+            "buildDuration": 1106188
+        }
+    },
+    {
+        "id": "b00dfe33-af1e-429c-ac20-febffe28283b",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/nJVhYxVtUSVnwimzrnQEoX.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/nJVhYxVtUSVnwimzrnQEoX.apk"
+        },
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "146",
+        "gitCommitHash": "8d391c82cd9f65d22e245b45b9d22b0fe5015325",
+        "gitCommitMessage": "Merged PR 602: added Default Flag\n\nadded Default Flag",
+        "priority": "HIGH",
+        "createdAt": "2025-05-22T13:11:33.272Z",
+        "updatedAt": "2025-05-22T13:30:32.018Z",
+        "completedAt": "2025-05-22T13:30:25.774Z",
+        "expirationDate": "2025-08-20T13:11:33.350Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 334,
+            "buildQueueTime": 40270,
+            "buildDuration": 1091588
+        }
+    },
+    {
+        "id": "6e28977f-c4aa-4eb9-b9d8-02ed3cea85c7",
+        "status": "ERRORED",
+        "platform": "ANDROID",
+        "error": {
+            "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+            "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+        },
+        "artifacts": {},
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "145",
+        "gitCommitHash": "8d391c82cd9f65d22e245b45b9d22b0fe5015325",
+        "gitCommitMessage": "Merged PR 602: added Default Flag\n\nadded Default Flag",
+        "priority": "HIGH",
+        "createdAt": "2025-05-22T12:09:57.552Z",
+        "updatedAt": "2025-05-22T12:14:14.702Z",
+        "completedAt": "2025-05-22T12:14:05.400Z",
+        "expirationDate": "2025-08-20T12:09:57.652Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 425,
+            "buildQueueTime": 53454,
+            "buildDuration": 193445
+        }
+    },
+    {
+        "id": "32730a35-fc3d-40e5-9892-2dbdd3361ca8",
+        "status": "ERRORED",
+        "platform": "ANDROID",
+        "error": {
+            "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+            "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+        },
+        "artifacts": {},
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "STORE",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "144",
+        "gitCommitHash": "8d391c82cd9f65d22e245b45b9d22b0fe5015325",
+        "gitCommitMessage": "Merged PR 602: added Default Flag\n\nadded Default Flag",
+        "priority": "HIGH",
+        "createdAt": "2025-05-22T12:07:28.033Z",
+        "updatedAt": "2025-05-22T12:12:15.792Z",
+        "completedAt": "2025-05-22T12:12:03.550Z",
+        "expirationDate": "2025-06-21T12:07:28.101Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 341,
+            "buildQueueTime": 83014,
+            "buildDuration": 191831
+        }
+    },
+    {
+        "id": "675cbbfa-a15d-4728-9002-938e4efab226",
+        "status": "ERRORED",
+        "platform": "ANDROID",
+        "error": {
+            "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+            "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+        },
+        "artifacts": {},
+        "initiatingActor": {
+            "id": "f5f07b09-959c-4d4f-990d-96d6804be7e3",
+            "displayName": "philip.i"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "STORE",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "143",
+        "gitCommitHash": "cdd2de647603cb9f5a22fd386494de7057d33140",
+        "gitCommitMessage": "Update icon setUp on Space",
+        "priority": "HIGH",
+        "createdAt": "2025-05-22T10:04:25.508Z",
+        "updatedAt": "2025-05-22T10:08:50.862Z",
+        "completedAt": "2025-05-22T10:08:39.140Z",
+        "expirationDate": "2025-06-21T10:04:25.583Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 306,
+            "buildQueueTime": 55609,
+            "buildDuration": 197117
+        }
+    },
+    {
+        "id": "1b129d74-d0bc-4886-acaf-8411fefa9319",
+        "status": "ERRORED",
+        "platform": "ANDROID",
+        "error": {
+            "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+            "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+        },
+        "artifacts": {},
+        "initiatingActor": {
+            "id": "f5f07b09-959c-4d4f-990d-96d6804be7e3",
+            "displayName": "philip.i"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "channel": "preview",
+        "distribution": "STORE",
+        "buildProfile": "preview",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "142",
+        "gitCommitHash": "cdd2de647603cb9f5a22fd386494de7057d33140",
+        "gitCommitMessage": "Update icon setUp on Space",
+        "priority": "HIGH",
+        "createdAt": "2025-05-22T10:00:44.024Z",
+        "updatedAt": "2025-05-22T10:04:49.741Z",
+        "completedAt": "2025-05-22T10:04:31.924Z",
+        "expirationDate": "2025-06-21T10:00:44.099Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 514,
+            "buildQueueTime": 44823,
+            "buildDuration": 182150
+        }
+    },
+    {
+        "id": "c24fc22b-f2bb-4ca7-9ae7-1bc95357b83d",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/pZFeaaJ2DaMGnpYd3bYdUD.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/pZFeaaJ2DaMGnpYd3bYdUD.apk"
+        },
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "STORE",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.2.0",
+        "appBuildVersion": "141",
+        "gitCommitHash": "ed48ca54e103712ef3d3c13294a2517f5e7615cd",
+        "gitCommitMessage": "Merged PR 587: Thumbnail metadata\n\n- added meta data for first image in capture flow to identfiy\n- fixed type errors\n\nRelated work items: #572",
+        "priority": "HIGH",
+        "createdAt": "2025-05-21T22:33:31.599Z",
+        "updatedAt": "2025-05-21T22:50:57.667Z",
+        "completedAt": "2025-05-21T22:50:54.083Z",
+        "expirationDate": "2025-06-20T22:33:31.693Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 288,
+            "buildQueueTime": 34720,
+            "buildDuration": 1007039
+        }
+    },
+    {
+        "id": "7683c6ff-02be-481e-8ee0-34542eb1b831",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/fCP9ZMJW9KqW9GkDMw8axg.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/fCP9ZMJW9KqW9GkDMw8axg.apk"
+        },
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "STORE",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.6",
+        "appBuildVersion": "140",
+        "gitCommitHash": "ed48ca54e103712ef3d3c13294a2517f5e7615cd",
+        "gitCommitMessage": "Merged PR 587: Thumbnail metadata\n\n- added meta data for first image in capture flow to identfiy\n- fixed type errors\n\nRelated work items: #572",
+        "priority": "HIGH",
+        "createdAt": "2025-05-21T21:05:34.357Z",
+        "updatedAt": "2025-05-21T21:22:28.627Z",
+        "completedAt": "2025-05-21T21:22:25.847Z",
+        "expirationDate": "2025-06-20T21:05:34.426Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 246,
+            "buildQueueTime": 45891,
+            "buildDuration": 965095
+        }
+    },
+    {
+        "id": "e70a84e9-18d5-4cd2-8eea-93fe20abed1a",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/uwJHqMZ6erWeAUFpeyGZHL.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/uwJHqMZ6erWeAUFpeyGZHL.apk"
+        },
+        "initiatingActor": {
+            "id": "f5f07b09-959c-4d4f-990d-96d6804be7e3",
+            "displayName": "philip.i"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "137",
+        "gitCommitHash": "0e36db6553d70c83907ef54d0e46ef2416ab651a",
+        "gitCommitMessage": "Detected inconsistent filename casing between your branch(fixed)",
+        "priority": "HIGH",
+        "createdAt": "2025-05-14T13:05:24.146Z",
+        "updatedAt": "2025-05-14T13:20:47.894Z",
+        "completedAt": "2025-05-14T13:20:39.183Z",
+        "expirationDate": "2025-08-12T13:05:24.197Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 217,
+            "buildQueueTime": 35206,
+            "buildDuration": 879325
+        }
+    },
+    {
+        "id": "611da995-7b0e-462a-be87-4f6fe392fc0e",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/cZy32QjLzbcfZxzh25yhg9.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/cZy32QjLzbcfZxzh25yhg9.apk"
+        },
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "STORE",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "132",
+        "gitCommitHash": "c84638b73e58c52d38c10980e54041485851cfe6",
+        "gitCommitMessage": "Merge branch 'development' into feature/434-deploy-ios",
+        "priority": "HIGH",
+        "createdAt": "2025-05-12T12:54:11.467Z",
+        "updatedAt": "2025-05-12T13:11:25.774Z",
+        "completedAt": "2025-05-12T13:11:18.342Z",
+        "expirationDate": "2025-06-11T12:54:11.551Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 329,
+            "buildQueueTime": 31382,
+            "buildDuration": 994474
+        }
+    },
+    {
+        "id": "f754aa75-670c-40f4-85a0-c97098326973",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/wxprSKbnBMQux2BnWKBSK6.aab",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/wxprSKbnBMQux2BnWKBSK6.aab"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "STORE",
+        "buildProfile": "production",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "131",
+        "gitCommitHash": "07010e07d9605d8cb659f6e1ad73d088331038dd",
+        "gitCommitMessage": "updated download of files to use the corrrect command to inspect the download from eas",
+        "priority": "HIGH",
+        "createdAt": "2025-05-09T16:26:41.017Z",
+        "updatedAt": "2025-05-09T16:42:03.156Z",
+        "completedAt": "2025-05-09T16:41:57.199Z",
+        "expirationDate": "2025-06-08T16:26:41.069Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 189,
+            "buildQueueTime": 43181,
+            "buildDuration": 872555
+        }
+    },
+    {
+        "id": "c781a75f-b927-43bd-b6c1-8fec6cb298c1",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/qCTck6H8tT7NeGstFB7uT4.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/qCTck6H8tT7NeGstFB7uT4.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "staging",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "130",
+        "gitCommitHash": "07010e07d9605d8cb659f6e1ad73d088331038dd",
+        "gitCommitMessage": "updated download of files to use the corrrect command to inspect the download from eas",
+        "priority": "HIGH",
+        "createdAt": "2025-05-09T16:07:36.484Z",
+        "updatedAt": "2025-05-09T16:26:25.638Z",
+        "completedAt": "2025-05-09T16:26:12.734Z",
+        "expirationDate": "2025-08-07T16:07:36.547Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 199,
+            "buildQueueTime": 35509,
+            "buildDuration": 1080222
+        }
+    },
+    {
+        "id": "662a9756-00bd-47f7-8148-198be7d6c70f",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/dBJ27LX61HLbor3u51XY5P.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/dBJ27LX61HLbor3u51XY5P.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "129",
+        "gitCommitHash": "07010e07d9605d8cb659f6e1ad73d088331038dd",
+        "gitCommitMessage": "updated download of files to use the corrrect command to inspect the download from eas",
+        "priority": "HIGH",
+        "createdAt": "2025-05-09T15:51:36.206Z",
+        "updatedAt": "2025-05-09T16:07:20.629Z",
+        "completedAt": "2025-05-09T16:07:17.092Z",
+        "expirationDate": "2025-08-07T15:51:36.275Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 200,
+            "buildQueueTime": 44294,
+            "buildDuration": 895840
+        }
+    },
+    {
+        "id": "6b680da3-f261-4a8c-977a-225be27f9123",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/egfKTBwUXcfdL9vQWYnujp.aab",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/egfKTBwUXcfdL9vQWYnujp.aab"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "STORE",
+        "buildProfile": "production",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "128",
+        "gitCommitHash": "16580c85f284359b77b468aab2967e210dea4319",
+        "gitCommitMessage": "swapped npx for yarn as yarn output messes with the json return data",
+        "priority": "HIGH",
+        "createdAt": "2025-05-08T20:53:04.175Z",
+        "updatedAt": "2025-05-08T21:07:17.534Z",
+        "completedAt": "2025-05-08T21:07:15.563Z",
+        "expirationDate": "2025-06-07T20:53:04.240Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 186,
+            "buildQueueTime": 29476,
+            "buildDuration": 821395
+        }
+    },
+    {
+        "id": "218e81ce-f7a7-4891-a2e1-df894b99ff03",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/59ktzV5P3YYQkJGaCPCmrZ.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/59ktzV5P3YYQkJGaCPCmrZ.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "staging",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "127",
+        "gitCommitHash": "16580c85f284359b77b468aab2967e210dea4319",
+        "gitCommitMessage": "swapped npx for yarn as yarn output messes with the json return data",
+        "priority": "HIGH",
+        "createdAt": "2025-05-08T20:35:54.005Z",
+        "updatedAt": "2025-05-08T20:52:38.040Z",
+        "completedAt": "2025-05-08T20:52:32.896Z",
+        "expirationDate": "2025-08-06T20:35:54.079Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 208,
+            "buildQueueTime": 36071,
+            "buildDuration": 962356
+        }
+    },
+    {
+        "id": "de1e250e-7fab-496d-9bd1-16f1141aba6c",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/tqPX7YzqXx6ZEJx8V63ZMW.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/tqPX7YzqXx6ZEJx8V63ZMW.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "126",
+        "gitCommitHash": "16580c85f284359b77b468aab2967e210dea4319",
+        "gitCommitMessage": "swapped npx for yarn as yarn output messes with the json return data",
+        "priority": "HIGH",
+        "createdAt": "2025-05-08T20:19:51.368Z",
+        "updatedAt": "2025-05-08T20:35:33.435Z",
+        "completedAt": "2025-05-08T20:35:26.411Z",
+        "expirationDate": "2025-08-06T20:19:51.453Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 254,
+            "buildQueueTime": 34268,
+            "buildDuration": 900139
+        }
+    },
+    {
+        "id": "eddc56c6-264e-4c60-947b-7dca560faada",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/vnzA3gFr5UxdBDB4JH2PsA.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/vnzA3gFr5UxdBDB4JH2PsA.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "125",
+        "gitCommitHash": "8a72415a40fc7589705fc6526c0ba11ad7db4ccb",
+        "gitCommitMessage": "updated pipeline for just android",
+        "priority": "HIGH",
+        "createdAt": "2025-05-08T19:28:04.202Z",
+        "updatedAt": "2025-05-08T19:45:23.963Z",
+        "completedAt": "2025-05-08T19:45:21.668Z",
+        "expirationDate": "2025-08-06T19:28:04.316Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 300,
+            "buildQueueTime": 31618,
+            "buildDuration": 1005264
+        }
+    },
+    {
+        "id": "30e75143-bc64-4e95-8a92-8b86763c716a",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/73fAQqpp4LG7Sn18xvBGMQ.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/73fAQqpp4LG7Sn18xvBGMQ.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "124",
+        "gitCommitHash": "7c35a8de2bcfc642fddd6e3966ccb1fb584dc05d",
+        "gitCommitMessage": "updated pipeline, testing",
+        "priority": "HIGH",
+        "createdAt": "2025-05-08T18:26:38.137Z",
+        "updatedAt": "2025-05-08T18:44:15.559Z",
+        "completedAt": "2025-05-08T18:44:13.128Z",
+        "expirationDate": "2025-08-06T18:26:38.226Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 283,
+            "buildQueueTime": 52931,
+            "buildDuration": 1001496
+        }
+    },
+    {
+        "id": "bcd1fecc-a95d-4d31-8311-a511de1ffb12",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/pjm9JJTekhpURkvrJd4quA.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/pjm9JJTekhpURkvrJd4quA.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "staging",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "123",
+        "gitCommitHash": "7c35a8de2bcfc642fddd6e3966ccb1fb584dc05d",
+        "gitCommitMessage": "updated pipeline, testing",
+        "priority": "HIGH",
+        "createdAt": "2025-05-08T18:26:38.049Z",
+        "updatedAt": "2025-05-08T18:42:32.459Z",
+        "completedAt": "2025-05-08T18:42:30.076Z",
+        "expirationDate": "2025-08-06T18:26:38.111Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 245,
+            "buildQueueTime": 52217,
+            "buildDuration": 899148
+        }
+    },
+    {
+        "id": "f21b1d5b-7d70-4c45-a7c3-dc9b396b448a",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/vTZ4bkrv31DoPfr84ssibj.aab",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/vTZ4bkrv31DoPfr84ssibj.aab"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "STORE",
+        "buildProfile": "production",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "123",
+        "gitCommitHash": "7c35a8de2bcfc642fddd6e3966ccb1fb584dc05d",
+        "gitCommitMessage": "updated pipeline, testing",
+        "priority": "HIGH",
+        "createdAt": "2025-05-08T18:26:37.987Z",
+        "updatedAt": "2025-05-08T18:41:16.170Z",
+        "completedAt": "2025-05-08T18:41:08.195Z",
+        "expirationDate": "2025-06-07T18:26:38.090Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 286,
+            "buildQueueTime": 51599,
+            "buildDuration": 817971
+        }
+    },
+    {
+        "id": "4188e620-8b6a-4250-8398-46e3fff4dce2",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/96nd9FkATegmiaYrvDXNBU.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/96nd9FkATegmiaYrvDXNBU.apk"
+        },
+        "initiatingActor": {
+            "id": "6e86ff6f-2b3c-4fe0-a1a3-2fb0e2de5a79",
+            "displayName": "mmueller"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "122",
+        "gitCommitHash": "ffd3167de11e519b1aae3a5705f756271ef318cd",
+        "gitCommitMessage": "chore: add verbose output for artifact polling and debugging",
+        "priority": "HIGH",
+        "createdAt": "2025-05-08T16:26:10.277Z",
+        "updatedAt": "2025-05-08T16:41:50.691Z",
+        "completedAt": "2025-05-08T16:41:46.190Z",
+        "expirationDate": "2025-08-06T16:26:10.326Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 206,
+            "buildQueueTime": 40427,
+            "buildDuration": 894979
+        }
+    },
+    {
+        "id": "8d73c28e-a8e6-431a-b1a0-e26990916dac",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/it6oxZPFrfJY6XR99FMPeE.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/it6oxZPFrfJY6XR99FMPeE.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "121",
+        "gitCommitHash": "ffd3167de11e519b1aae3a5705f756271ef318cd",
+        "gitCommitMessage": "chore: add verbose output for artifact polling and debugging",
+        "priority": "HIGH",
+        "createdAt": "2025-05-07T13:21:06.464Z",
+        "updatedAt": "2025-05-07T13:38:24.624Z",
+        "completedAt": "2025-05-07T13:38:14.458Z",
+        "expirationDate": "2025-08-05T13:21:06.520Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 279,
+            "buildQueueTime": 35847,
+            "buildDuration": 991588
+        }
+    },
+    {
+        "id": "93a95253-baf7-4f84-acd3-4f0a2b9a64fc",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/jeyH2XH3CHStXgtWNbHGgN.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/jeyH2XH3CHStXgtWNbHGgN.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "120",
+        "gitCommitHash": "f56ee0816c36ec9565270802e2de1a38619ddd0e",
+        "gitCommitMessage": "fix: robust error handling for EAS artifact polling (handle non-JSON output)",
+        "priority": "HIGH",
+        "createdAt": "2025-05-07T04:00:07.601Z",
+        "updatedAt": "2025-05-07T04:15:37.301Z",
+        "completedAt": "2025-05-07T04:15:34.591Z",
+        "expirationDate": "2025-08-05T04:00:07.695Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 223,
+            "buildQueueTime": 35618,
+            "buildDuration": 890791
+        }
+    },
+    {
+        "id": "799be2bd-c9c7-4d3d-bab0-8ea856c98521",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/g1YtJ1WnzzSLbuReDttKH4.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/g1YtJ1WnzzSLbuReDttKH4.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "119",
+        "gitCommitHash": "112f827d7c7d6f05905e0041abe0711bc68d0794",
+        "gitCommitMessage": "fix: use eas build:view for artifact polling and download in pipeline",
+        "priority": "HIGH",
+        "createdAt": "2025-05-07T03:26:12.832Z",
+        "updatedAt": "2025-05-07T03:42:54.671Z",
+        "completedAt": "2025-05-07T03:42:45.099Z",
+        "expirationDate": "2025-08-05T03:26:12.925Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 226,
+            "buildQueueTime": 32225,
+            "buildDuration": 959418
+        }
+    },
+    {
+        "id": "cb08968d-2dbf-4c72-acbc-2a402084f4f6",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/r59mmUm7wXJ9eca12oUchJ.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/r59mmUm7wXJ9eca12oUchJ.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "118",
+        "gitCommitHash": "80493c786114bd74d1801bad22c9d60852a1739d",
+        "gitCommitMessage": "CI: add polling to APK download step for EAS artifact readiness",
+        "priority": "HIGH",
+        "createdAt": "2025-05-07T03:00:58.098Z",
+        "updatedAt": "2025-05-07T03:17:38.854Z",
+        "completedAt": "2025-05-07T03:17:29.541Z",
+        "expirationDate": "2025-08-05T03:00:58.185Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 231,
+            "buildQueueTime": 32395,
+            "buildDuration": 958514
+        }
+    },
+    {
+        "id": "98e04515-52d6-4cf8-bcf3-640d5bbe2509",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/jSUSL3KH58KbB2VwrKbJaX.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/jSUSL3KH58KbB2VwrKbJaX.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "117",
+        "gitCommitHash": "874f0c39d1f5c2303ad43d96bdbd13faf9c67848",
+        "gitCommitMessage": "CI: update pipeline to robustly download and publish APK with improved naming",
+        "priority": "HIGH",
+        "createdAt": "2025-05-07T01:24:51.204Z",
+        "updatedAt": "2025-05-07T01:40:40.833Z",
+        "completedAt": "2025-05-07T01:40:36.386Z",
+        "expirationDate": "2025-08-05T01:24:51.277Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 205,
+            "buildQueueTime": 36062,
+            "buildDuration": 908635
+        }
+    },
+    {
+        "id": "6e74d1e4-832c-4b84-8c03-b9955aab4536",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/eD6FcjCKAKhJ2EE8R3vaAW.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/eD6FcjCKAKhJ2EE8R3vaAW.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "116",
+        "gitCommitHash": "bb202efbc8787840ddedd2cf3288892d46aa2ec8",
+        "gitCommitMessage": "switching to this branch :P 2",
+        "priority": "HIGH",
+        "createdAt": "2025-05-06T23:38:27.787Z",
+        "updatedAt": "2025-05-06T23:54:24.603Z",
+        "completedAt": "2025-05-06T23:54:18.149Z",
+        "expirationDate": "2025-08-04T23:38:27.877Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 195,
+            "buildQueueTime": 35249,
+            "buildDuration": 914625
+        }
+    },
+    {
+        "id": "2c2b789b-ac5d-496d-9162-58a1df9b763b",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/6smbLhPcCtWm43ixxpnS4M.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/6smbLhPcCtWm43ixxpnS4M.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "115",
+        "gitCommitHash": "2c3725c377a258dcbb402783e4b779a1fda1e978",
+        "gitCommitMessage": "switching to this branch :P",
+        "priority": "HIGH",
+        "createdAt": "2025-05-06T23:34:17.310Z",
+        "updatedAt": "2025-05-06T23:50:34.688Z",
+        "completedAt": "2025-05-06T23:50:32.849Z",
+        "expirationDate": "2025-08-04T23:34:17.389Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 210,
+            "buildQueueTime": 31008,
+            "buildDuration": 944051
+        }
+    },
+    {
+        "id": "cf6c0f7b-cbba-4e3a-9553-f40712a953d0",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/rBznbwf6LARs9ukRDA8Jdq.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/rBznbwf6LARs9ukRDA8Jdq.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "114",
+        "gitCommitHash": "6d9bc97541712446cc6c74da2d07c15d1f2c6938",
+        "gitCommitMessage": "updated to remove incorrect line",
+        "priority": "HIGH",
+        "createdAt": "2025-05-06T22:53:12.347Z",
+        "updatedAt": "2025-05-06T23:10:00.498Z",
+        "completedAt": "2025-05-06T23:09:59.084Z",
+        "expirationDate": "2025-08-04T22:53:12.423Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 273,
+            "buildQueueTime": 40962,
+            "buildDuration": 965254
+        }
+    },
+    {
+        "id": "ad10ad6d-7ba7-4ab3-916a-181ae2e9af74",
+        "status": "CANCELED",
+        "platform": "ANDROID",
+        "artifacts": {},
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "113",
+        "gitCommitHash": "7f255e619bef51de32ee37e03d336782b3814992",
+        "gitCommitMessage": "ci: add polling and wait for EAS Android build before download",
+        "priority": "HIGH",
+        "createdAt": "2025-05-06T22:15:53.258Z",
+        "updatedAt": "2025-05-06T22:26:44.361Z",
+        "completedAt": "2025-05-06T22:26:31.085Z",
+        "expirationDate": "2025-08-04T22:15:53.373Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 258,
+            "buildQueueTime": 29918,
+            "buildDuration": 610227
+        }
+    },
+    {
+        "id": "31883c53-5a3c-417d-9f41-f2eb5a7f9a5d",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/77KHxiESKVyqQJejijFmJR.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/77KHxiESKVyqQJejijFmJR.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "112",
+        "gitCommitHash": "68a1524da1f2b0f084700f5c2a68364d056d366d",
+        "gitCommitMessage": "ci: fix YAML structure for EAS Android build pipeline",
+        "priority": "HIGH",
+        "createdAt": "2025-05-06T21:48:29.757Z",
+        "updatedAt": "2025-05-06T22:04:52.623Z",
+        "completedAt": "2025-05-06T22:04:43.166Z",
+        "expirationDate": "2025-08-04T21:48:29.831Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 212,
+            "buildQueueTime": 32565,
+            "buildDuration": 940243
+        }
+    },
+    {
+        "id": "0d10b17f-299b-423c-8361-38688ea15cc8",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/2Bziu1ZevUtZoq1USi6LSL.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/2Bziu1ZevUtZoq1USi6LSL.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "111",
+        "gitCommitHash": "18b8ca612f277a49d83239c86f921f4465e1353d",
+        "gitCommitMessage": "updated pipeline file.",
+        "priority": "HIGH",
+        "createdAt": "2025-05-06T21:17:55.715Z",
+        "updatedAt": "2025-05-06T21:33:57.729Z",
+        "completedAt": "2025-05-06T21:33:55.078Z",
+        "expirationDate": "2025-08-04T21:17:55.778Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 216,
+            "buildQueueTime": 35793,
+            "buildDuration": 923042
+        }
+    },
+    {
+        "id": "5e0bc916-252c-4a4d-9a06-590178b2977b",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/cByPLHecE5HSbNzB3EruvR.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/cByPLHecE5HSbNzB3EruvR.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "110",
+        "gitCommitHash": "cf381d60da6d30984461fd6b9cb70ca9155ef255",
+        "gitCommitMessage": "Set up CI with Azure Pipelines\n\n[skip ci]",
+        "priority": "HIGH",
+        "createdAt": "2025-05-06T20:18:06.057Z",
+        "updatedAt": "2025-05-06T20:34:34.403Z",
+        "completedAt": "2025-05-06T20:34:28.143Z",
+        "expirationDate": "2025-08-04T20:18:06.832Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 1196,
+            "buildQueueTime": 63902,
+            "buildDuration": 916698
+        }
+    },
+    {
+        "id": "15422dab-e1b9-4ec0-8d49-a066016ce902",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/3CfNPYWvN3Gj6NEa4zocKq.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/3CfNPYWvN3Gj6NEa4zocKq.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.4",
+        "appBuildVersion": "109",
+        "gitCommitHash": "ba4d25979fe95cde045576f2ba7ee4542ef6f7c3",
+        "gitCommitMessage": "HUGE update for clerk flow",
+        "priority": "HIGH",
+        "createdAt": "2025-05-06T01:24:55.880Z",
+        "updatedAt": "2025-05-06T01:37:04.457Z",
+        "completedAt": "2025-05-06T01:36:57.438Z",
+        "expirationDate": "2025-08-04T01:24:55.953Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 329,
+            "buildQueueTime": 29704,
+            "buildDuration": 691201
+        }
+    },
+    {
+        "id": "72548956-aa14-4e07-b702-a53ebe229ea2",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/f7QTUNCYaDQiji3fs1rf5s.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/f7QTUNCYaDQiji3fs1rf5s.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.4",
+        "appBuildVersion": "109",
+        "gitCommitHash": "a529f6c02826944d393bba589d0eb470ecb80fe8",
+        "gitCommitMessage": "feat(ci): add Teams notifications after each build step",
+        "priority": "HIGH",
+        "createdAt": "2025-05-05T18:39:36.356Z",
+        "updatedAt": "2025-05-05T18:52:28.913Z",
+        "completedAt": "2025-05-05T18:52:22.088Z",
+        "expirationDate": "2025-08-03T18:39:36.435Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 358,
+            "buildQueueTime": 32169,
+            "buildDuration": 732869
+        }
+    },
+    {
+        "id": "63671559-ef7a-45a7-a22c-f3a13e986066",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/dgVYw2WQAfjjMLsmRqS3Gw.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/dgVYw2WQAfjjMLsmRqS3Gw.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.4",
+        "appBuildVersion": "109",
+        "gitCommitHash": "2fa0bb8625295d522068aaecce73bec56e319d7c",
+        "gitCommitMessage": "fix: use correct eas build:download syntax with --path and --profile",
+        "priority": "HIGH",
+        "createdAt": "2025-05-05T18:22:45.957Z",
+        "updatedAt": "2025-05-05T18:35:56.967Z",
+        "completedAt": "2025-05-05T18:35:50.835Z",
+        "expirationDate": "2025-08-03T18:22:46.099Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 347,
+            "buildQueueTime": 37189,
+            "buildDuration": 747084
+        }
+    },
+    {
+        "id": "e2acd85d-15e7-4949-a898-c513c3b04847",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/tZt7jo4nuxB7THF8dZeDri.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/tZt7jo4nuxB7THF8dZeDri.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.4",
+        "appBuildVersion": "109",
+        "gitCommitHash": "a5207f84e552094841542c049acc0f48e5f11c4b",
+        "gitCommitMessage": "added --wait",
+        "priority": "HIGH",
+        "createdAt": "2025-05-05T17:38:05.804Z",
+        "updatedAt": "2025-05-05T17:51:03.396Z",
+        "completedAt": "2025-05-05T17:50:57.680Z",
+        "expirationDate": "2025-08-03T17:38:05.863Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 183,
+            "buildQueueTime": 36360,
+            "buildDuration": 735025
+        }
+    },
+    {
+        "id": "6ea47c5c-fc84-459c-b63c-cde48e504d74",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/eEr2ePohvpkb4wAehXJD9Q.apk",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/eEr2ePohvpkb4wAehXJD9Q.apk"
+        },
+        "initiatingActor": {
+            "id": "146cddd6-bc06-479f-9b3a-811b22ae4683",
+            "displayName": "azure"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "INTERNAL",
+        "buildProfile": "development",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.4",
+        "appBuildVersion": "109",
+        "gitCommitHash": "78c91e324eb6f42fd9c546cfe0aa474d9ee17d60",
+        "gitCommitMessage": "updated pipeline to build on the correct branch",
+        "priority": "HIGH",
+        "createdAt": "2025-05-05T17:03:36.526Z",
+        "updatedAt": "2025-05-05T17:17:04.878Z",
+        "completedAt": "2025-05-05T17:16:51.198Z",
+        "expirationDate": "2025-08-03T17:03:36.605Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 332,
+            "buildQueueTime": 65188,
+            "buildDuration": 728854
+        }
+    },
+    {
+        "id": "ec770543-fff0-4c1c-8211-4c201c5f6055",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/vczMgwABsFdKpf1yKzcD7v.aab",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/vczMgwABsFdKpf1yKzcD7v.aab"
+        },
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "STORE",
+        "buildProfile": "production",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "109",
+        "gitCommitHash": "831c203f6a27bc9da3f08523ec7686e8134210dc",
+        "gitCommitMessage": "BUG_FIX: make selected location the default location else fall back to global location",
+        "priority": "HIGH",
+        "createdAt": "2025-05-05T08:34:19.532Z",
+        "updatedAt": "2025-05-05T08:49:56.051Z",
+        "completedAt": "2025-05-05T08:49:53.540Z",
+        "expirationDate": "2025-06-04T08:34:19.726Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 312,
+            "buildQueueTime": 37478,
+            "buildDuration": 895883
+        }
+    },
+    {
+        "id": "1c7ad39a-20d2-4bf4-9574-36c5ab4ddd37",
+        "status": "FINISHED",
+        "platform": "ANDROID",
+        "artifacts": {
+            "buildUrl": "https://expo.dev/artifacts/eas/4vYx4x4nNjYp7TFYXRVmjt.aab",
+            "applicationArchiveUrl": "https://expo.dev/artifacts/eas/4vYx4x4nNjYp7TFYXRVmjt.aab"
+        },
+        "initiatingActor": {
+            "id": "3c672be1-69f3-41c0-b9e4-568171399af4",
+            "displayName": "arboma25"
+        },
+        "project": {
+            "id": "9821d63e-ff8d-4439-b990-9315f9f9463c",
+            "name": "rosievision-mobile",
+            "slug": "rosievision-mobile",
+            "ownerAccount": {
+                "id": "ed560b41-ba64-4d67-8400-4bef1391b17e",
+                "name": "ar-worx"
+            }
+        },
+        "distribution": "STORE",
+        "buildProfile": "production",
+        "sdkVersion": "52.0.0",
+        "appVersion": "0.1.5",
+        "appBuildVersion": "108",
+        "gitCommitHash": "831c203f6a27bc9da3f08523ec7686e8134210dc",
+        "gitCommitMessage": "BUG_FIX: make selected location the default location else fall back to global location",
+        "priority": "HIGH",
+        "createdAt": "2025-05-02T23:07:26.829Z",
+        "updatedAt": "2025-05-02T23:22:50.649Z",
+        "completedAt": "2025-05-02T23:22:42.220Z",
+        "expirationDate": "2025-06-01T23:07:26.901Z",
+        "isForIosSimulator": false,
+        "metrics": {
+            "buildWaitTime": 231,
+            "buildQueueTime": 31840,
+            "buildDuration": 882929
+        }
+    }
+]

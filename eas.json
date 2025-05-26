@@ -1,0 +1,47 @@
+{
+  "cli": {
+    "version": ">= 14.3.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "autoIncrement": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bWludC11bmljb3JuLTU5LmNsZXJrLmFjY291bnRzLmRldiQ",
+        "EXPO_PUBLIC_GRAPHQL_API": "https://moapidev.rosievision.ai/graphql",
+        "EXPO_PUBLIC_API": "https://moapidev.rosievision.ai",
+        "EXPO_PUBLIC_CLERK_JWT_TEMPLATE": "rosievision-jwt-test",
+        "SENTRY_AUTH_TOKEN": "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"
+      }
+    },
+    "staging": {
+      "distribution": "internal",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YWN0aXZlLXVyY2hpbi0yNy5jbGVyay5hY2NvdW50cy5kZXYk",
+        "EXPO_PUBLIC_GRAPHQL_API": "https://moapistage.rosievision.ai/graphql",
+        "EXPO_PUBLIC_API": "https://moapistage.rosievision.ai",
+        "EXPO_PUBLIC_CLERK_JWT_TEMPLATE": "rosievision-jwt-test",
+        "SENTRY_AUTH_TOKEN": "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"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YWN0aXZlLXVyY2hpbi0yNy5jbGVyay5hY2NvdW50cy5kZXYk",
+        "EXPO_PUBLIC_GRAPHQL_API": "https://moapistage.rosievision.ai/graphql",
+        "EXPO_PUBLIC_API": "https://moapistage.rosievision.ai",
+        "EXPO_PUBLIC_CLERK_JWT_TEMPLATE": "rosievision-jwt-test",
+        "SENTRY_AUTH_TOKEN": "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"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6741807354"
+      }
+    }
+  }
+}

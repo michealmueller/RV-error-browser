@@ -1,109 +1,51 @@
-# RVEB - RosieVision Error Browser
+# QuantumOps
 
-A modern PostgreSQL error log viewer application built with PySide6.
+QuantumOps is a cross-platform desktop DevOps tool built with PySide6, designed for error log browsing, mobile build management, and seamless Azure integration. The application provides a robust, branded, and user-friendly interface for managing PostgreSQL error logs, monitoring Android/iOS builds via EAS CLI, and pushing artifacts to Azure Blob Storage.
 
-## Features
+## Key Features
+- **Tabbed Interface**: Error Browser, Android Builds, iOS Builds (via `QTabWidget`)
+- **Error Browser**: Browse/query PostgreSQL error logs, manage connections (add/edit/delete, persisted via QSettings), styled auto-resizing table
+- **Mobile Build Management**: EAS CLI integration for Android/iOS builds, build metadata, download links, error messages, Azure Blob Storage upload with SAS token
+- **Always-Visible Log Area**: Persistent, resizable, color-coded log/terminal area, menu option to toggle visibility
+- **Theming & Branding**: Light/dark themes and multiple branding themes (Quantum Blue, Vivid Purple, Electric Green, Cyber Pink) using pyqtdarktheme, runtime switching, full UI refresh
+- **SAS Token Management**: Expiration label color-coded (green/yellow/red), update via menu, persisted in QSettings
+- **Robust Error Handling**: All error dialogs use `setText` for main message and `setInformativeText` for technical details; handles missing files, JSON parsing errors, CLI failures
+- **UI Consistency**: Android/iOS tabs have identical layouts; main window auto-resizes to fit table content; JSON viewer removed for simplicity
 
-- Connect to PostgreSQL databases
-- View and analyze error logs in real-time
-- Manage multiple database connections
-- Color-coded log messages with timestamps
-- Modern UI with professional styling
-- Cross-platform support (Windows, macOS, Linux)
-- Connection persistence
-- Custom table formatting for error details
-- Comprehensive logging system
+## DevOps & Automation
+- **Cross-Platform Build Automation**: GitHub Actions workflow builds QuantumOps on Windows, macOS, and Linux using a matrix strategy
+  - Sets up Python 3.11, caches pip dependencies
+  - Installs dependencies from `requirements.txt` and PyInstaller
+  - Prints PyInstaller version and custom `quantumops.spec` for traceability
+  - Builds a one-file, windowed executable with PyInstaller, including all necessary hidden imports and data files
+  - Uploads resulting artifacts for each OS
+- **Reproducible Builds**: Requirements and dependencies are pinned for compatibility and reproducibility
+- **Spec File**: Custom `quantumops.spec` ensures all resources and hidden imports are included for cross-platform compatibility
 
-python -m pytest tests/unit/test_app.py -v## UI Features
+## Tech Stack
+- **Languages & Frameworks**: Python 3.11, PySide6, pyqtdarktheme
+- **DevOps & Cloud**: GitHub Actions, PyInstaller, Azure SDK, Azure Blob Storage
+- **Build Management**: EAS CLI (via Node.js, see `package.json`)
+- **Database**: PostgreSQL (via psycopg2)
+- **Other**: QSettings, requests, Cursor (development environment)
 
-The application features a modern, professional interface with:
-
-- Clean, flat design with rounded corners
-- Professional color scheme with consistent styling
-- Split-pane interface for efficient workflow:
-  - Left panel: Connection management and log output
-  - Right panel: Query results with custom formatting
-- Menu bar with File, View, and Help sections
-- Connection management through a dedicated dialog
-- Real-time log window with color-coded messages
-- Custom table formatting for error details
-- Responsive layout with proper spacing and padding
-- Modern typography using Segoe UI font
-- Visual feedback for user interactions
-- Proper cleanup on window close
-
-## Installation
-
-### From Source
-
-1. Clone the repository:
-```bash
-git clone https://github.com/msquared86/RV-error-browser.git
-cd RV-error-browser
-```
-
-2. Install dependencies:
-```bash
-pip install -e .
-```
-
-3. Run the application:
-```bash
-python main.py
-```
-
-### From Package
-
-```bash
-pip install RosieVision-Error-Browser
-rosievision-error-browser
-```
+## Getting Started
+1. Clone the repository and set up a Python 3.11 virtual environment.
+2. Install dependencies from `requirements.txt`.
+3. For EAS CLI features, ensure Node.js and EAS CLI are installed (`yarn install`).
+4. Run the app with `python main.py` or use the provided executables from CI artifacts.
 
 ## Development
+- **Running Tests**: Uses pytest for unit, integration, and build process tests. Run with `pytest`.
+- **Building Executables Locally**: Run `python build.py` to create platform-specific executables in the `dist` directory.
 
-### Running Tests
-
-The project uses pytest for testing. To run the tests:
-
-```bash
-pytest
-```
-
-The test suite includes:
-- Unit tests for all components
-- Integration tests for database operations
-- Build process tests
-- GitHub Actions workflow tests
-
-### CI/CD Pipeline
-
-The project uses GitHub Actions for continuous integration and deployment. The pipeline:
-
-1. Runs the test suite
-2. Builds executables for Windows, macOS, and Linux
-3. Creates a release with the built executables
-
-The pipeline will fail if:
-- Any tests fail
-- The build process fails
-- The release creation fails
-
-### Building Executables
-
-To build executables locally:
-
-```bash
-python build.py
-```
-
-This will create platform-specific executables in the `dist` directory.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## CI/CD Pipeline
+- Runs the test suite
+- Builds executables for Windows, macOS, and Linux
+- Uploads build artifacts for each OS
+- Fails if any tests or build steps fail
 
 ## Contributing
-
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
@@ -112,31 +54,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 All pull requests must pass the CI/CD pipeline before being merged.
 
-## Development Timeline
+## Best Practices & Guidance
+- Follows Pythonic, modular, and scalable code practices (PEP 8, DRY, KISS)
+- DevOps automation is cross-platform, reproducible, and secure
+- UI/UX is consistent, accessible, and brandable
+- All major features, workflows, and technical decisions are documented and automated for maintainability and scalability
 
-### May 3, 2025 (5 hours total)
-- 18:01 - 18:16: Initial setup and versioning
-  - Added automated versioning system
-  - Set up release workflow
-  - Renamed application to RosieVision Error Browser
+## Credits
+- QuantumOps team, all major libraries, and OpenAI GPT-4 for technical design and code generation
 
-- 18:26 - 19:48: CI/CD Pipeline Development
-  - Fixed Qt dependencies for Linux
-  - Added Xvfb support for GUI tests
-  - Improved test reliability with PostgreSQL
-  - Added pytest-timeout configuration
+## License
+MIT
 
-- 19:48 - 20:46: UI and Test Improvements
-  - Added menu bar
-  - Moved connection management to separate window
-  - Improved layout
-  - Fixed connection persistence
-  - Enhanced test coverage
-
-- 20:46 - 23:02: Pipeline Optimization
-  - Disabled GUI tests in CI
-  - Fixed package dependencies
-  - Added proper PostgreSQL support for Windows/macOS
-  - Optimized build process
-
-### Current Version: 0.1.55
+---
+For more details, see the workflow/spec files. For troubleshooting PyInstaller or Qt plugin issues, refer to the official documentation and community discussions.

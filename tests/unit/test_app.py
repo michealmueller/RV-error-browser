@@ -6,6 +6,9 @@ from app import DatabaseApp
 from datetime import datetime
 import psycopg2
 from psycopg2 import Error
+import io
+import json as pyjson
+from unittest.mock import patch, MagicMock
 
 @pytest.fixture
 def app(qtbot, mocker):
@@ -38,6 +41,11 @@ def mock_settings(mocker):
     mock_settings.value.return_value = None
     mocker.patch('app.QSettings', return_value=mock_settings)  # Patch at the module level
     return mock_settings
+
+@pytest.fixture
+def eas_json_output():
+    # Use a sample from json-output-example.json
+    return '''Found eas-cli in your project dependencies.\n[\n  {\n    \"id\": \"abc\", \"status\": \"FINISHED\", \"platform\": \"ANDROID\", \"artifacts\": {\"buildUrl\": \"http://example.com/app.apk\"}\n  },\n  {\n    \"id\": \"def\", \"status\": \"ERRORED\", \"platform\": \"ANDROID\", \"error\": {\"message\": \"Build failed\"}, \"artifacts\": {}\n  }\n]\nIt\'s recommended to use the \"cli.version\" field in eas.json to enforce the eas-cli version for your project.\n'''
 
 @pytest.mark.gui
 def test_app_initialization(app):
@@ -304,4 +312,77 @@ def test_connection_persistence(qtbot, mock_settings):
     app.connections = []
     app.load_connections()
     assert len(app.connections) == 1
-    assert app.connections[0]['name'] == 'Test Connection' 
+    assert app.connections[0]['name'] == 'Test Connection'
+
+@pytest.mark.gui
+def test_fetch_and_display_builds_parses_json(eas_json_output, qtbot):
+    """Test that fetch_and_display_builds extracts and parses JSON output correctly."""
+    # Mock for EAS CLI init command
+    process_init = MagicMock()
+    init_stdout_lines = ["✔ Project already linked (ID: 9821d63e-ff8d-4439-b990-9315f9f9463c)\n", ""]
+    process_init.stdout.readline.side_effect = init_stdout_lines
+    process_init.stderr.readline.side_effect = ["", ""]
+    process_init.poll.return_value = 0
+    process_init.wait.return_value = 0
+    # Mock for EAS CLI build:list command
+    process_build = MagicMock()
+    build_lines = eas_json_output.splitlines(keepends=True)
+    process_build.stdout.readline.side_effect = build_lines + [""]
+    process_build.stderr.readline.side_effect = [""] * (len(build_lines) + 1)
+    process_build.poll.return_value = 0
+    process_build.wait.return_value = 0
+    with patch('subprocess.Popen') as mock_popen:
+        mock_popen.side_effect = [process_init, process_build]
+        from app import DatabaseApp
+        app = DatabaseApp()
+        qtbot.addWidget(app)
+        app.fetch_and_display_builds('android')
+        table = app.android_builds_table
+        print('LOG OUTPUT:', app.log_window.toPlainText())
+        # Should parse 2 builds
+        assert table.rowCount() == 2
+        assert table.item(0, 0).text() == 'abc'
+        assert table.item(1, 0).text() == 'def'
+        # Download URL present for first, N/A for second
+        assert table.item(0, 4).text() == 'http://example.com/app.apk'
+        assert table.item(1, 4).text() == 'N/A'
+        # Error column for errored build
+        assert table.item(1, 6).text() == 'Build failed'
+
+@patch('subprocess.Popen')
+def test_fetch_and_display_builds_handles_malformed_json(mock_popen, app, qtbot):
+    """Test that fetch_and_display_builds logs error on malformed JSON output."""
+    bad_output = 'Not JSON at all!\n[broken json\n'
+    process_mock = MagicMock()
+    process_mock.stdout.readline.side_effect = bad_output.splitlines(keepends=True) + ['']
+    process_mock.stderr.readline.side_effect = [''] * (bad_output.count('\n') + 1)
+    process_mock.poll.return_value = 0
+    process_mock.wait.return_value = 0
+    mock_popen.return_value = process_mock
+
+    app.fetch_and_display_builds('android')
+    table = app.android_builds_table
+    # Should show error in table
+    assert table.rowCount() == 1
+    assert 'Error' in table.item(0, 0).text() or 'error' in table.item(0, 0).text().lower()
+    # Log should contain extraction error
+    assert 'Could not extract JSON array' in app.log_window.toHtml()
+
+@patch('subprocess.Popen')
+def test_fetch_and_display_builds_handles_no_json(mock_popen, app, qtbot):
+    """Test that fetch_and_display_builds logs error if no JSON array is found."""
+    output = 'Some warning\nAnother line\nNo JSON here\n'
+    process_mock = MagicMock()
+    process_mock.stdout.readline.side_effect = output.splitlines(keepends=True) + ['']
+    process_mock.stderr.readline.side_effect = [''] * (output.count('\n') + 1)
+    process_mock.poll.return_value = 0
+    process_mock.wait.return_value = 0
+    mock_popen.return_value = process_mock
+
+    app.fetch_and_display_builds('android')
+    table = app.android_builds_table
+    # Should show error in table
+    assert table.rowCount() == 1
+    assert 'Error' in table.item(0, 0).text() or 'error' in table.item(0, 0).text().lower()
+    # Log should contain extraction error
+    assert 'Could not extract JSON array' in app.log_window.toHtml() 
