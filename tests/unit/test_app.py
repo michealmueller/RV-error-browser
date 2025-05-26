@@ -1,5 +1,5 @@
 import pytest
-from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QInputDialog
 from PySide6.QtTest import QTest
 from PySide6.QtCore import Qt
 from app import DatabaseApp
@@ -9,6 +9,7 @@ from psycopg2 import Error
 import io
 import json as pyjson
 from unittest.mock import patch, MagicMock
+from quantumops.theming import BRANDING_THEMES, get_current_brand_colors
 
 @pytest.fixture
 def app(qtbot, mocker):
@@ -385,4 +386,84 @@ def test_fetch_and_display_builds_handles_no_json(mock_popen, app, qtbot):
     assert table.rowCount() == 1
     assert 'Error' in table.item(0, 0).text() or 'error' in table.item(0, 0).text().lower()
     # Log should contain extraction error
-    assert 'Could not extract JSON array' in app.log_window.toHtml() 
+    assert 'Could not extract JSON array' in app.log_window.toHtml()
+
+def test_branding_theme_switching(app, qtbot):
+    for brand in BRANDING_THEMES:
+        app.set_branding_theme(brand)
+        # Check that the log reflects the theme change
+        assert f"Branding theme set to {brand}" in app.log_window.toPlainText()
+
+def test_toggle_log_area(app):
+    # Initially visible
+    assert app.log_window.isVisible()
+    app.toggle_log_action.setChecked(False)
+    app.toggle_log_area()
+    assert not app.log_window.isVisible()
+    app.toggle_log_action.setChecked(True)
+    app.toggle_log_area()
+    assert app.log_window.isVisible()
+
+def test_toggle_autoresize(app, qtbot):
+    app.toggle_autoresize_action.setChecked(False)
+    app.toggle_autoresize()
+    assert "Auto-resize window set to False" in app.log_window.toPlainText()
+    app.toggle_autoresize_action.setChecked(True)
+    app.toggle_autoresize()
+    assert "Auto-resize window set to True" in app.log_window.toPlainText()
+
+@patch.object(QInputDialog, 'getText', return_value=("https://example.com/sas?sig=abc", True))
+def test_update_sas_token(mock_get_text, app):
+    app.update_sas_token()
+    assert "SAS token updated." in app.log_window.toPlainText()
+
+@patch("quantumops.builds.fetch_builds", return_value=[{"id": 1, "status": "finished", "platform": "android", "artifacts": {"buildUrl": "http://example.com/app.apk"}}])
+def test_handle_refresh_builds_android(mock_fetch, app):
+    app.handle_refresh_builds("android")
+    assert app.android_builds_table.rowCount() == 1
+    assert app.android_builds_table.item(0, 0).text() == "1"
+
+@patch("quantumops.builds.upload_build_to_azure", side_effect=Exception("Upload failed"))
+@patch("requests.get", side_effect=Exception("Download failed"))
+def test_handle_push_to_azure_error(mock_requests_get, mock_upload, app):
+    build = {"id": 1, "artifacts": {"buildUrl": "http://example.com/app.apk"}}
+    app.android_builds_table.setRowCount(1)
+    app.handle_push_to_azure(build, "android", 0)
+    assert "Error uploading build" in app.log_window.toPlainText() or "No build URL available for upload." in app.log_window.toPlainText()
+
+def test_real_time_log_viewer(app, tmp_path):
+    log_file = tmp_path / "quantumops.log"
+    log_file.write_text("Test log entry\n")
+    with patch("builtins.open", return_value=open(log_file, "r")):
+        app.refresh_log_viewer()
+        assert "Test log entry" in app.log_viewer.toPlainText()
+
+def test_dynamic_theming_updates_all_ui(app, qtbot):
+    # Test all branding themes
+    for brand, theme in BRANDING_THEMES.items():
+        app.set_branding_theme(brand)
+        colors = get_current_brand_colors()
+        # Check button styles
+        for btn in [app.add_conn_btn, app.edit_conn_btn, app.del_conn_btn, app.android_refresh_btn, app.ios_refresh_btn]:
+            style = btn.styleSheet()
+            assert colors['primary'].lower() in style
+            assert colors['accent'].lower() in style
+        # Check log window border color
+        log_style = app.log_window.styleSheet()
+        assert colors['primary'].lower() in log_style
+        # Optionally, check other widgets as needed
+
+def test_log_message_colors_update_with_theme(app, qtbot):
+    # Switch to each theme and check log message color mapping
+    for brand in BRANDING_THEMES:
+        app.set_branding_theme(brand)
+        colors = get_current_brand_colors()
+        # Simulate log messages
+        app.append_terminal_line("Info message", msg_type="info")
+        app.append_terminal_line("Error message", msg_type="error")
+        app.append_terminal_line("Success message", msg_type="success")
+        app.append_terminal_line("Warning message", msg_type="warning")
+        # Check that log window still uses the correct border color
+        log_style = app.log_window.styleSheet()
+        assert colors['primary'].lower() in log_style
+        # Optionally, parse log HTML for color spans if custom coloring is used 

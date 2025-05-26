@@ -7,3 +7,4 @@ azure-storage-blob==12.25.1
 pytest-qt==4.4.0
 pytest-mock==3.13.0
 pyqtdarktheme>=2.1.0
+pyyaml

@@ -17,7 +17,7 @@ def test_build_script():
     assert dist_dir.exists(), "dist directory not created"
     
     # Check for executable files
-    executables = list(dist_dir.glob("postgresql-viewer*"))
+    executables = list(dist_dir.glob("QuantumOps*")) + list(dist_dir.glob("RosieVision-Error-Browser*"))
     assert len(executables) > 0, "No executables found in dist directory"
 
 def test_version_file():
@@ -56,7 +56,7 @@ def test_requirements_file():
 
 def test_github_workflow():
     """Test that the GitHub workflow file exists and is valid."""
-    workflow_file = Path(".github/workflows/build-release.yml")
+    workflow_file = Path(".github/workflows/build.yml")
     assert workflow_file.exists(), "GitHub workflow file not found"
     
     # Read workflow file
@@ -64,11 +64,9 @@ def test_github_workflow():
         workflow = f.read()
     
     # Check for required sections
-    assert "name: Build and Release" in workflow
+    assert "name: Build QuantumOps" in workflow
     assert "on:" in workflow
     assert "jobs:" in workflow
-    assert "test:" in workflow
-    assert "build-linux:" in workflow
-    assert "build-windows:" in workflow
-    assert "build-macos:" in workflow
-    assert "create-release:" in workflow 
+    assert "build:" in workflow
+    assert "Build on ${{ matrix.os }}" in workflow
+    assert "pyinstaller quantumops.spec" in workflow 

@@ -30,6 +30,7 @@ from dialogs import ConnectionDialog
 from quantumops import database
 from quantumops import builds
 import tempfile
+from quantumops.theming import get_current_brand_colors
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -43,6 +44,7 @@ class DatabaseApp(QMainWindow):
         self.connections = database.load_connections()
         self.eas_setup_complete = False
         self.setup_ui()
+        self.update_all_widget_styles()  # Ensure initial style
 
     def setup_ui(self):
         self.setWindowTitle("QuantumOps")
@@ -133,27 +135,8 @@ class DatabaseApp(QMainWindow):
         self.add_conn_btn = QPushButton("Add")
         self.edit_conn_btn = QPushButton("Edit")
         self.del_conn_btn = QPushButton("Delete")
-        # Moderate accent style for buttons
-        accent = "#005f7f"
-        btn_style = f'''
-            QPushButton {{
-                min-width: 80px;
-                min-height: 28px;
-                font-size: 14px;
-                background-color: {accent};
-                color: #fff;
-                border-radius: 4px;
-                border: none;
-            }}
-            QPushButton:hover {{
-                background-color: #0077b3;
-            }}
-            QPushButton:pressed {{
-                background-color: #00334d;
-            }}
-        '''
-        for btn in [self.add_conn_btn, self.edit_conn_btn, self.del_conn_btn]:
-            btn.setStyleSheet(btn_style)
+        # Style buttons using current brand color
+        self.update_button_styles([self.add_conn_btn, self.edit_conn_btn, self.del_conn_btn])
         conn_layout.addWidget(QLabel("Connection:"))
         conn_layout.addWidget(self.connection_combo)
         conn_layout.addWidget(self.add_conn_btn)
@@ -205,6 +188,8 @@ class DatabaseApp(QMainWindow):
     def setup_builds_tab(self, tab_widget, platform):
         layout = QVBoxLayout()
         refresh_btn = QPushButton(f"Refresh {platform.capitalize()} Builds")
+        # Style refresh button using current brand color
+        self.update_button_styles([refresh_btn], prominent=True)
         builds_table = QTableWidget()
         builds_table.setColumnCount(6)
         builds_table.setHorizontalHeaderLabels([
@@ -461,11 +446,17 @@ class DatabaseApp(QMainWindow):
     def set_theme(self, mode):
         import qdarktheme
         qdarktheme.setup_theme(mode)
+        self.update_all_widget_styles()
+        if mode == "light":
+            self.log_window.setStyleSheet("color: #222; background: #fff;")
+        else:
+            self.log_window.setStyleSheet("color: #fff; background: #222;")
         self.append_terminal_line(f"Theme set to {mode}", msg_type="system")
 
     def set_branding_theme(self, brand):
         from quantumops.theming import apply_branding_theme
         apply_branding_theme(brand)
+        self.update_all_widget_styles()
         self.append_terminal_line(f"Branding theme set to {brand}", msg_type="system")
 
     def update_sas_token(self):
@@ -479,6 +470,62 @@ class DatabaseApp(QMainWindow):
             self.append_terminal_line("SAS token updated.", msg_type="success")
         elif ok:
             self.append_terminal_line("SAS token update cancelled or empty.", msg_type="warning")
+
+    def update_button_styles(self, buttons, prominent=False):
+        colors = get_current_brand_colors()
+        if prominent:
+            style = f'''
+                QPushButton {{
+                    min-width: 180px;
+                    min-height: 38px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    background-color: {colors['primary']};
+                    color: #fff;
+                    border-radius: 6px;
+                    border: none;
+                }}
+                QPushButton:hover {{
+                    background-color: {colors['accent']};
+                }}
+                QPushButton:pressed {{
+                    background-color: #00334d;
+                }}
+            '''
+        else:
+            style = f'''
+                QPushButton {{
+                    min-width: 80px;
+                    min-height: 28px;
+                    font-size: 14px;
+                    background-color: {colors['primary']};
+                    color: #fff;
+                    border-radius: 4px;
+                    border: none;
+                }}
+                QPushButton:hover {{
+                    background-color: {colors['accent']};
+                }}
+                QPushButton:pressed {{
+                    background-color: #00334d;
+                }}
+            '''
+        for btn in buttons:
+            btn.setStyleSheet(style)
+
+    def update_log_styles(self):
+        colors = get_current_brand_colors()
+        # Example: update log window background and text color
+        self.log_window.setStyleSheet(f"color: #fff; background: #222; border: 1px solid {colors['primary']};")
+        # You may want to update log message color mapping as well
+
+    def update_all_widget_styles(self):
+        # Update all colored widgets to match the current theme/brand
+        self.update_button_styles([self.add_conn_btn, self.edit_conn_btn, self.del_conn_btn])
+        self.update_button_styles([self.android_refresh_btn], prominent=True)
+        self.update_button_styles([self.ios_refresh_btn], prominent=True)
+        self.update_log_styles()
+        # Add more widgets as needed
 
     # --- Builds logic: to be modularized into quantumops/builds.py ---
     # --- Theming logic: to be modularized into quantumops/theming.py ---

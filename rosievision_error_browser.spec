@@ -10,7 +10,6 @@ block_cipher = None
 local_files = [
     ('main.py', '.'),
     ('app.py', '.'),
-    ('theme.py', '.'),
     ('dialogs.py', '.'),
     ('delegates.py', '.'),
 ]
@@ -20,7 +19,7 @@ a = Analysis(
     pathex=[os.getcwd()],  # Use current working directory
     binaries=[],
     datas=collect_data_files('PySide6') + [('version.txt', '.')] + local_files,
-    hiddenimports=['app', 'theme', 'dialogs', 'delegates'],
+    hiddenimports=['app', 'dialogs', 'delegates'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

@@ -23,7 +23,7 @@ def wait_for_postgres(max_retries: int = 5, delay: int = 2) -> None:
             time.sleep(delay)
 
 def create_test_database() -> Dict[str, Any]:
-    """Create a test database and return connection info."""
+    """Create a test database and the test_table, then return connection info."""
     wait_for_postgres()
     
     conn = psycopg2.connect(
@@ -39,7 +39,20 @@ def create_test_database() -> Dict[str, Any]:
     cursor.execute("CREATE DATABASE test_db")
     cursor.close()
     conn.close()
-    
+
+    # Now connect to test_db and create the test_table
+    test_db_conn = psycopg2.connect(
+        dbname="test_db",
+        user="postgres",
+        password="postgres",
+        host="localhost"
+    )
+    test_db_conn.autocommit = True
+    test_db_cursor = test_db_conn.cursor()
+    test_db_cursor.execute(TEST_TABLE_SCHEMA)
+    test_db_cursor.close()
+    test_db_conn.close()
+
     return {
         "dbname": "test_db",
         "user": "postgres",
