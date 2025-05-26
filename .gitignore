@@ -2,6 +2,7 @@
 dist/
 build/
 *.spec
+!quantumops.spec
 !rosievision_error_browser.spec
 
 # Python bytecode
