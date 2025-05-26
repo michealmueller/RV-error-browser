@@ -21,14 +21,23 @@ Usage:
 """
 
 import sys
+import logging
 from PySide6.QtWidgets import QApplication
 from app import DatabaseApp
-from theme import ModernTheme
+
+def setup_logging():
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s | %(levelname)s | %(name)s | %(message)s',
+        handlers=[
+            logging.StreamHandler(sys.stdout),
+            logging.FileHandler('quantumops.log', encoding='utf-8')
+        ]
+    )
 
 if __name__ == '__main__':
+    setup_logging()
     app = QApplication(sys.argv)
-    ModernTheme.apply(app)
-    app.setStyleSheet(ModernTheme.get_stylesheet())
     window = DatabaseApp()
     window.show()
     sys.exit(app.exec())

@@ -58,3 +58,6 @@ coverage.xml
 # Distribution packages
 *.zip
 **/.cursorrules
+
+# Environment variables and secrets
+.env
