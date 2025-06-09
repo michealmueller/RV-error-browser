@@ -531,6 +531,9 @@ class MainWindow(QMainWindow):
             event.accept()
 
     def create_menu_bar(self):
+        # Force menu bar to be visible
+        self.menuBar().setVisible(True)
+        self.menuBar().setNativeMenuBar(False)  # Disable global menu integration
         menubar = self.menuBar()
         
         # File menu
