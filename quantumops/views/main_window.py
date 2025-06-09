@@ -261,7 +261,7 @@ class MainWindow(QMainWindow):
                 label = QLabel(f"{site['name']}: {site['status']}")
                 label.setMinimumWidth(160)
                 label.setAlignment(Qt.AlignCenter)
-                label.setStyleSheet("border-radius: 8px; padding: 6px 10px; background: #f1f8e9; font-weight: bold; font-size: 15px;")
+                label.setStyleSheet("border-radius: 8px; padding: 6px 10px; background: #2196f3; color: white; font-weight: bold; font-size: 13px; border: 2px solid #2196f3; margin: 2px;")
                 self.site_status_labels[site['name']] = label
                 site_status_layout.addWidget(label)
             right_layout.addWidget(site_status_group)
@@ -300,7 +300,7 @@ class MainWindow(QMainWindow):
             self.setStatusBar(self.status_bar)
 
             # Start health check timer (every 30 seconds)
-            self.health_check_timer.start(30000)
+            self.perform_health_check(); self.health_check_timer.start(30000)
             logger.info("UI setup completed successfully")
         except Exception as e:
             logger.error(f"Error in setup_ui: {str(e)}")
@@ -1091,7 +1091,7 @@ class MainWindow(QMainWindow):
         try:
             label = self.site_status_labels[site_name]
             label.setText(f"{site_name}: {status}")
-            label.setStyleSheet(f"color: {color}; font-weight: bold; padding: 0 10px;")
+            label.setStyleSheet(f"border-radius: 8px; padding: 8px 12px; background: {color}; color: white; font-weight: bold; font-size: 13px; border: 2px solid {color}; margin: 2px;")
         except Exception as e:
             logger.error(f"Error updating status for {site_name}: {str(e)}")
             
