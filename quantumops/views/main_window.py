@@ -1054,16 +1054,16 @@ class MainWindow(QMainWindow):
                     if response.status_code == 200:
                         if response_time < 1.0:
                             status = 'OK'
-                            color = 'green'
+                            color = '#4CAF50'
                         elif response_time < 3.0:
                             status = 'Slow'
-                            color = 'orange'
+                            color = '#FF9800'
                         else:
                             status = 'Very Slow'
-                            color = 'red'
+                            color = '#F44336'
                     else:
                         status = f'Error ({response.status_code})'
-                        color = 'red'
+                        color = '#F44336'
                         
                     site['status'] = status
                     site['response_time'] = response_time
@@ -1072,7 +1072,7 @@ class MainWindow(QMainWindow):
                 except requests.RequestException as e:
                     logger.error(f"Error checking {site['name']}: {str(e)}")
                     status = 'Offline'
-                    color = 'red'
+                    color = '#F44336'
                     site['status'] = status
                     site['error'] = str(e)
                     site['last_check'] = datetime.now()
