@@ -46,10 +46,10 @@ def apply_branding_theme(brand: str) -> None:
     app = QApplication.instance()
     theme = BRANDING_THEMES.get(brand, BRANDING_THEMES["Quantum Blue"])
     CURRENT_BRAND.update(theme)
-    qdarktheme.setup_theme(
-        theme="dark",
-        custom_colors={"primary": theme["primary"]},
-    )
+    # qdarktheme.setup_theme(  # DISABLED for beautiful colorful UI
+    #         theme="dark",
+    #         custom_colors={"primary": theme["primary"]},
+    #     )
     # Set palette for accent color (for widgets that use it)
     palette = app.palette()
     palette.setColor(QPalette.Highlight, QColor(theme["primary"]))

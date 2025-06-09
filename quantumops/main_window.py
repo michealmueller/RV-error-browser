@@ -442,9 +442,9 @@ class MainWindow(QMainWindow):
             self.setWindowTitle("QuantumOps")
             self.setMinimumSize(1200, 800)
             # Create menu bar
-            # Apply beautiful modern colorful styling
-            self._apply_modern_colorful_styling()
             self._create_menu_bar()
+            # Apply beautiful styling
+            self._apply_beautiful_styling()
             
             # Create main splitter
             main_splitter = QSplitter(Qt.Horizontal)
@@ -2147,137 +2147,66 @@ class MainWindow(QMainWindow):
         else:
             logger.info(message)
 
-    def _apply_modern_colorful_styling(self):
-        """Apply beautiful modern colorful UI styling from app.py"""
+    def _apply_beautiful_styling(self):
+        """Apply simple beautiful colorful UI styling"""
+        print("🎨 Applying beautiful blue and white styling!")
         self.setStyleSheet("""
             QMainWindow {
                 background: #f7fafd;
             }
-            QMenuBar {
-                background: #ffffff;
-                border-bottom: 1px solid #e0e0e0;
-                font-size: 15px;
-                padding: 4px 10px;
-            }
-            QMenuBar::item {
-                background: transparent;
-                padding: 6px 18px;
-                border-radius: 6px;
-            }
-            QMenuBar::item:selected {
-                background: #e3f2fd;
-            }
-            QMenu {
-                background: #ffffff;
-                border: 1px solid #e0e0e0;
-            }
             QPushButton {
                 background: #2196f3;
-                color: #fff;
+                color: white;
                 border-radius: 8px;
-                padding: 8px 18px;
-                font-size: 15px;
+                padding: 8px 16px;
+                font-size: 14px;
                 font-weight: 500;
                 border: none;
+            }
+            QPushButton:hover {
+                background: #1976d2;
             }
             QPushButton:disabled {
                 background: #b0bec5;
                 color: #ececec;
             }
-            QPushButton:hover {
-                background: #1976d2;
-            }
-            QLineEdit, QComboBox {
-                background: #fff;
-                border: 1px solid #b0bec5;
-                border-radius: 6px;
-                padding: 7px 10px;
-                font-size: 15px;
-            }
-            QLabel {
-                color: #424242;
-                font-size: 14px;
-            }
             QGroupBox {
-                font-weight: bold;
+                background: white;
                 border: 2px solid #e0e0e0;
                 border-radius: 12px;
                 margin-top: 10px;
                 padding-top: 15px;
-                background: #ffffff;
-                font-size: 16px;
+                font-weight: bold;
                 color: #1976d2;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
                 left: 15px;
-                padding: 0 8px 0 8px;
+                padding: 0 8px;
                 color: #1976d2;
-                font-weight: bold;
-                background: #ffffff;
+                background: white;
             }
             QTextBrowser {
-                background: #ffffff;
+                background: white;
                 border: 1px solid #e0e0e0;
                 border-radius: 8px;
-                font-family: 'Fira Mono', 'Consolas', monospace;
-                font-size: 14px;
-                color: #333;
                 padding: 10px;
-            }
-            QTableWidget {
-                background: #fff;
-                border-radius: 8px;
-                border: 1px solid #e0e0e0;
-                font-size: 14px;
-                gridline-color: #f0f0f0;
-            }
-            QTableWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #f0f0f0;
-            }
-            QTableWidget::item:selected {
-                background: #e3f2fd;
+                color: #333;
             }
             QTabWidget::pane {
+                background: white;
                 border: 1px solid #e0e0e0;
                 border-radius: 8px;
-                background: #fff;
-                margin-top: 5px;
             }
             QTabBar::tab {
                 background: #f5f5f5;
                 padding: 10px 20px;
                 margin: 2px;
                 border-radius: 6px;
-                border: 1px solid #e0e0e0;
                 color: #666;
             }
             QTabBar::tab:selected {
                 background: #2196f3;
                 color: white;
-                border: 1px solid #2196f3;
-            }
-            QTabBar::tab:hover {
-                background: #e3f2fd;
-            }
-            QSplitter::handle {
-                background: #e0e0e0;
-                width: 2px;
-                border-radius: 1px;
-            }
-            QScrollBar:vertical {
-                border: none;
-                background: #f0f0f0;
-                width: 12px;
-                border-radius: 6px;
-            }
-            QScrollBar::handle:vertical {
-                background: #c0c0c0;
-                border-radius: 6px;
-                min-height: 20px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background: #a0a0a0;
             }
         """) 
