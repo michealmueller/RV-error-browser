@@ -4,16 +4,16 @@
 # But don't ignore these important directories and files
 !quantumops/
 !docs/
-!scripts/
-!config/
-!tests/
-!archives/
-!*.py
-!*.md
-!*.json
-!*.yaml
-!*.yml
-!*.txt
+!/scripts/
+!/config/
+!/tests/
+!/archives/
+!/*.py
+!/*.md
+!/*.json
+!/*.yaml
+!/*.yml
+!/*.txt
 !requirements*.txt
 !setup.py
 !pyproject.toml
