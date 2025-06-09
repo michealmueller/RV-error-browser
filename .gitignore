@@ -58,6 +58,17 @@ coverage.xml
 # Distribution packages
 *.zip
 **/.cursorrules
+*.tar.gz
+*.whl
+
+# Node.js (if needed in future)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Test outputs
+test_*.log
+*_test_output.log
 
 # Environment variables and secrets
 .env

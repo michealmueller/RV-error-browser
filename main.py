@@ -1,43 +1,45 @@
 """
-Database Viewer Application
---------------------------
-A PySide6-based application for viewing PostgreSQL database tables with logging functionality.
-
-Features:
-- Connect to PostgreSQL databases
-- Query and display table data
-- Real-time logging with timestamps
-- Clear log functionality
-- Auto-scrolling log window
-- Dynamic table column headers
-- Pre-configured database connections
-
-Usage:
-1. Enter PostgreSQL connection details
-2. Enter the table name to query
-3. Click 'Connect' to establish database connection
-4. Click 'Get Logs' to fetch and display table data
-5. Use 'Clear Log' to reset the log window
+Main entry point for the QuantumOps application.
 """
-
 import sys
-import logging
+import os
+from pathlib import Path
+
+# Add the project root to Python path
+project_root = Path(__file__).parent
+sys.path.insert(0, str(project_root))
+
 from PySide6.QtWidgets import QApplication
-from app import DatabaseApp
+from quantumops.views.main_window import MainWindow
+from quantumops.controllers.main_controller import MainController
+from quantumops.models.build_manager import BuildManager
 
-def setup_logging():
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s | %(levelname)s | %(name)s | %(message)s',
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler('quantumops.log', encoding='utf-8')
-        ]
-    )
-
-if __name__ == '__main__':
-    setup_logging()
+def main():
+    """Main application entry point."""
+    # Create application
     app = QApplication(sys.argv)
-    window = DatabaseApp()
+    app.setApplicationName("QuantumOps")
+    app.setOrganizationName("RosieVision")
+    
+    # Load version
+    version_file = project_root / "config" / "version.txt"
+    if version_file.exists():
+        with open(version_file, "r") as f:
+            version = f.read().strip()
+            app.setApplicationVersion(version)
+    
+    # Create main window
+    window = MainWindow()
+    
+    # Create model and controller
+    model = BuildManager()
+    controller = MainController(model, window)
+    
+    # Show window
     window.show()
+    
+    # Run application
     sys.exit(app.exec())
+
+if __name__ == "__main__":
+    main()

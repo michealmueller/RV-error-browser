@@ -1,0 +1,10 @@
+[
+  {
+    "name": "my-webapp-1",
+    "resource_group": "my-resource-group-1"
+  },
+  {
+    "name": "my-webapp-2",
+    "resource_group": "my-resource-group-2"
+  }
+] 

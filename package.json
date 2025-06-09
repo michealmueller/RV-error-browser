@@ -1,6 +1,0 @@
-{
-  "name": "QuantumOps",
-  "dependencies": {
-    "eas-cli": "^16.6.2"
-  }
-}
