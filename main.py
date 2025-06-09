@@ -1,63 +1,69 @@
 """
-Main entry point for the PostgreSQL Error Browser application.
+PostgreSQL Error Browser - Main Entry Point
 """
 import sys
-import logging
 import os
+import logging
 from pathlib import Path
-
-# Add the project root to Python path
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
-
 from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import Qt
+
 from app import DatabaseApp
+from settings import SettingsManager
+from theme import ThemeManager
 
 def setup_logging():
     """Set up logging configuration."""
-    log_dir = Path.home() / ".postgresql_viewer" / "logs"
+    # Create logs directory
+    log_dir = Path.home() / '.postgres_error_browser' / 'logs'
     log_dir.mkdir(parents=True, exist_ok=True)
     
+    # Set up logging
+    log_file = log_dir / 'app.log'
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler(log_dir / "postgresql_viewer.log"),
+            logging.FileHandler(log_file),
             logging.StreamHandler()
         ]
     )
-
-def main():
-    """Main application entry point."""
-    # Set up logging
-    setup_logging()
-    logger = logging.getLogger(__name__)
     
+    # Log startup
+    logger = logging.getLogger(__name__)
+    logger.info("Application starting up")
+    
+def main():
+    """Main entry point for the application."""
     try:
+        # Set up logging
+        setup_logging()
+        logger = logging.getLogger(__name__)
+        
         # Create application
         app = QApplication(sys.argv)
         app.setApplicationName("PostgreSQL Error Browser")
-        app.setOrganizationName("Rosie Vision")
+        app.setApplicationVersion("1.0.0")
         
-        # Load version
-        version_file = project_root / "config" / "version.txt"
-        if version_file.exists():
-            with open(version_file, "r") as f:
-                version = f.read().strip()
-                app.setApplicationVersion(version)
-                logger.info(f"Running PostgreSQL Error Browser version {version}")
+        # Load settings
+        settings_manager = SettingsManager()
+        theme_manager = ThemeManager()
+        
+        # Apply theme
+        theme = settings_manager.get_setting('theme', 'light')
+        theme_manager.apply_theme(app, theme)
         
         # Create and show main window
         window = DatabaseApp()
         window.show()
-        logger.info("Application started successfully")
         
-        # Run application
+        # Start event loop
+        logger.info("Starting application event loop")
         sys.exit(app.exec())
         
     except Exception as e:
-        logger.error(f"Application error: {e}", exc_info=True)
+        logger.error(f"Fatal error: {str(e)}", exc_info=True)
         sys.exit(1)
-
+        
 if __name__ == "__main__":
     main()
