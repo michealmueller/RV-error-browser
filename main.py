@@ -28,11 +28,11 @@ def main():
 
     app = QApplication(sys.argv)
     
-    # Apply modern theme
-    try:
-        setup_qdarktheme('light')  # Default theme
-    except Exception as e:
-        logger.warning(f"Theme setup not available: {e}, using default theme")
+    # Apply modern theme - DISABLED to use custom colorful styling
+    # try:
+    #     setup_qdarktheme('light')  # Default theme
+    # except Exception as e:
+    #     logger.warning(f"Theme setup not available: {e}, using default theme")
 
     window = MainWindow()
     window.show()
