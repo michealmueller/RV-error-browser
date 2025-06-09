@@ -1,43 +1,88 @@
-"""UI delegates for custom widget rendering."""
+"""
+Custom delegates for table widgets.
+"""
 
-from PySide6.QtWidgets import QStyledItemDelegate, QStyle
+import json
+from PySide6.QtWidgets import QStyledItemDelegate
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtGui import QTextDocument
 
-class StatusDelegate(QStyledItemDelegate):
-    """Delegate for rendering build status with custom colors."""
-    
-    def initStyleOption(self, option, index):
-        """Initialize style options with custom colors."""
-        super().initStyleOption(option, index)
+class DetailsDelegate(QStyledItemDelegate):
+    """Custom delegate for formatting the details column"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
         
-        status = index.data()
-        if status == "available":
-            option.palette.setColor(QPalette.Text, QColor("#4CAF50"))  # Green
-        elif status == "downloaded":
-            option.palette.setColor(QPalette.Text, QColor("#2196F3"))  # Blue
-        elif status == "installed":
-            option.palette.setColor(QPalette.Text, QColor("#9C27B0"))  # Purple
-        elif status == "error":
-            option.palette.setColor(QPalette.Text, QColor("#F44336"))  # Red
+    def paint(self, painter, option, index):
+        if index.column() == 2:  # details column
+            # Get the text
+            text = index.data(Qt.DisplayRole)
+            
+            # Create a document for HTML rendering
+            doc = QTextDocument()
+            doc.setHtml(text)
+            
+            # Save painter state
+            painter.save()
+            
+            # Set up the painter
+            painter.translate(option.rect.topLeft())
+            painter.setClipRect(option.rect.translated(-option.rect.topLeft()))
+            
+            # Draw the document
+            doc.drawContents(painter)
+            
+            # Restore painter state
+            painter.restore()
+        else:
+            # Use default painting for other columns
+            super().paint(painter, option, index)
+            
+    def sizeHint(self, option, index):
+        if index.column() == 2:  # details column
+            # Create a document for HTML rendering
+            doc = QTextDocument()
+            doc.setHtml(index.data(Qt.DisplayRole))
+            
+            # Return the size of the document
+            return QSize(doc.idealWidth(), doc.size().height())
+        return super().sizeHint(option, index)
 
-class VersionDelegate(QStyledItemDelegate):
-    """Delegate for rendering version numbers."""
-    
-    def initStyleOption(self, option, index):
-        """Initialize style options for version display."""
-        super().initStyleOption(option, index)
-        option.displayAlignment = Qt.AlignCenter
-
-class DateDelegate(QStyledItemDelegate):
-    """Delegate for rendering dates."""
-    
-    def initStyleOption(self, option, index):
-        """Initialize style options for date display."""
-        super().initStyleOption(option, index)
-        option.displayAlignment = Qt.AlignRight | Qt.AlignVCenter 
-
-"""Dialogs and modal helpers for the QuantumOps UI."""
-
-class DialogPlaceholder:
-    pass 
+def format_details(details):
+    """Format the details into a visually appealing HTML string"""
+    try:
+        # Try to parse as JSON
+        data = json.loads(details)
+        
+        # Start with a container div
+        html = '<div style="font-family: monospace; padding: 5px;">'
+        
+        # Format based on data type
+        if isinstance(data, dict):
+            html += '<div>{</div>'
+            for key, value in data.items():
+                html += f'<div style="margin-left: 20px;">'
+                html += f'"{key}": '
+                if isinstance(value, (dict, list)):
+                    html += format_details(json.dumps(value))
+                else:
+                    html += f'{json.dumps(value)}'
+                html += '</div>'
+            html += '<div>}</div>'
+        elif isinstance(data, list):
+            html += '<div>[</div>'
+            for item in data:
+                html += '<div style="margin-left: 20px;">'
+                if isinstance(item, (dict, list)):
+                    html += format_details(json.dumps(item))
+                else:
+                    html += f'{json.dumps(item)}'
+                html += '</div>'
+            html += '<div>]</div>'
+        else:
+            html += f'{json.dumps(data)}'
+            
+        html += '</div>'
+        return html
+    except json.JSONDecodeError:
+        # If not JSON, return formatted plain text
+        return f'<div style="font-family: monospace; padding: 5px;">{details}</div>' 

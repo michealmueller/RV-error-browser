@@ -25,8 +25,8 @@ from azure.storage.blob import BlobClient
 import requests
 import re
 import qdarktheme
-from quantumops.views.delegates import DetailsDelegate, format_details
-from quantumops.views.dialogs import ConnectionDialog
+from delegates import DetailsDelegate, format_details
+from dialogs import ConnectionDialog
 from quantumops import database
 from quantumops import builds
 import tempfile
