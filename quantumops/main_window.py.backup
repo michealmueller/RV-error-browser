@@ -441,8 +441,6 @@ class MainWindow(QMainWindow):
         try:
             self.setWindowTitle("QuantumOps")
             self.setMinimumSize(1200, 800)
-            # Create menu bar
-            self._create_menu_bar()
             
             # Create main splitter
             main_splitter = QSplitter(Qt.Horizontal)
@@ -2073,74 +2071,4 @@ class MainWindow(QMainWindow):
                 return "Projectflow-Dev"
             else:
                 return "ProjectFlow-Staging"
-                return ""  # Default fallback
-    def _create_menu_bar(self):
-        """Create the menu bar for the application."""
-        try:
-            menubar = self.menuBar()
-            menubar.setVisible(True)  # Ensure menu bar is visible
-            menubar.setNativeMenuBar(False)  # Disable native menu bar for Linux compatibility
-            
-            # File menu
-            file_menu = menubar.addMenu("File")
-            
-            # View menu  
-            view_menu = menubar.addMenu("View")
-            
-            clear_action = QAction("Clear Logs", self)
-            clear_action.triggered.connect(self._clear_all_logs)
-            view_menu.addAction(clear_action)
-            
-            # Help menu
-            help_menu = menubar.addMenu("Help")
-            
-            about_action = QAction("About QuantumOps", self)
-            about_action.triggered.connect(self._show_about)
-            help_menu.addAction(about_action)
-            
-        except Exception as e:
-            logger.error(f"Error creating menu bar: {str(e)}")
-    
-    def _clear_all_logs(self):
-        """Clear all log displays."""
-        try:
-            # Clear log browser if it exists
-            if hasattr(self, "log_browser"):
-                self.log_browser.clear()
-            # Clear any other log displays
-            logger.info("All logs cleared")
-        except Exception as e:
-            logger.error(f"Error clearing logs: {str(e)}")
-    
-    def _show_about(self):
-        """Show about dialog."""
-        try:
-            QMessageBox.about(self, "About QuantumOps", 
-                            "QuantumOps\nDatabase Error Browser with Azure Integration\n\nA modern application for monitoring and managing database errors.")
-        except Exception as e:
-            logger.error(f"Error showing about dialog: {str(e)}")
-
-    def log_message(self, message: str, level: str = "INFO"):
-        """Log a message to both the UI and the logger (from app.py)"""
-        from datetime import datetime
-        timestamp = datetime.now().strftime('%H:%M:%S')
-        color = {
-            "INFO": "black",
-            "ERROR": "red", 
-            "SUCCESS": "green",
-            "WARNING": "orange"
-        }.get(level, "black")
-        
-        html_message = f'<div style="color: {color}">[{timestamp}] {message}</div>'
-        
-        # Log to any available log browser
-        if hasattr(self, "log_browser"):
-            self.log_browser.append(html_message)
-        
-        # Also log to Python logger
-        if level == "ERROR":
-            logger.error(message)
-        elif level == "WARNING":
-            logger.warning(message)
-        else:
-            logger.info(message) 
+        return ""
