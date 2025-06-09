@@ -1,11 +1,11 @@
 import pytest
 from unittest.mock import Mock, patch
-from PySide6.QtWidgets import QApplication, QTableWidgetItem
+from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtCore import Qt
 from quantumops.views.build_view import BuildView
 
 @pytest.fixture
-def build_view(qapp):
+def build_view(app):
     """Create a BuildView instance."""
     return BuildView(platform="android")
 

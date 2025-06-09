@@ -1,12 +1,12 @@
 import pytest
 from unittest.mock import Mock, patch
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QMessageBox
 from PySide6.QtCore import Qt
 from quantumops.views.azure_config_dialog import AzureConfigDialog
 import io
 
 @pytest.fixture
-def azure_config_dialog(qapp):
+def azure_config_dialog(app):
     """Create an AzureConfigDialog instance."""
     return AzureConfigDialog()
 
@@ -95,24 +95,31 @@ def test_handle_cancel(azure_config_dialog):
     azure_config_dialog._handle_cancel()
     assert azure_config_dialog.result() == 0  # Rejected
 
-def test_handle_test_connection(azure_config_dialog):
-    """Test connection testing."""
-    # Set test values
-    azure_config_dialog.tenant_id_input.setText("test_tenant")
-    azure_config_dialog.client_id_input.setText("test_client")
-    azure_config_dialog.client_secret_input.setText("test_secret")
-    azure_config_dialog.container_input.setText("test_container")
-    azure_config_dialog.storage_account_input.setText("test_storage")
+def test_handle_test_connection(qtbot, azure_config_dialog, mock_azure_service):
+    """Test the test connection button handler."""
+    # Set up test data
+    azure_config_dialog.account_name_input.setText("testaccount")
+    azure_config_dialog.account_key_input.setText("testkey")
+    azure_config_dialog.container_input.setText("testcontainer")
     
-    with patch('quantumops.services.azure_service.AzureService') as mock_service:
-        mock_service_instance = Mock()
-        mock_service.return_value = mock_service_instance
-        mock_service_instance.initialize.return_value = True
-        
-        with patch('quantumops.views.azure_config_dialog.QMessageBox.information') as mock_info:
-            azure_config_dialog._handle_test_connection()
-            mock_info.assert_called_once()
-            assert "Connection successful" in mock_info.call_args[0][1]
+    # Mock the Azure service test_connection method
+    mock_azure_service.test_connection.return_value = True
+    
+    # Click the test button using qtbot
+    qtbot.mouseClick(azure_config_dialog.test_button, Qt.LeftButton)
+    
+    # Wait for any pending events
+    qtbot.wait(100)
+    
+    # Verify the Azure service was called with correct parameters
+    mock_azure_service.test_connection.assert_called_once_with(
+        "testaccount",
+        "testkey",
+        "testcontainer"
+    )
+    
+    # Verify the success message was shown
+    assert azure_config_dialog.status_label.text() == "Connection successful!"
 
 def test_handle_test_connection_failure(azure_config_dialog):
     """Test connection testing failure."""

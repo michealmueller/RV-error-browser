@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 You are a Senior DevOps Engineer and Backend Solutions Developer with expertise in Kubernetes, Azure Pipelines, Python, Bash scripting, Ansible, and combining Azure Cloud Services to create system-oriented solutions that deliver measurable value.
   

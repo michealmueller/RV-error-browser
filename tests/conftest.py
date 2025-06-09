@@ -10,35 +10,84 @@ from quantumops.models.build_manager import BuildManager
 from quantumops.controllers.build_controller import BuildController
 from quantumops.models.database import Database
 from .utils import create_test_database, cleanup_test_database, get_test_db_config
+from .db_config import DB_CONFIG
 import os
 import tempfile
 import sys
+from tests.config.test_config import setup_test_environment, teardown_test_environment
 
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 @pytest.fixture(scope="session")
 def app():
-    """Create a QApplication instance."""
+    """Create a QApplication instance with proper lifecycle management."""
     app = QApplication.instance()
     if app is None:
         app = QApplication([])
+        app.setQuitOnLastWindowClosed(True)
+    
+    # Ensure we're in a clean state
+    for widget in app.topLevelWidgets():
+        widget.close()
+        widget.deleteLater()
+    app.processEvents()
+    
     yield app
-    app.quit()
+    
+    # Clean up before quitting
+    for widget in app.topLevelWidgets():
+        widget.close()
+        widget.deleteLater()
+    app.processEvents()
+    
+    # Only quit if we created the instance
+    if QApplication.instance() is app:
+        app.quit()
+        app.processEvents()
+
+@pytest.fixture
+def qtbot(qt_app):
+    """Create a QtBot instance."""
+    from pytestqt.qtbot import QtBot
+    return QtBot(qt_app)
+
+@pytest.fixture(autouse=True)
+def cleanup_qt_windows(qt_app):
+    """Clean up any Qt windows after each test with improved resource management."""
+    yield
+    # Close and delete all top-level windows
+    for widget in qt_app.topLevelWidgets():
+        widget.close()
+        widget.deleteLater()
+    # Process any pending events
+    qt_app.processEvents()
+    # Force garbage collection of deleted widgets
+    qt_app.sendPostedEvents(None, 0)
+    # Ensure all events are processed
+    qt_app.processEvents()
 
 @pytest.fixture(scope="session")
 def test_db():
-    """Create and clean up test database."""
+    """Create and clean up test database with proper isolation."""
     create_test_database()
-    yield get_test_db_config()
-    cleanup_test_database()
+    try:
+        yield get_test_db_config()
+    finally:
+        cleanup_test_database()
 
 @pytest.fixture
 def db(test_db):
-    """Create a database instance."""
+    """Create a database instance with transaction management."""
     db = Database(test_db)
-    yield db
-    db.close()
+    # Start a transaction
+    db.begin_transaction()
+    try:
+        yield db
+    finally:
+        # Rollback the transaction to ensure test isolation
+        db.rollback()
+        db.close()
 
 @pytest.fixture
 def mock_azure_service():
@@ -90,12 +139,12 @@ def mock_connection():
     """Create a mock database connection."""
     return {
         "name": "test_connection",
-        "host": "localhost",
-        "port": "5432",
-        "database": "test_db",
-        "username": "test_user",
-        "password": "test_pass",
-        "default_table": "test_table"
+        "host": DB_CONFIG['host'],
+        "port": DB_CONFIG['port'],
+        "database": DB_CONFIG['database'],
+        "username": DB_CONFIG['username'],
+        "password": DB_CONFIG['password'],
+        "default_table": DB_CONFIG['default_table']
     }
 
 def pytest_configure(config):
@@ -115,4 +164,13 @@ def test_env(monkeypatch):
     """Set up test environment variables."""
     # Set test-specific environment variables
     monkeypatch.setenv('TESTING', 'true')
-    monkeypatch.setenv('PYTHONPATH', os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) 
+    monkeypatch.setenv('PYTHONPATH', os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+@pytest.fixture(autouse=True)
+def setup_teardown():
+    """Set up and tear down the test environment for each test with proper cleanup."""
+    setup_test_environment()
+    try:
+        yield
+    finally:
+        teardown_test_environment() 

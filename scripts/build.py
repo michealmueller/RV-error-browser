@@ -1,58 +1,44 @@
+"""Build script for QuantumOps."""
+
 import os
 import sys
-import platform
-import subprocess
 import shutil
 from pathlib import Path
+import subprocess
 
-def install_dependencies():
-    """Install required dependencies"""
-    print("Installing dependencies...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
-
-def build_for_platform(target_platform):
-    """Build the executable for a specific platform"""
-    print(f"\nBuilding for {target_platform}...")
-    
-    # Platform-specific setup
-    if target_platform == "linux":
-        if not shutil.which("upx"):
-            print("Installing UPX for Linux...")
-            subprocess.check_call(["sudo", "apt-get", "install", "-y", "upx"])
-    elif target_platform == "darwin":
-        if not shutil.which("upx"):
-            print("Installing UPX for macOS...")
-            subprocess.check_call(["brew", "install", "upx"])
-    
-    # Build command
-    cmd = [
-        "pyinstaller",
-        "--clean",
-        "--noconfirm",
-        "rosievision_error_browser.spec"
-    ]
-    
-    # Run the build
-    subprocess.check_call(cmd)
-    
-    # Create a zip file of the distribution
-    print("Creating distribution package...")
-    dist_name = f"RosieVision_Error_Browser_{target_platform}_{platform.machine()}"
-    shutil.make_archive(dist_name, 'zip', "dist")
-    
-    print(f"Build complete for {target_platform}!")
-    print(f"Distribution package: {dist_name}.zip")
-
-def main():
-    """Main build function"""
-    # Install dependencies
-    install_dependencies()
-    
-    # Build for all platforms
-    platforms = ["linux"] #["windows", "linux", "darwin"]
-    for platform_name in platforms:
-        build_for_platform(platform_name)
+def build_app():
+    """Build the QuantumOps application."""
+    try:
+        # Create build directory
+        build_dir = Path("build")
+        if build_dir.exists():
+            shutil.rmtree(build_dir)
+        build_dir.mkdir()
+        
+        # Copy source files
+        src_dir = Path("quantumops")
+        if not src_dir.exists():
+            raise FileNotFoundError("Source directory not found")
+            
+        shutil.copytree(src_dir, build_dir / "quantumops")
+        
+        # Copy configuration files
+        config_files = ["requirements.txt", "README.md", "LICENSE"]
+        for file in config_files:
+            if Path(file).exists():
+                shutil.copy2(file, build_dir)
+                
+        # Create version file
+        version = "1.0.0"  # TODO: Get from config
+        with open(build_dir / "version.txt", "w") as f:
+            f.write(version)
+            
+        print("Build completed successfully")
+        return 0
+        
+    except Exception as e:
+        print(f"Build failed: {str(e)}")
+        return 1
 
 if __name__ == "__main__":
-    main() 
+    sys.exit(build_app()) 

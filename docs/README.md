@@ -11,6 +11,7 @@ A modern build management and deployment tool for mobile applications, built wit
 - Direct installation to connected devices
 - Service Principal authentication for Azure
 - Modern, responsive UI
+- Automated documentation archiving system
 
 ## Requirements
 
@@ -101,6 +102,9 @@ quantumops/
 ├── config/                 # Configuration files
 ├── docs/                   # Documentation
 ├── scripts/               # Build and utility scripts
+│   ├── archive_docs.sh    # Documentation archiving script
+│   └── setup_cron.sh      # Cron job setup for archiving
+├── archives/              # Archived documentation
 ├── tests/                 # Test files and configuration
 ├── quantumops/           # Main package
 │   ├── models/           # Data models
@@ -108,6 +112,15 @@ quantumops/
 │   └── controllers/      # Business logic
 └── ...
 ```
+
+## Documentation
+
+- [Project Overview](PROJECT_OVERVIEW.md)
+- [Configuration Reference](CONFIG_REFERENCE.md)
+- [DevOps Guide](DEVOPS_GUIDE.md)
+- [Archiving System](ARCHIVING.md) - Documentation archiving and context optimization
+- [Bug Analysis](BUG_ANALYSIS.md)
+- [Changelog](CHANGELOG.md)
 
 ## Contributing
 

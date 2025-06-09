@@ -152,7 +152,9 @@ class AzureService:
             blob_size = properties.size
             
             # Create destination directory if it doesn't exist
-            os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+            dir_name = os.path.dirname(destination_path)
+            if dir_name:
+                os.makedirs(dir_name, exist_ok=True)
             
             # Download with progress tracking
             with open(destination_path, "wb") as file:
@@ -249,6 +251,7 @@ class AzureService:
             )
             properties = blob_client.get_blob_properties()
             return {
+                "name": blob_name,
                 "size": properties.size,
                 "last_modified": properties.last_modified,
                 "metadata": properties.metadata or {}

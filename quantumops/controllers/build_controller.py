@@ -5,11 +5,13 @@ import logging
 import subprocess
 import os
 from PySide6.QtCore import QObject, Signal, Slot, QTimer
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox, QProgressDialog
 from quantumops.models.build_manager import BuildManager
 from quantumops.views.build_view import BuildView
 from quantumops.views.progress_dialog import ProgressDialog
 from quantumops.services.azure_service import AzureServiceError
+from typing import Dict, List, Optional
+from PySide6.QtCore import Qt
 
 logger = logging.getLogger(__name__)
 
@@ -40,31 +42,42 @@ class BuildController(QObject):
         self.view.download_requested.connect(self._handle_download_request)
         self.view.upload_requested.connect(self._handle_upload_request)
         self.view.install_requested.connect(self._handle_install_request)
+        self.view.filter_changed.connect(self._handle_filter_change)
+        self.view.refresh_requested.connect(self._handle_refresh)
         
         logger.info(f"Build controller initialized for {view.platform}")
         
-    def _handle_download_request(self, build_id: str):
+    def _connect_signals(self):
+        """Connect signals to slots."""
+        self.view.download_requested.connect(self._handle_download_request)
+        self.view.upload_requested.connect(self._handle_upload_request)
+        self.view.install_requested.connect(self._handle_install_request)
+        self.view.filter_changed.connect(self._handle_filter_change)
+        self.view.refresh_requested.connect(self._handle_refresh)
+        
+    def initialize_azure(self, container_name: str):
+        """Initialize Azure service."""
+        try:
+            self.model.initialize_azure(container_name)
+        except AzureServiceError as e:
+            self.view.show_error("Azure Error", str(e))
+            
+    def _handle_download_request(self, build_id: str, platform: str = None):
         """Handle download request from view."""
         try:
-            build_data = next(
-                (build for build in self.model.get_builds() if build["id"] == build_id),
-                None
-            )
+            builds = self.model.get_builds(platform or self.view.platform)
+            build_data = next((build for build in builds if build["id"] == build_id), None)
             if not build_data:
                 self.view.show_error("Build not found")
                 return
-                
-            # Show progress dialog
             progress = self._show_progress_dialog("Downloading Build")
-            
             def progress_callback(progress_value: int, status: str) -> None:
                 if progress:
                     progress.set_progress(progress_value, status)
-                    
             try:
                 local_path = self.model.download_build(
                     build_id=build_id,
-                    platform=self.view.platform,
+                    platform=platform or self.view.platform,
                     progress_callback=progress_callback
                 )
                 self.build_downloaded.emit(build_id, local_path)
@@ -75,30 +88,25 @@ class BuildController(QObject):
             finally:
                 if progress:
                     progress.close()
-                    
         except Exception as e:
             logger.error(f"Error handling download request: {e}")
             self.view.show_error(f"Error handling download request: {str(e)}")
             
-    def _handle_upload_request(self, build_id: str, local_path: str):
+    def _handle_upload_request(self, build_id: str, local_path: str, platform: str = None):
         """Handle upload request from view."""
         try:
             if not os.path.exists(local_path):
                 self.view.show_error("Build file not found locally")
                 return
-                
-            # Show progress dialog
             progress = self._show_progress_dialog("Uploading Build")
-            
             def progress_callback(progress_value: int, status: str) -> None:
                 if progress:
                     progress.set_progress(progress_value, status)
-                    
             try:
                 blob_url = self.model.upload_build(
                     build_id=build_id,
                     local_path=local_path,
-                    platform=self.view.platform,
+                    platform=platform or self.view.platform,
                     progress_callback=progress_callback
                 )
                 self.build_uploaded.emit(build_id, blob_url)
@@ -111,29 +119,24 @@ class BuildController(QObject):
             finally:
                 if progress:
                     progress.close()
-                    
         except Exception as e:
             logger.error(f"Error handling upload request: {e}")
             self.view.show_error(f"Error handling upload request: {str(e)}")
             
-    def _handle_install_request(self, build_id: str):
+    def _handle_install_request(self, build_id: str, platform: str = None):
         """Handle install request from preview dialog."""
         try:
-            build_data = next(
-                (build for build in self.model.get_builds() if build["id"] == build_id),
-                None
-            )
+            builds = self.model.get_builds(platform or self.view.platform)
+            build_data = next((build for build in builds if build["id"] == build_id), None)
             if not build_data:
                 self.view.show_error("Build not found")
                 return
-                
             local_path = self.model.get_local_path(build_id)
             if not local_path or not os.path.exists(local_path):
                 self.view.show_error("Build file not found locally")
                 return
-                
             try:
-                if self.view.platform.lower() == "android":
+                if (platform or self.view.platform).lower() == "android":
                     self._install_android_build(local_path)
                 else:
                     self._install_ios_build(local_path)
@@ -144,7 +147,6 @@ class BuildController(QObject):
             except Exception as e:
                 logger.error(f"Failed to install build: {e}")
                 self.view.show_error(f"Failed to install build: {str(e)}")
-                
         except Exception as e:
             logger.error(f"Error handling install request: {e}")
             self.view.show_error(f"Error handling install request: {str(e)}")
@@ -344,9 +346,12 @@ class BuildController(QObject):
         try:
             builds = self.model.filter_builds(platform, filters)
             self.builds_fetched.emit(builds)
+            return builds
         except Exception as e:
             logger.error(f"Error filtering builds: {e}")
             self.error_occurred.emit(str(e))
+            QMessageBox.critical(None, "Error", str(e))
+            return None
             
     def _show_progress(self, title: str, message: str) -> None:
         """Show progress dialog."""
@@ -372,4 +377,57 @@ class BuildController(QObject):
             self.error_occurred.emit(message)
             QMessageBox.critical(None, title, message)
         except Exception as e:
-            logger.error(f"Error showing error message: {e}") 
+            logger.error(f"Error showing error message: {e}")
+            
+    def _handle_filter_change(self, filters: Dict):
+        """Handle filter changes."""
+        try:
+            platform = self.view.platform
+            filtered_builds = self.model.filter_builds(platform, filters)
+            self.view.update_builds(filtered_builds)
+        except Exception as e:
+            logger.error(f"Error filtering builds: {e}")
+            self.error_occurred.emit(str(e))
+            
+    def _handle_refresh(self):
+        """Handle refresh request."""
+        try:
+            platform = self.view.platform
+            self._show_progress_dialog("Refreshing builds...")
+            builds = self.model.fetch_builds(platform)
+            self.view.update_builds(builds)
+            self._hide_progress()
+        except Exception as e:
+            logger.error(f"Error refreshing builds: {e}")
+            self._hide_progress()
+            self.error_occurred.emit(f"Failed to refresh builds: {str(e)}")
+
+    def upload_build(self, build_id: str, local_path: str, platform: str):
+        """Upload a build."""
+        try:
+            self._show_progress("Uploading Build", f"Uploading build {build_id}...")
+
+            def progress_callback(progress: int, status: str) -> None:
+                if self._progress_dialog:
+                    self._progress_dialog.set_progress(progress, status)
+
+            blob_url = self.model.upload_build(
+                build_id=build_id,
+                local_path=local_path,
+                platform=platform,
+                progress_callback=progress_callback
+            )
+
+            self._hide_progress()
+            QMessageBox.information(
+                None,
+                "Upload Complete",
+                f"Build uploaded successfully to:\n{blob_url}"
+            )
+            return blob_url
+        except AzureServiceError as e:
+            self._show_error("Azure Error", str(e))
+        except Exception as e:
+            self._show_error("Error", f"Failed to upload build: {str(e)}")
+        finally:
+            self._hide_progress() 

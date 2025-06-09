@@ -15,7 +15,7 @@ with open("requirements.txt", "r") as f:
 
 setup(
     name="quantumops",
-    version=version,
+    version="1.0.0",
     description="Mobile build management and deployment tool",
     author="RosieVision",
     author_email="info@rosievision.com",

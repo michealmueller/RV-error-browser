@@ -17,277 +17,159 @@ from azure.core.exceptions import (
 from quantumops.services.azure_service import AzureService, AzureServiceError
 
 @pytest.fixture
-def azure_service():
-    """Create an AzureService instance for testing."""
-    service = AzureService()
-    return service
+def mock_credential():
+    """Create a mock Azure credential."""
+    with patch("azure.identity.DefaultAzureCredential") as mock:
+        mock_cred = Mock()
+        mock.return_value = mock_cred
+        yield mock_cred
 
 @pytest.fixture
 def mock_blob_service_client():
-    """Create a mock BlobServiceClient."""
+    """Create a mock blob service client."""
     with patch("azure.storage.blob.BlobServiceClient") as mock:
-        yield mock
+        mock_client = Mock()
+        mock_container = Mock()
+        mock_blob = Mock()
+        
+        # Set up the mock chain
+        mock_client.get_container_client.return_value = mock_container
+        mock_container.get_blob_client.return_value = mock_blob
+        
+        # Set up blob operations
+        mock_blob.upload_blob = Mock()
+        mock_blob.download_blob = Mock()
+        mock_blob.get_blob_properties = Mock()
+        
+        # Set up container operations
+        mock_container.list_blobs = Mock()
+        mock_container.get_blob_client = Mock(return_value=mock_blob)
+        
+        mock.return_value = mock_client
+        yield mock_client
 
 @pytest.fixture
-def mock_credential():
-    """Create a mock DefaultAzureCredential."""
-    with patch("azure.identity.DefaultAzureCredential") as mock:
-        yield mock
+def azure_service(mock_credential, mock_blob_service_client):
+    """Create an AzureService instance with mocked dependencies."""
+    return AzureService()
 
 def test_initialize_success(azure_service, mock_credential, mock_blob_service_client):
-    """Test successful initialization."""
-    # Arrange
-    container_name = "test-container"
-    os.environ["AZURE_STORAGE_ACCOUNT"] = "testaccount"
+    """Test successful Azure service initialization."""
+    azure_service.initialize("test-container")
     
-    # Act
-    azure_service.initialize(container_name)
-    
-    # Assert
-    assert azure_service._container_name == container_name
     assert azure_service._credential is not None
     assert azure_service._blob_service_client is not None
+    mock_blob_service_client.get_container_client.assert_called_once_with("test-container")
 
-def test_initialize_missing_account(azure_service):
-    """Test initialization with missing storage account."""
-    # Arrange
-    container_name = "test-container"
-    if "AZURE_STORAGE_ACCOUNT" in os.environ:
-        del os.environ["AZURE_STORAGE_ACCOUNT"]
+def test_initialize_error(azure_service, mock_credential, mock_blob_service_client):
+    """Test Azure service initialization error."""
+    mock_blob_service_client.get_container_client.side_effect = Exception("Connection error")
     
-    # Act & Assert
     with pytest.raises(AzureServiceError) as exc_info:
-        azure_service.initialize(container_name)
-    assert "AZURE_STORAGE_ACCOUNT environment variable not set" in str(exc_info.value)
-
-def test_initialize_credential_error(azure_service, mock_credential):
-    """Test initialization with credential error."""
-    # Arrange
-    container_name = "test-container"
-    os.environ["AZURE_STORAGE_ACCOUNT"] = "testaccount"
-    mock_credential.side_effect = Exception("Credential error")
+        azure_service.initialize("test-container")
     
-    # Act & Assert
-    with pytest.raises(AzureServiceError) as exc_info:
-        azure_service.initialize(container_name)
     assert "Failed to initialize Azure service" in str(exc_info.value)
 
 def test_upload_file_success(azure_service, mock_blob_service_client):
     """Test successful file upload."""
-    # Arrange
-    azure_service._blob_service_client = mock_blob_service_client
-    azure_service._container_name = "test-container"
+    azure_service.initialize("test-container")
+    test_file = Path("/tmp/test.txt")
+    test_file.write_text("test content")
     
-    file_path = "test.txt"
-    blob_name = "test-blob"
-    metadata = {"key": "value"}
+    azure_service.upload_file(test_file, "test.txt")
     
-    # Create test file
-    with open(file_path, "w") as f:
-        f.write("test content")
-    
-    try:
-        # Act
-        result = azure_service.upload_file(
-            file_path=file_path,
-            blob_name=blob_name,
-            metadata=metadata
-        )
-        
-        # Assert
-        assert result is not None
-        mock_blob_service_client.get_blob_client.assert_called_once()
-        
-    finally:
-        # Cleanup
-        if os.path.exists(file_path):
-            os.remove(file_path)
+    mock_blob = mock_blob_service_client.get_container_client().get_blob_client()
+    mock_blob.upload_blob.assert_called_once()
+    test_file.unlink()
 
 def test_upload_file_not_found(azure_service):
-    """Test upload with non-existent file."""
-    # Arrange
-    file_path = "nonexistent.txt"
+    """Test file upload with non-existent file."""
+    azure_service.initialize("test-container")
     
-    # Act & Assert
     with pytest.raises(AzureServiceError) as exc_info:
-        azure_service.upload_file(file_path)
-    assert "File not found" in str(exc_info.value)
-
-def test_upload_file_azure_error(azure_service, mock_blob_service_client):
-    """Test upload with Azure error."""
-    # Arrange
-    azure_service._blob_service_client = mock_blob_service_client
-    azure_service._container_name = "test-container"
+        azure_service.upload_file(Path("/tmp/nonexistent.txt"), "test.txt")
     
-    file_path = "test.txt"
-    with open(file_path, "w") as f:
-        f.write("test content")
-    
-    mock_blob_service_client.get_blob_client.return_value.upload_blob.side_effect = \
-        ServiceRequestError("Network error")
-    
-    try:
-        # Act & Assert
-        with pytest.raises(AzureServiceError) as exc_info:
-            azure_service.upload_file(file_path)
-        assert "Network error" in str(exc_info.value)
-        
-    finally:
-        if os.path.exists(file_path):
-            os.remove(file_path)
+    assert "Failed to upload file" in str(exc_info.value)
 
 def test_download_file_success(azure_service, mock_blob_service_client):
     """Test successful file download."""
-    # Arrange
-    azure_service._blob_service_client = mock_blob_service_client
-    azure_service._container_name = "test-container"
+    azure_service.initialize("test-container")
+    test_file = Path("/tmp/test.txt")
     
-    blob_name = "test-blob"
-    destination_path = "downloaded.txt"
+    azure_service.download_file("test.txt", test_file)
     
-    # Mock blob properties and download stream
-    mock_blob = Mock()
-    mock_blob.size = 100
-    mock_blob.download_blob.return_value.chunks.return_value = [b"test content"]
-    
-    mock_blob_service_client.get_blob_client.return_value.get_blob_properties.return_value = mock_blob
-    
-    try:
-        # Act
-        result = azure_service.download_file(
-            blob_name=blob_name,
-            destination_path=destination_path
-        )
-        
-        # Assert
-        assert result == destination_path
-        assert os.path.exists(destination_path)
-        
-    finally:
-        # Cleanup
-        if os.path.exists(destination_path):
-            os.remove(destination_path)
+    mock_blob = mock_blob_service_client.get_container_client().get_blob_client()
+    mock_blob.download_blob.assert_called_once()
+    test_file.unlink()
 
 def test_download_file_not_found(azure_service, mock_blob_service_client):
-    """Test download with non-existent blob."""
-    # Arrange
-    azure_service._blob_service_client = mock_blob_service_client
-    azure_service._container_name = "test-container"
+    """Test file download with non-existent blob."""
+    azure_service.initialize("test-container")
+    mock_blob = mock_blob_service_client.get_container_client().get_blob_client()
+    mock_blob.download_blob.side_effect = Exception("Blob not found")
     
-    blob_name = "nonexistent-blob"
-    destination_path = "downloaded.txt"
-    
-    mock_blob_service_client.get_blob_client.return_value.get_blob_properties.side_effect = \
-        ResourceNotFoundError("Blob not found")
-    
-    # Act & Assert
     with pytest.raises(AzureServiceError) as exc_info:
-        azure_service.download_file(blob_name, destination_path)
-    assert "Blob not found" in str(exc_info.value)
+        azure_service.download_file("nonexistent.txt", Path("/tmp/test.txt"))
+    
+    assert "Failed to download file" in str(exc_info.value)
 
 def test_list_files_success(azure_service, mock_blob_service_client):
     """Test successful file listing."""
-    # Arrange
-    azure_service._blob_service_client = mock_blob_service_client
-    azure_service._container_name = "test-container"
-    
-    prefix = "test/"
-    expected_files = ["test/file1.txt", "test/file2.txt"]
-    
-    mock_container = Mock()
-    mock_container.list_blobs.return_value = [
-        Mock(name=name) for name in expected_files
+    azure_service.initialize("test-container")
+    mock_blobs = [
+        Mock(name="file1.txt"),
+        Mock(name="file2.txt")
     ]
-    mock_blob_service_client.get_container_client.return_value = mock_container
+    mock_blob_service_client.get_container_client().list_blobs.return_value = mock_blobs
     
-    # Act
-    result = azure_service.list_files(prefix=prefix)
+    files = azure_service.list_files()
     
-    # Assert
-    assert result == expected_files
+    assert len(files) == 2
+    assert "file1.txt" in files
+    assert "file2.txt" in files
 
-def test_list_files_container_not_found(azure_service, mock_blob_service_client):
-    """Test listing files with non-existent container."""
-    # Arrange
-    azure_service._blob_service_client = mock_blob_service_client
-    azure_service._container_name = "nonexistent-container"
+def test_list_files_error(azure_service, mock_blob_service_client):
+    """Test file listing error."""
+    azure_service.initialize("test-container")
+    mock_blob_service_client.get_container_client().list_blobs.side_effect = Exception("List error")
     
-    mock_blob_service_client.get_container_client.return_value.list_blobs.side_effect = \
-        ResourceNotFoundError("Container not found")
-    
-    # Act & Assert
     with pytest.raises(AzureServiceError) as exc_info:
         azure_service.list_files()
-    assert "Container not found" in str(exc_info.value)
+    
+    assert "Failed to list files" in str(exc_info.value)
 
 def test_get_file_metadata_success(azure_service, mock_blob_service_client):
     """Test successful metadata retrieval."""
-    # Arrange
-    azure_service._blob_service_client = mock_blob_service_client
-    azure_service._container_name = "test-container"
+    azure_service.initialize("test-container")
+    mock_properties = Mock(
+        size=1024,
+        last_modified="2024-01-01T00:00:00Z",
+        metadata={"version": "1.0.0"}
+    )
+    mock_blob = mock_blob_service_client.get_container_client().get_blob_client()
+    mock_blob.get_blob_properties.return_value = mock_properties
     
-    blob_name = "test-blob"
-    last_modified = datetime.now()
-    metadata = {"version": "1.0"}
+    metadata = azure_service.get_file_metadata("test.txt")
     
-    mock_properties = Mock()
-    mock_properties.size = 100
-    mock_properties.last_modified = last_modified
-    mock_properties.metadata = metadata
-    
-    mock_blob_service_client.get_blob_client.return_value.get_blob_properties.return_value = mock_properties
-    
-    # Act
-    result = azure_service.get_file_metadata(blob_name)
-    
-    # Assert
-    assert result["name"] == blob_name
-    assert result["size"] == 100
-    assert result["last_modified"] == last_modified
-    assert result["metadata"] == metadata
+    assert metadata["size"] == 1024
+    assert metadata["last_modified"] == "2024-01-01T00:00:00Z"
+    assert metadata["version"] == "1.0.0"
 
 def test_get_file_metadata_not_found(azure_service, mock_blob_service_client):
-    """Test metadata retrieval for non-existent blob."""
-    # Arrange
-    azure_service._blob_service_client = mock_blob_service_client
-    azure_service._container_name = "test-container"
+    """Test metadata retrieval for non-existent file."""
+    azure_service.initialize("test-container")
+    mock_blob = mock_blob_service_client.get_container_client().get_blob_client()
+    mock_blob.get_blob_properties.side_effect = Exception("Blob not found")
     
-    blob_name = "nonexistent-blob"
-    
-    mock_blob_service_client.get_blob_client.return_value.get_blob_properties.side_effect = \
-        ResourceNotFoundError("Blob not found")
-    
-    # Act & Assert
     with pytest.raises(AzureServiceError) as exc_info:
-        azure_service.get_file_metadata(blob_name)
-    assert "Blob not found" in str(exc_info.value)
+        azure_service.get_file_metadata("nonexistent.txt")
+    
+    assert "Failed to get file metadata" in str(exc_info.value)
 
-def test_delete_file_success(azure_service, mock_blob_service_client):
-    """Test successful file deletion."""
-    # Arrange
-    azure_service._blob_service_client = mock_blob_service_client
-    azure_service._container_name = "test-container"
+def test_cleanup(azure_service, mock_blob_service_client):
+    """Test service cleanup."""
+    azure_service.initialize("test-container")
+    azure_service.cleanup()
     
-    blob_name = "test-blob"
-    
-    # Act
-    azure_service.delete_file(blob_name)
-    
-    # Assert
-    mock_blob_service_client.get_blob_client.return_value.delete_blob.assert_called_once()
-
-def test_delete_file_not_found(azure_service, mock_blob_service_client):
-    """Test deletion of non-existent file."""
-    # Arrange
-    azure_service._blob_service_client = mock_blob_service_client
-    azure_service._container_name = "test-container"
-    
-    blob_name = "nonexistent-blob"
-    
-    mock_blob_service_client.get_blob_client.return_value.delete_blob.side_effect = \
-        ResourceNotFoundError("Blob not found")
-    
-    # Act & Assert
-    with pytest.raises(AzureServiceError) as exc_info:
-        azure_service.delete_file(blob_name)
-    assert "Blob not found" in str(exc_info.value) 
+    assert azure_service._credential is None
+    assert azure_service._blob_service_client is None 

@@ -1,0 +1,36 @@
+# Build and distribution
+build/
+dist/
+*.spec
+*.zip
+
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+.pytest_cache/
+
+# Generated files
+.coverage
+coverage.xml
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# IDE and editor files
+.cursor/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Large binary files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Keep archives directory for context
+!archives/ 

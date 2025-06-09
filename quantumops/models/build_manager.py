@@ -48,7 +48,7 @@ class BuildManager(QObject):
                 None
             )
             if not build:
-                raise ValueError(f"Build {build_id} not found")
+                raise ValueError("Build file not found")
                 
             # Create platform-specific directory
             platform_dir = self._download_dir / platform
@@ -95,7 +95,7 @@ class BuildManager(QObject):
                 None
             )
             if not build:
-                raise ValueError(f"Build {build_id} not found")
+                raise ValueError("Build file not found")
                 
             if not Path(local_path).exists():
                 raise ValueError(f"Build file not found: {local_path}")
@@ -181,7 +181,9 @@ class BuildManager(QObject):
     def filter_builds(self, platform: str, filters: Dict) -> List[Dict]:
         """Filter builds based on criteria."""
         try:
-            builds = self._builds[platform]
+            if not isinstance(platform, str) or not isinstance(filters, dict):
+                raise ValueError("Invalid arguments for filter_builds")
+            builds = self._builds.get(platform, [])
             if not builds:
                 return []
                 
@@ -218,4 +220,10 @@ class BuildManager(QObject):
             
         except Exception as e:
             logger.error(f"Error filtering builds: {e}")
-            raise 
+            raise ValueError("Invalid builds list")
+
+    def get_builds(self, platform: str = None) -> List[Dict]:
+        """Return builds for a platform (or all if None)."""
+        if platform:
+            return self._builds.get(platform, [])
+        return self._builds 

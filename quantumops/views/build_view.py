@@ -218,12 +218,15 @@ class BuildView(QWidget):
         except Exception as e:
             logger.error(f"Error updating upload retry status: {e}")
             
-    def show_error(self, message: str):
-        """Show error message."""
-        try:
-            self._show_error("Error", message)
-        except Exception as e:
-            logger.error(f"Error showing error message: {e}")
+    def show_error(self, *args):
+        """Show error message with title and message, or just message."""
+        if len(args) == 2:
+            title, message = args
+        elif len(args) == 1:
+            title, message = "Error", args[0]
+        else:
+            title, message = "Error", "Unknown error"
+        self._show_error(title, message)
             
     def cleanup(self):
         """Clean up resources."""

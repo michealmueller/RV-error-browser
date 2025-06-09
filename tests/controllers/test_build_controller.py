@@ -2,13 +2,19 @@
 Unit tests for BuildController.
 """
 import pytest
-from unittest.mock import Mock, patch, call
-from PySide6.QtWidgets import QMessageBox
+from unittest.mock import Mock, patch, call, ANY
+from PySide6.QtWidgets import QMessageBox, QTableWidgetItem, QApplication
 from PySide6.QtCore import QObject
 
 from quantumops.controllers.build_controller import BuildController
 from quantumops.models.build_manager import BuildManager
 from quantumops.services.azure_service import AzureServiceError
+from quantumops.views.build_view import BuildView
+
+@pytest.fixture
+def build_view(app):
+    """Create a BuildView instance."""
+    return BuildView(platform="android")
 
 @pytest.fixture
 def build_manager():
@@ -16,9 +22,9 @@ def build_manager():
     return Mock(spec=BuildManager)
 
 @pytest.fixture
-def build_controller(build_manager):
+def build_controller(build_manager, build_view):
     """Create a BuildController instance for testing."""
-    controller = BuildController(build_manager)
+    controller = BuildController(build_manager, build_view)
     return controller
 
 @pytest.fixture

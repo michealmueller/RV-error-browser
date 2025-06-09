@@ -2,7 +2,7 @@ import pytest
 import os
 import tempfile
 from unittest.mock import patch, MagicMock
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtCore import Qt
 from quantumops.controllers.build_controller import BuildController
 from quantumops.views.build_view import BuildView
@@ -31,7 +31,7 @@ def build_manager(temp_dir, mock_azure_service):
     return manager
 
 @pytest.fixture
-def build_view(qapp):
+def build_view(app):
     """Create a BuildView instance."""
     return BuildView(platform="android")
 
@@ -87,8 +87,8 @@ def test_build_upload_flow(build_controller, build_view, mock_azure_service, tem
     
     # Add build to view
     build_view.builds_table.setRowCount(1)
-    build_view.builds_table.setItem(0, 0, MagicMock(text=build_id))
-    build_view.builds_table.setItem(0, 2, MagicMock(text="downloaded"))
+    build_view.builds_table.setItem(0, 0, QTableWidgetItem(build_id))
+    build_view.builds_table.setItem(0, 2, QTableWidgetItem("downloaded"))
     
     # Trigger upload
     build_controller._handle_upload_request(build_id)
@@ -111,8 +111,8 @@ def test_build_install_flow(build_controller, build_view, temp_dir):
     
     # Add build to view
     build_view.builds_table.setRowCount(1)
-    build_view.builds_table.setItem(0, 0, MagicMock(text=build_id))
-    build_view.builds_table.setItem(0, 2, MagicMock(text="downloaded"))
+    build_view.builds_table.setItem(0, 0, QTableWidgetItem(build_id))
+    build_view.builds_table.setItem(0, 2, QTableWidgetItem("downloaded"))
     
     # Mock adb commands
     with patch('subprocess.run') as mock_run:
@@ -139,8 +139,8 @@ def test_error_handling_flow(build_controller, build_view, mock_azure_service):
     
     # Add build to view
     build_view.builds_table.setRowCount(1)
-    build_view.builds_table.setItem(0, 0, MagicMock(text=build_id))
-    build_view.builds_table.setItem(0, 2, MagicMock(text="available"))
+    build_view.builds_table.setItem(0, 0, QTableWidgetItem(build_id))
+    build_view.builds_table.setItem(0, 2, QTableWidgetItem("available"))
     
     # Mock QMessageBox
     with patch('PySide6.QtWidgets.QMessageBox.critical') as mock_critical:
@@ -186,7 +186,7 @@ def test_cleanup_flow(build_controller, build_view, mock_azure_service):
     # Setup test data
     build_id = "test_build_1"
     build_view.builds_table.setRowCount(1)
-    build_view.builds_table.setItem(0, 0, MagicMock(text=build_id))
+    build_view.builds_table.setItem(0, 0, QTableWidgetItem(build_id))
     build_view.search_input.setText("test")
     build_view.status_bar.setText("Test status")
     

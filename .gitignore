@@ -1,77 +1,59 @@
-# PyInstaller build artifacts
-dist/
-build/
-*.spec
-!quantumops.spec
-!rosievision_error_browser.spec
-
-# Python bytecode
+# Python essentials
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Virtual environments
-venv/
-env/
-.env/
-.venv/
-
-# IDE specific files
-.idea/
-.vscode/
-*.swp
-*.swo
-.DS_Store
-
-# Logs and databases
-*.log
-*.sqlite
-*.db
-
-# Distribution / packaging
+*.so
 .Python
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# Local development settings
-.env
-.env.local
-.env.*.local
-
-# Build directories
+build/
+dist/
 *.egg-info/
 *.egg
 
-# Distribution packages
+# Virtual Environment
+venv/
+.env
+.venv/
+
+# IDE and Editor
+.idea/
+.vscode/
+.cursor/
+*.swp
+*.swo
+
+# Testing
+.coverage
+coverage.xml
+.pytest_cache/
+htmlcov/
+
+# Build artifacts
+*.spec
 *.zip
-**/.cursorrules
 *.tar.gz
+*.exe
+*.dll
+*.so
 *.whl
 
-# Node.js (if needed in future)
+# Node
 node_modules/
-package-lock.json
 yarn.lock
+package-lock.json
 
-# Test outputs
-test_*.log
-*_test_output.log
+# OS generated files
+.DS_Store
+Thumbs.db
 
-# Environment variables and secrets
-.env
-
-# AI Information files (.aii) are tracked in git
-!*.aii
+# Project specific - IMPORTANT: Keep these directories
+!archives/
+!archives/*.tar.gz
+!version.txt
+!config/
+!config/*.json
+!config/*.yaml
+!docs/
+!docs/*.md
+!scripts/
+!scripts/*.py
+!tests/
+!tests/*.py
