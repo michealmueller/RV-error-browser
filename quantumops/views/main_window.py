@@ -8,15 +8,15 @@ from PySide6.QtWidgets import (
     QLabel, QPushButton, QTextEdit, QComboBox,
     QGroupBox, QSplitter, QMenu, QTabWidget, QMessageBox,
     QTableWidget, QTableWidgetItem, QMenuBar, QFileDialog,
-    QStatusBar, QProgressBar, QDialog
+    QStatusBar, QProgressBar, QDialog, QStackedWidget
 )
-from PySide6.QtCore import Qt, Signal, QSize, QTimer
+from PySide6.QtCore import Qt, Signal, QSize, QTimer, QSettings
 from PySide6.QtGui import QColor, QPalette, QAction
 from quantumops.controllers.log_controller import LogController
 from quantumops.controllers.health_controller import HealthController
 from quantumops.controllers.database_controller import DatabaseController
 from quantumops.azure_webapp import AzureWebApp
-from quantumops.models.database import DatabaseModel
+from quantumops.models.database import Database
 from quantumops.views.database_view import DatabaseView
 from quantumops.views.build_view import BuildView
 from quantumops.models.build_manager import BuildManager
@@ -24,83 +24,60 @@ from quantumops.controllers.build_controller import BuildController
 from ..models.history_manager import HistoryManager
 from .history_dialog import HistoryDialog
 from .preview_dialog import PreviewDialog
+from .layouts import ClassicTabbedLayout, SplitViewLayout, DashboardLayout
+from quantumops.views.azure_config_dialog import AzureConfigDialog
+from quantumops.views.status_indicator import StatusIndicator
+from quantumops.views.progress_dialog import ProgressDialog
 import json
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-class StatusIndicator(QLabel):
-    """Custom widget for displaying health status."""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFixedSize(12, 12)
-        self.set_status(False)
-        
-    def set_status(self, is_healthy: bool) -> None:
-        """Set the status indicator color."""
-        color = QColor("#2ecc71") if is_healthy else QColor("#e74c3c")
-        self.setStyleSheet(f"""
-            QLabel {{
-                background-color: {color.name()};
-                border-radius: 6px;
-                border: 1px solid #2d2d2d;
-            }}
-        """)
-
-class ProgressDialog(QDialog):
-    """Dialog for showing operation progress."""
-    def __init__(self, title: str, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(title)
-        self.setModal(True)
-        self.setMinimumWidth(400)
-        
-        layout = QVBoxLayout(self)
-        
-        # Status label
-        self.status_label = QLabel("Initializing...")
-        layout.addWidget(self.status_label)
-        
-        # Progress bar
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 100)
-        layout.addWidget(self.progress_bar)
-        
-        # Cancel button
-        self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.clicked.connect(self.reject)
-        layout.addWidget(self.cancel_button)
-        
-    def update_progress(self, value: int, status: str):
-        """Update progress bar and status."""
-        self.progress_bar.setValue(value)
-        self.status_label.setText(status)
-        
-    def set_indeterminate(self, status: str):
-        """Set progress bar to indeterminate mode."""
-        self.progress_bar.setRange(0, 0)
-        self.status_label.setText(status)
-
 class MainWindow(QMainWindow):
-    """Main window for the application."""
+    """Main window for QuantumOps."""
     
-    def __init__(self):
-        """Initialize main window."""
-        super().__init__()
-        self.webapps = self._load_webapps()
-        self.selected_webapp = self.webapps[0] if self.webapps else None
-        self.history_manager = HistoryManager()
-        self._init_ui()
-        self._setup_controllers()
-        self._setup_build_managers()
-        self._connect_signals()
-        self._setup_status_bar()
-        self._progress_dialog = None
-        logger.info("Main window initialized")
+    def __init__(self, web_apps: list):
+        """Initialize main window.
         
+        Args:
+            web_apps: List of web app names
+        """
+        super().__init__()
+        self.web_apps = web_apps
+        self.settings = QSettings("RosieVision", "QuantumOps")
+        
+        # Initialize controllers
+        self._init_controllers()
+        
+        # Setup UI
+        self._init_ui()
+        self._setup_menu()
+        self._setup_status_bar()
+        
+        # Load initial data
+        self._load_data()
+    
+    def _init_controllers(self):
+        """Initialize controllers."""
+        # Create database instance
+        db_config = {
+            "dbname": self.settings.value("database/name", "quantumops"),
+            "user": self.settings.value("database/user", "postgres"),
+            "password": self.settings.value("database/password", "postgres"),
+            "host": self.settings.value("database/host", "localhost")
+        }
+        db = Database(db_config)
+        
+        # Create controllers
+        self._db_controller = DatabaseController(db)
+        self._build_controller = BuildController(self._db_controller)
+        
+        # Connect signals
+        self._db_controller.connection_status_changed.connect(self._handle_db_status)
+        self._db_controller.error_occurred.connect(self._handle_error)
+    
     def _init_ui(self):
-        """Initialize the UI components."""
+        """Initialize UI components."""
         self.setWindowTitle("QuantumOps")
         self.setMinimumSize(1200, 800)
         
@@ -109,73 +86,52 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
         
-        # Create tab widget
-        self.tab_widget = QTabWidget()
-        
-        # Create database tab
-        self.database_model = DatabaseModel()
-        self.database_view = DatabaseView()
-        self.database_controller = DatabaseController(self.database_model, self.database_view)
-        self.tab_widget.addTab(self.database_view, "Error Browser")
-        
-        # Create health check panel
-        health_group = QGroupBox("Health Status")
-        health_layout = QVBoxLayout(health_group)
-        self.health_status = QLabel("Checking health...")
-        health_layout.addWidget(self.health_status)
-        
-        # Create log area
-        log_group = QGroupBox("System Log")
-        log_layout = QVBoxLayout(log_group)
-        self.log_area = QTextEdit()
-        self.log_area.setReadOnly(True)
-        log_layout.addWidget(self.log_area)
-        
-        # Create splitter for health and log
-        splitter = QSplitter(Qt.Vertical)
-        splitter.addWidget(health_group)
-        splitter.addWidget(log_group)
-        splitter.setSizes([200, 400])  # Initial sizes
-        
-        # Create build tabs
-        self.android_tab = BuildView("android")
-        self.ios_tab = BuildView("ios")
-        
-        # Add tabs
-        self.tab_widget.addTab(self.android_tab, "Android Builds")
-        self.tab_widget.addTab(self.ios_tab, "iOS Builds")
-        
-        # Add webapp selector
-        webapp_layout = QHBoxLayout()
-        webapp_layout.addWidget(QLabel("Azure Web App:"))
-        self.webapp_combo = QComboBox()
-        for webapp in self.webapps:
-            label = f"{webapp['name']} ({webapp['resource_group']})"
-            self.webapp_combo.addItem(label, webapp)
-        self.webapp_combo.currentIndexChanged.connect(self._on_webapp_changed)
-        webapp_layout.addWidget(self.webapp_combo)
-        webapp_layout.addStretch()
-        
-        # Wrap webapp_layout in a QWidget
-        webapp_widget = QWidget()
-        webapp_widget.setLayout(webapp_layout)
-        
-        # Add widgets to main layout
-        main_layout.addWidget(webapp_widget)
-        main_layout.addWidget(self.tab_widget, 7)  # 70% of space
-        main_layout.addWidget(splitter, 3)  # 30% of space
+        # Add webapp and platform selectors at the top (always present)
+        selector_layout = QHBoxLayout()
+        selector_layout.addWidget(QLabel("Azure Web App:"))
+        self.web_app_combo = QComboBox()
+        self.web_app_combo.addItems(self.web_apps)
+        self.web_app_combo.currentTextChanged.connect(self._handle_web_app_change)
+        selector_layout.addWidget(self.web_app_combo)
+        selector_layout.addWidget(QLabel("Platform:"))
+        self.platform_combo = QComboBox()
+        self.platform_combo.addItems(["Android", "iOS"])
+        self.platform_combo.currentTextChanged.connect(self._handle_platform_change)
+        selector_layout.addWidget(self.platform_combo)
+        selector_layout.addStretch()
+        selector_widget = QWidget()
+        selector_widget.setLayout(selector_layout)
+        main_layout.addWidget(selector_widget)
+
+        # Create a QStackedWidget for the main content area
+        self._layout_stack = QStackedWidget()
+        self._layouts = {}
+        classic_layout = ClassicTabbedLayout()
+        self._layouts['classic'] = classic_layout
+        self._layout_stack.addWidget(classic_layout)
+        split_layout = SplitViewLayout()
+        self._layouts['split'] = split_layout
+        self._layout_stack.addWidget(split_layout)
+        dashboard_layout = DashboardLayout()
+        self._layouts['dashboard'] = dashboard_layout
+        self._layout_stack.addWidget(dashboard_layout)
+        main_layout.addWidget(self._layout_stack, 1)
+
+        # Create status bar
+        self.statusBar().showMessage("Ready")
         
         # Create menu bar
         self._create_menu_bar()
         
-        # Create status bar
-        self.statusBar().showMessage("Ready")
-        
-        # Connect refresh button to signal
-        self.refresh_button.clicked.connect(self.refresh_builds.emit)
-        self.download_button.clicked.connect(self._emit_download_selected)
-        self.upload_button.clicked.connect(self._emit_upload_selected)
-        
+        # Connect button signals (if present in layouts)
+        # (Assume ClassicTabbedLayout has refresh_button, download_button, upload_button)
+        if hasattr(classic_layout, 'refresh_button'):
+            classic_layout.refresh_button.clicked.connect(self._handle_refresh)
+        if hasattr(classic_layout, 'download_button'):
+            classic_layout.download_button.clicked.connect(self._handle_download)
+        if hasattr(classic_layout, 'upload_button'):
+            classic_layout.upload_button.clicked.connect(self._handle_upload)
+
     def _create_menu_bar(self):
         """Create the menu bar."""
         menubar = self.menuBar()
@@ -184,7 +140,7 @@ class MainWindow(QMainWindow):
         file_menu = menubar.addMenu("File")
         
         refresh_action = file_menu.addAction("Refresh")
-        refresh_action.triggered.connect(self.refresh_builds)
+        refresh_action.triggered.connect(self._handle_refresh)
         
         file_menu.addSeparator()
         
@@ -197,74 +153,140 @@ class MainWindow(QMainWindow):
         history_action = view_menu.addAction("Build History")
         history_action.triggered.connect(self.show_history)
         
+        # Layout menu
+        layout_menu = menubar.addMenu("Layout")
+        classic_action = layout_menu.addAction("Classic Tabbed")
+        classic_action.triggered.connect(lambda: self.switch_layout("classic"))
+        split_action = layout_menu.addAction("Split View")
+        split_action.triggered.connect(lambda: self.switch_layout("split"))
+        dashboard_action = layout_menu.addAction("Dashboard")
+        dashboard_action.triggered.connect(lambda: self.switch_layout("dashboard"))
+        
         # Settings menu
         settings_menu = menubar.addMenu("Settings")
         sp_info_action = QAction("View SP Info", self)
         sp_info_action.triggered.connect(self._show_sp_info)
         settings_menu.addAction(sp_info_action)
         
-    def _setup_controllers(self):
-        """Set up controllers."""
-        # Health controller
-        self.health_controller = HealthController()
-        self.health_controller.status_updated.connect(self._update_health_status)
+    def _setup_menu(self):
+        """Setup menu bar."""
+        # Create menu bar
+        menu_bar = self.menuBar()
         
-        # Log controller
-        self.log_controller = LogController(self.selected_webapp)
-        self.log_controller.log_message.connect(self._append_log)
+        # Create File menu
+        file_menu = menu_bar.addMenu("File")
         
-    def _setup_build_managers(self):
-        """Set up build managers and controllers."""
-        # Create models
-        self.android_model = BuildManager()
-        self.ios_model = BuildManager()
+        # Add actions
+        refresh_action = QAction("Refresh", self)
+        refresh_action.triggered.connect(self._handle_refresh)
+        file_menu.addAction(refresh_action)
         
-        # Create controllers
-        self.android_controller = BuildController(self.android_model, self.android_tab)
-        self.ios_controller = BuildController(self.ios_model, self.ios_tab)
+        exit_action = QAction("Exit", self)
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
         
-        # Connect upload signals
-        self.android_tab.upload_requested.connect(self._handle_android_upload)
-        self.ios_tab.upload_requested.connect(self._handle_ios_upload)
+        # Create Settings menu
+        settings_menu = menu_bar.addMenu("Settings")
         
-    def _update_health_status(self, status: dict):
-        """Update health status display."""
-        text = []
-        for app, health in status.items():
-            color = "green" if health["healthy"] else "red"
-            text.append(f'<span style="color: {color}">●</span> {app}: {health["message"]}')
-        self.health_status.setText("<br>".join(text))
+        azure_action = QAction("Azure Configuration", self)
+        azure_action.triggered.connect(self._handle_azure_config)
+        settings_menu.addAction(azure_action)
         
-    def _append_log(self, message: str):
-        """Append message to log area."""
-        self.log_area.append(message)
+        # Create Help menu
+        help_menu = menu_bar.addMenu("Help")
         
-    def _set_health_interval(self, interval: int):
-        """Set health check interval."""
-        self.health_controller.set_interval(interval)
+        about_action = QAction("About", self)
+        about_action.triggered.connect(self._handle_about)
+        help_menu.addAction(about_action)
+    
+    def _setup_status_bar(self):
+        """Setup status bar."""
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
         
-    def _show_sp_info(self):
-        """Show service principal info dialog."""
-        # TODO: Implement SP info dialog
+        # Add status indicator
+        self.status_indicator = StatusIndicator()
+        self.status_bar.addPermanentWidget(self.status_indicator)
+    
+    def _load_data(self):
+        """Load initial data."""
+        self._handle_refresh()
+    
+    def _handle_web_app_change(self, web_app: str):
+        """Handle web app change.
+        
+        Args:
+            web_app: Selected web app
+        """
+        self._handle_refresh()
+    
+    def _handle_platform_change(self, platform: str):
+        """Handle platform change.
+        
+        Args:
+            platform: Selected platform
+        """
+        self._handle_refresh()
+    
+    def _handle_refresh(self):
+        """Handle refresh action."""
+        try:
+            platform = self.platform_combo.currentText().lower()
+            builds = self._build_controller.get_builds(platform)
+            # TODO: Update build list with builds
+        except Exception as e:
+            self._handle_error(str(e))
+    
+    def _handle_upload(self):
+        """Handle upload action."""
+        # TODO: Implement upload functionality
         pass
+    
+    def _handle_download(self):
+        """Handle download action."""
+        # TODO: Implement download functionality
+        pass
+    
+    def _handle_azure_config(self):
+        """Handle Azure configuration action."""
+        dialog = AzureConfigDialog(self)
+        if dialog.exec():
+            # TODO: Update Azure configuration
+            pass
+    
+    def _handle_about(self):
+        """Handle about action."""
+        QMessageBox.about(
+            self,
+            "About QuantumOps",
+            "QuantumOps - Mobile Build Manager\n\n"
+            "Version 1.0.0\n"
+            "Copyright © 2024 Rosie Vision"
+        )
+    
+    def _handle_db_status(self, connected: bool, message: str):
+        """Handle database status change.
         
-    def _handle_android_upload(self, build_id: str, local_path: str):
-        """Handle Android build upload request."""
-        # TODO: Implement Azure upload
-        self.statusBar().showMessage(f"Uploading Android build {build_id}...")
+        Args:
+            connected: Whether connected to database
+            message: Status message
+        """
+        self.status_indicator.set_status("connected" if connected else "disconnected")
+        self.statusBar().showMessage(message)
+    
+    def _handle_error(self, message: str):
+        """Handle error.
         
-    def _handle_ios_upload(self, build_id: str, local_path: str):
-        """Handle iOS build upload request."""
-        # TODO: Implement Azure upload
-        self.statusBar().showMessage(f"Uploading iOS build {build_id}...")
-        
+        Args:
+            message: Error message
+        """
+        QMessageBox.critical(self, "Error", message)
+        logger.error(message)
+    
     def closeEvent(self, event):
         """Handle window close event."""
-        # Clean up controllers
-        self.database_controller.cleanup()
-        self.health_controller.cleanup()
-        self.android_controller.cleanup()
-        self.ios_controller.cleanup()
+        # Clean up resources
+        self._db_controller.close()
         event.accept()
         
     def show_history(self):
@@ -276,7 +298,7 @@ class MainWindow(QMainWindow):
         """Show preview dialog."""
         row = item.row()
         build_id = self.build_table.item(row, 0).text()
-        platform = self.platform_combo.currentText()
+        platform = self.platform_combo.currentText().lower()  # Convert to lowercase to match build view platform
         version = self.build_table.item(row, 1).text()
         
         dialog = PreviewDialog(build_id, platform, version, self)
@@ -290,75 +312,49 @@ class MainWindow(QMainWindow):
                 share_url=dialog.share_url
             )
             
-    def _emit_download_selected(self):
-        selected = self._get_selected_build_ids()
-        self.download_selected.emit(selected)
-        
-    def _emit_upload_selected(self):
-        selected = self._get_selected_build_ids()
-        self.upload_selected.emit(selected)
-        
-    def refresh_builds(self):
-        """Refresh build list."""
-        # Refresh logic here
+    def _show_sp_info(self):
+        """Show service principal info dialog."""
+        # TODO: Implement SP info dialog
         pass
         
-    def show_about(self):
-        """Show about dialog."""
-        QMessageBox.about(
-            self,
-            "About QuantumOps",
-            "QuantumOps - Mobile Build Manager\n\n"
-            "Version 1.0.0\n"
-            "© 2024 Rosie Vision"
-        )
-        
-    def _load_webapps(self):
-        config_path = Path("config/webapps.json")
-        if config_path.exists():
-            with open(config_path) as f:
-                return json.load(f)
-        return []
-        
-    def _on_webapp_changed(self, idx):
-        self.selected_webapp = self.webapp_combo.currentData()
-        # Re-instantiate LogController with new webapp
-        self.log_controller = LogController(self.selected_webapp)
-        # ... any additional logic to update log view ... 
+    def switch_layout(self, layout_name):
+        """Switch the main content area to the selected layout."""
+        if layout_name in self._layouts:
+            idx = list(self._layouts.keys()).index(layout_name)
+            self._layout_stack.setCurrentIndex(idx)
+        else:
+            logger.error(f"Unknown layout: {layout_name}")
 
-    def _setup_status_bar(self):
-        """Set up status bar for displaying error messages."""
-        self.status_bar = QStatusBar()
-        self.setStatusBar(self.status_bar)
+    def _show_progress_dialog(self, title: str) -> ProgressDialog:
+        """Show progress dialog and return it."""
+        if self._progress_dialog:
+            self._progress_dialog.close()
+        self._progress_dialog = ProgressDialog(title, self)
+        self._progress_dialog.show()
+        return self._progress_dialog
         
-        # Create permanent widget for error messages
-        self.error_label = QLabel()
-        self.error_label.setStyleSheet("color: red;")
-        self.error_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.status_bar.addPermanentWidget(self.error_label)
+    def _handle_build_download(self, build_id: str, local_path: str):
+        """Handle build download completion."""
+        if self._progress_dialog:
+            self._progress_dialog.update_progress(100, f"Downloaded to: {local_path}")
+            QTimer.singleShot(2000, self._progress_dialog.close)
+        self.show_status(f"Downloaded build {build_id}")
         
-        # Create temporary widget for status messages
-        self.status_label = QLabel()
-        self.status_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.status_bar.addWidget(self.status_label)
+    def _handle_build_upload(self, build_id: str, blob_url: str):
+        """Handle build upload completion."""
+        if self._progress_dialog:
+            self._progress_dialog.update_progress(100, f"Uploaded to: {blob_url}")
+            QTimer.singleShot(2000, self._progress_dialog.close)
+        self.show_status(f"Uploaded build {build_id}")
         
-    def _handle_error(self, error_message: str):
-        """Central error handler for all controllers."""
-        logger.error(f"Error occurred: {error_message}")
-        
-        # Show error in status bar
-        self.error_label.setText(error_message)
-        
-        # Show error dialog with details
-        error_dialog = QMessageBox(self)
-        error_dialog.setIcon(QMessageBox.Critical)
-        error_dialog.setWindowTitle("Error")
-        error_dialog.setText("An error occurred")
-        error_dialog.setInformativeText(error_message)
-        error_dialog.setDetailedText(f"Error details:\n{error_message}")
-        error_dialog.setStandardButtons(QMessageBox.Ok)
-        error_dialog.exec()
-        
+    def _handle_upload_retry(self, build_id: str, local_path: str, attempt: int):
+        """Handle upload retry attempt."""
+        if self._progress_dialog:
+            self._progress_dialog.update_progress(
+                0, f"Retrying upload of build {build_id} (attempt {attempt})"
+            )
+        self.show_status(f"Retrying upload of build {build_id} (attempt {attempt})")
+
     def show_status(self, message: str, timeout: int = 5000):
         """Show a temporary status message."""
         self.status_label.setText(message)
@@ -449,4 +445,19 @@ class MainWindow(QMainWindow):
             self._progress_dialog.update_progress(
                 0, f"Retrying upload of build {build_id} (attempt {attempt})"
             )
-        self.show_status(f"Retrying upload of build {build_id} (attempt {attempt})") 
+        self.show_status(f"Retrying upload of build {build_id} (attempt {attempt})")
+
+    def switch_layout(self, layout_name):
+        """Switch the main content area to the selected layout."""
+        if layout_name in self._layouts:
+            idx = list(self._layouts.keys()).index(layout_name)
+            self._layout_stack.setCurrentIndex(idx)
+        else:
+            logger.error(f"Unknown layout: {layout_name}")
+
+    def _load_webapps(self):
+        config_path = Path("config/webapps.json")
+        if config_path.exists():
+            with open(config_path) as f:
+                return json.load(f)
+        return [] 

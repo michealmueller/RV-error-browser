@@ -1,11 +1,13 @@
 """Test utilities."""
+import os
+import time
 import psycopg2
+from pathlib import Path
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from .db_config import DB_CONFIG, TEST_TABLE_SCHEMA
-import time
 from typing import Dict, Any
 
-def wait_for_postgres(max_retries: int = 5, delay: int = 2) -> None:
+def wait_for_postgres(max_retries=5, retry_interval=1):
     """Wait for PostgreSQL to be ready."""
     for i in range(max_retries):
         try:
@@ -18,14 +20,17 @@ def wait_for_postgres(max_retries: int = 5, delay: int = 2) -> None:
             conn.close()
             return
         except psycopg2.OperationalError:
-            if i == max_retries - 1:
+            if i < max_retries - 1:
+                time.sleep(retry_interval)
+            else:
                 raise
-            time.sleep(delay)
 
-def create_test_database() -> Dict[str, Any]:
-    """Create a test database and the test_table, then return connection info."""
+def create_test_database():
+    """Create a test database."""
+    # Wait for PostgreSQL to be ready
     wait_for_postgres()
     
+    # Connect to default database
     conn = psycopg2.connect(
         dbname="postgres",
         user="postgres",
@@ -33,28 +38,73 @@ def create_test_database() -> Dict[str, Any]:
         host="localhost"
     )
     conn.autocommit = True
-    cursor = conn.cursor()
     
-    cursor.execute("DROP DATABASE IF EXISTS test_db")
-    cursor.execute("CREATE DATABASE test_db")
-    cursor.close()
-    conn.close()
-
-    # Now connect to test_db and create the test_table
-    test_db_conn = psycopg2.connect(
-        dbname="test_db",
+    try:
+        with conn.cursor() as cur:
+            # Create test database if it doesn't exist
+            cur.execute("SELECT 1 FROM pg_database WHERE datname = 'quantumops_test'")
+            if not cur.fetchone():
+                cur.execute("CREATE DATABASE quantumops_test")
+    finally:
+        conn.close()
+    
+    # Connect to test database
+    test_conn = psycopg2.connect(
+        dbname="quantumops_test",
         user="postgres",
         password="postgres",
         host="localhost"
     )
-    test_db_conn.autocommit = True
-    test_db_cursor = test_db_conn.cursor()
-    test_db_cursor.execute(TEST_TABLE_SCHEMA)
-    test_db_cursor.close()
-    test_db_conn.close()
+    
+    try:
+        with test_conn.cursor() as cur:
+            # Create test tables
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS builds (
+                    id SERIAL PRIMARY KEY,
+                    build_id VARCHAR(255) NOT NULL,
+                    platform VARCHAR(50) NOT NULL,
+                    version VARCHAR(50) NOT NULL,
+                    status VARCHAR(50) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS history (
+                    id SERIAL PRIMARY KEY,
+                    build_id VARCHAR(255) NOT NULL,
+                    platform VARCHAR(50) NOT NULL,
+                    version VARCHAR(50) NOT NULL,
+                    action VARCHAR(50) NOT NULL,
+                    status VARCHAR(50) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+    finally:
+        test_conn.close()
 
+def cleanup_test_database():
+    """Clean up test database."""
+    conn = psycopg2.connect(
+        dbname="postgres",
+        user="postgres",
+        password="postgres",
+        host="localhost"
+    )
+    conn.autocommit = True
+    
+    try:
+        with conn.cursor() as cur:
+            # Drop test database
+            cur.execute("DROP DATABASE IF EXISTS quantumops_test")
+    finally:
+        conn.close()
+
+def get_test_db_config():
+    """Get test database configuration."""
     return {
-        "dbname": "test_db",
+        "dbname": "quantumops_test",
         "user": "postgres",
         "password": "postgres",
         "host": "localhost"

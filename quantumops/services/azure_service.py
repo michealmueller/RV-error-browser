@@ -3,7 +3,7 @@ Azure service for handling Azure Storage operations.
 """
 import logging
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pathlib import Path
 from datetime import datetime
 
@@ -14,7 +14,8 @@ from azure.core.exceptions import (
     ResourceNotFoundError,
     ResourceExistsError,
     ServiceRequestError,
-    HttpResponseError
+    HttpResponseError,
+    ClientAuthenticationError
 )
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,8 @@ class AzureService:
         self._blob_service_client: Optional[BlobServiceClient] = None
         self._credential: Optional[DefaultAzureCredential] = None
         self._container_name: Optional[str] = None
+        self._max_retries = 3
+        self._retry_delay = 1  # seconds
         
     def initialize(self, container_name: str) -> None:
         """Initialize the Azure service."""
@@ -41,6 +44,10 @@ class AzureService:
                 credential=self._credential
             )
             logger.info("Azure service initialized successfully")
+        except ClientAuthenticationError as e:
+            error_msg = f"Authentication failed: {str(e)}"
+            logger.error(error_msg)
+            raise AzureServiceError(error_msg)
         except Exception as e:
             error_msg = f"Failed to initialize Azure service: {str(e)}"
             logger.error(error_msg)
@@ -48,11 +55,16 @@ class AzureService:
             
     def _get_storage_url(self) -> str:
         """Get the storage account URL from environment variables."""
-        account_name = os.getenv("AZURE_STORAGE_ACCOUNT")
-        if not account_name:
-            raise AzureServiceError("AZURE_STORAGE_ACCOUNT environment variable not set")
-        return f"https://{account_name}.blob.core.windows.net"
-        
+        try:
+            account_name = os.getenv("AZURE_STORAGE_ACCOUNT")
+            if not account_name:
+                raise AzureServiceError("AZURE_STORAGE_ACCOUNT environment variable not set")
+            return f"https://{account_name}.blob.core.windows.net"
+        except Exception as e:
+            error_msg = f"Error getting storage URL: {str(e)}"
+            logger.error(error_msg)
+            raise AzureServiceError(error_msg)
+            
     def upload_file(
         self,
         file_path: str,
@@ -61,48 +73,39 @@ class AzureService:
         progress_callback: Optional[callable] = None
     ) -> str:
         """Upload a file to Azure Blob Storage."""
+        if not self._blob_service_client:
+            raise AzureServiceError("Azure service not initialized")
+            
+        if not os.path.exists(file_path):
+            raise AzureServiceError(f"File not found: {file_path}")
+            
+        blob_name = blob_name or os.path.basename(file_path)
+        metadata = metadata or {}
+        
         try:
-            if not self._blob_service_client:
-                raise AzureServiceError("Azure service not initialized")
-                
-            file_path = Path(file_path)
-            if not file_path.exists():
-                raise AzureServiceError(f"File not found: {file_path}")
-                
-            # Generate blob name if not provided
-            if not blob_name:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                blob_name = f"{timestamp}_{file_path.name}"
-                
             # Get blob client
             blob_client = self._blob_service_client.get_blob_client(
                 container=self._container_name,
                 blob=blob_name
             )
             
-            # Upload file with progress tracking
-            with open(file_path, "rb") as data:
-                file_size = file_path.stat().st_size
-                uploaded_size = 0
+            # Get file size for progress tracking
+            file_size = os.path.getsize(file_path)
+            uploaded_size = 0
+            
+            # Upload with progress tracking
+            with open(file_path, "rb") as file:
+                blob_client.upload_blob(
+                    file,
+                    overwrite=True,
+                    metadata=metadata,
+                    max_concurrency=4
+                )
                 
-                # Upload in chunks for progress tracking
-                chunk_size = 4 * 1024 * 1024  # 4MB chunks
-                while True:
-                    chunk = data.read(chunk_size)
-                    if not chunk:
-                        break
-                        
-                    blob_client.upload_blob(
-                        chunk,
-                        overwrite=True,
-                        metadata=metadata
-                    )
+                # Update progress
+                if progress_callback:
+                    progress_callback(100, "Upload complete")
                     
-                    uploaded_size += len(chunk)
-                    if progress_callback:
-                        progress = int((uploaded_size / file_size) * 100)
-                        progress_callback(progress, f"Uploading: {progress}%")
-                        
             logger.info(f"File uploaded successfully: {blob_name}")
             return blob_client.url
             
@@ -134,10 +137,10 @@ class AzureService:
         progress_callback: Optional[callable] = None
     ) -> str:
         """Download a file from Azure Blob Storage."""
+        if not self._blob_service_client:
+            raise AzureServiceError("Azure service not initialized")
+            
         try:
-            if not self._blob_service_client:
-                raise AzureServiceError("Azure service not initialized")
-                
             # Get blob client
             blob_client = self._blob_service_client.get_blob_client(
                 container=self._container_name,
@@ -147,6 +150,9 @@ class AzureService:
             # Get blob properties for size
             properties = blob_client.get_blob_properties()
             blob_size = properties.size
+            
+            # Create destination directory if it doesn't exist
+            os.makedirs(os.path.dirname(destination_path), exist_ok=True)
             
             # Download with progress tracking
             with open(destination_path, "wb") as file:
@@ -183,10 +189,10 @@ class AzureService:
             
     def delete_file(self, blob_name: str) -> None:
         """Delete a file from Azure Blob Storage."""
+        if not self._blob_service_client:
+            raise AzureServiceError("Azure service not initialized")
+            
         try:
-            if not self._blob_service_client:
-                raise AzureServiceError("Azure service not initialized")
-                
             blob_client = self._blob_service_client.get_blob_client(
                 container=self._container_name,
                 blob=blob_name
@@ -203,18 +209,25 @@ class AzureService:
             logger.error(error_msg)
             raise AzureServiceError(error_msg)
             
-    def list_files(self, prefix: Optional[str] = None) -> list:
+    def list_files(self, prefix: Optional[str] = None) -> List[Dict[str, Any]]:
         """List files in the container."""
-        try:
-            if not self._blob_service_client:
-                raise AzureServiceError("Azure service not initialized")
-                
-            container_client = self._blob_service_client.get_container_client(
-                self._container_name
-            )
+        if not self._blob_service_client:
+            raise AzureServiceError("Azure service not initialized")
             
+        try:
+            container_client = self._blob_service_client.get_container_client(self._container_name)
             blobs = container_client.list_blobs(name_starts_with=prefix)
-            return [blob.name for blob in blobs]
+            
+            files = []
+            for blob in blobs:
+                files.append({
+                    "name": blob.name,
+                    "size": blob.size,
+                    "last_modified": blob.last_modified,
+                    "metadata": blob.metadata
+                })
+                
+            return files
             
         except ResourceNotFoundError:
             error_msg = f"Container not found: {self._container_name}"
@@ -227,23 +240,19 @@ class AzureService:
             
     def get_file_metadata(self, blob_name: str) -> Dict[str, Any]:
         """Get metadata for a file."""
+        if not self._blob_service_client:
+            raise AzureServiceError("Azure service not initialized")
         try:
-            if not self._blob_service_client:
-                raise AzureServiceError("Azure service not initialized")
-                
             blob_client = self._blob_service_client.get_blob_client(
                 container=self._container_name,
                 blob=blob_name
             )
             properties = blob_client.get_blob_properties()
-            
             return {
-                "name": blob_name,
                 "size": properties.size,
                 "last_modified": properties.last_modified,
-                "metadata": properties.metadata
+                "metadata": properties.metadata or {}
             }
-            
         except ResourceNotFoundError:
             error_msg = f"Blob not found: {blob_name}"
             logger.error(error_msg)
@@ -251,4 +260,36 @@ class AzureService:
         except Exception as e:
             error_msg = f"Error getting file metadata: {str(e)}"
             logger.error(error_msg)
-            raise AzureServiceError(error_msg) 
+            raise AzureServiceError(error_msg)
+            
+    def update_file_metadata(self, blob_name: str, metadata: Dict[str, str]) -> None:
+        """Update metadata for a file."""
+        if not self._blob_service_client:
+            raise AzureServiceError("Azure service not initialized")
+            
+        try:
+            blob_client = self._blob_service_client.get_blob_client(
+                container=self._container_name,
+                blob=blob_name
+            )
+            blob_client.set_blob_metadata(metadata=metadata)
+            logger.info(f"File metadata updated successfully: {blob_name}")
+            
+        except ResourceNotFoundError:
+            error_msg = f"Blob not found: {blob_name}"
+            logger.error(error_msg)
+            raise AzureServiceError(error_msg)
+        except Exception as e:
+            error_msg = f"Error updating file metadata: {str(e)}"
+            logger.error(error_msg)
+            raise AzureServiceError(error_msg)
+            
+    def cleanup(self):
+        """Clean up resources."""
+        try:
+            self._blob_service_client = None
+            self._credential = None
+            self._container_name = None
+            logger.info("Azure service cleaned up successfully")
+        except Exception as e:
+            logger.error(f"Error during cleanup: {e}") 

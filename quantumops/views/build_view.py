@@ -16,65 +16,78 @@ class BuildView(QWidget):
     """View for displaying and managing mobile builds."""
     
     # Signals
-    build_selected = Signal(str)  # build_id
+    download_requested = Signal(str)  # build_id
+    upload_requested = Signal(str, str)  # build_id, local_path
+    install_requested = Signal(str)  # build_id
     filter_changed = Signal(dict)  # filter criteria
+    build_selected = Signal(str)  # build_id
     refresh_requested = Signal()
     
-    def __init__(self, platform: str):
-        super().__init__()
+    def __init__(self, platform: str, parent: Optional[QWidget] = None):
+        """Initialize build view."""
+        super().__init__(parent)
         self.platform = platform
-        self._init_ui()
+        self._setup_ui()
+        self._connect_signals()
         
-    def _init_ui(self):
-        """Initialize the UI components."""
-        layout = QVBoxLayout(self)
-        
-        # Filter controls
-        filter_layout = QHBoxLayout()
-        
-        # Search input
-        self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search builds...")
-        self.search_input.textChanged.connect(self._handle_search)
-        filter_layout.addWidget(self.search_input)
-        
-        # Version filter
-        self.version_filter = QComboBox()
-        self.version_filter.addItem("All Versions", "")
-        self.version_filter.currentIndexChanged.connect(self._handle_filter_change)
-        filter_layout.addWidget(self.version_filter)
-        
-        # Status filter
-        self.status_filter = QComboBox()
-        self.status_filter.addItem("All Statuses", "")
-        self.status_filter.addItem("Available", "available")
-        self.status_filter.addItem("Downloaded", "downloaded")
-        self.status_filter.addItem("Uploaded", "uploaded")
-        self.status_filter.currentIndexChanged.connect(self._handle_filter_change)
-        filter_layout.addWidget(self.status_filter)
-        
-        # Refresh button
-        refresh_btn = QPushButton("Refresh")
-        refresh_btn.clicked.connect(self.refresh_requested)
-        filter_layout.addWidget(refresh_btn)
-        
-        layout.addLayout(filter_layout)
-        
-        # Builds table
-        self.builds_table = QTableWidget()
-        self.builds_table.setColumnCount(5)
-        self.builds_table.setHorizontalHeaderLabels([
-            "Build ID", "Version", "Status", "Size", "Date"
-        ])
-        self.builds_table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.builds_table.setSelectionMode(QTableWidget.SingleSelection)
-        self.builds_table.itemSelectionChanged.connect(self._handle_selection)
-        layout.addWidget(self.builds_table)
-        
-        # Status bar
-        self.status_bar = QLabel()
-        layout.addWidget(self.status_bar)
-        
+    def _setup_ui(self):
+        """Set up the user interface."""
+        try:
+            # Main layout
+            layout = QVBoxLayout(self)
+            
+            # Search and filter bar
+            filter_layout = QHBoxLayout()
+            
+            # Search input
+            self.search_input = QLineEdit()
+            self.search_input.setPlaceholderText("Search builds...")
+            filter_layout.addWidget(self.search_input)
+            
+            # Version filter
+            self.version_filter = QComboBox()
+            self.version_filter.addItem("All Versions", "")
+            filter_layout.addWidget(self.version_filter)
+            
+            # Status filter
+            self.status_filter = QComboBox()
+            self.status_filter.addItem("All Statuses", "")
+            self.status_filter.addItem("Available", "available")
+            self.status_filter.addItem("Downloaded", "downloaded")
+            self.status_filter.addItem("Uploaded", "uploaded")
+            filter_layout.addWidget(self.status_filter)
+            
+            layout.addLayout(filter_layout)
+            
+            # Builds table
+            self.builds_table = QTableWidget()
+            self.builds_table.setColumnCount(5)
+            self.builds_table.setHorizontalHeaderLabels([
+                "ID", "Version", "Status", "Size", "Date"
+            ])
+            self.builds_table.setSelectionBehavior(QTableWidget.SelectRows)
+            self.builds_table.setSelectionMode(QTableWidget.SingleSelection)
+            layout.addWidget(self.builds_table)
+            
+            # Status bar
+            self.status_bar = QLabel()
+            layout.addWidget(self.status_bar)
+            
+        except Exception as e:
+            logger.error(f"Error setting up UI: {e}")
+            self._show_error("UI Setup Error", str(e))
+            
+    def _connect_signals(self):
+        """Connect signals to slots."""
+        try:
+            self.search_input.textChanged.connect(self._handle_search)
+            self.version_filter.currentIndexChanged.connect(self._handle_filter_change)
+            self.status_filter.currentIndexChanged.connect(self._handle_filter_change)
+            self.builds_table.itemSelectionChanged.connect(self._handle_selection)
+        except Exception as e:
+            logger.error(f"Error connecting signals: {e}")
+            self._show_error("Signal Connection Error", str(e))
+            
     def _handle_search(self, text: str):
         """Handle search input changes."""
         try:
@@ -106,14 +119,32 @@ class BuildView(QWidget):
             if selected:
                 build_id = selected[0].text()
                 self.build_selected.emit(build_id)
+                
+                # Get the local path for the selected build
+                local_path = self.get_local_path(build_id)
+                if local_path:
+                    self.upload_requested.emit(build_id, local_path)
         except Exception as e:
             logger.error(f"Error handling selection: {e}")
             self._show_error("Selection Error", str(e))
             
+    def get_local_path(self, build_id: str) -> Optional[str]:
+        """Get the local path for a build."""
+        try:
+            # This should be implemented to return the actual local path
+            # For now, we'll return a placeholder
+            return f"/tmp/builds/{build_id}"
+        except Exception as e:
+            logger.error(f"Error getting local path: {e}")
+            return None
+            
     def _show_error(self, title: str, message: str):
         """Show error message to user."""
-        QMessageBox.critical(self, title, message)
-        
+        try:
+            QMessageBox.critical(self, title, message)
+        except Exception as e:
+            logger.error(f"Error showing error message: {e}")
+            
     def update_builds(self, builds: List[Dict]):
         """Update the builds table with new data."""
         try:
@@ -139,24 +170,71 @@ class BuildView(QWidget):
                     
             # Populate table
             for row, build in enumerate(builds):
-                self.builds_table.setItem(row, 0, QTableWidgetItem(build.get("id", "")))
-                self.builds_table.setItem(row, 1, QTableWidgetItem(build.get("version", "")))
-                self.builds_table.setItem(row, 2, QTableWidgetItem(build.get("status", "")))
-                self.builds_table.setItem(row, 3, QTableWidgetItem(str(build.get("size", 0))))
-                self.builds_table.setItem(row, 4, QTableWidgetItem(build.get("date", "")))
-                
+                try:
+                    self.builds_table.setItem(row, 0, QTableWidgetItem(build.get("id", "")))
+                    self.builds_table.setItem(row, 1, QTableWidgetItem(build.get("version", "")))
+                    self.builds_table.setItem(row, 2, QTableWidgetItem(build.get("status", "")))
+                    self.builds_table.setItem(row, 3, QTableWidgetItem(str(build.get("size", 0))))
+                    self.builds_table.setItem(row, 4, QTableWidgetItem(build.get("date", "")))
+                except Exception as e:
+                    logger.error(f"Error populating row {row}: {e}")
+                    continue
+                    
             self.status_bar.setText(f"Showing {len(builds)} builds")
             
         except Exception as e:
             logger.error(f"Error updating builds: {e}")
             self._show_error("Update Error", str(e))
             
+    def update_build_status(self, build_id: str, status: str):
+        """Update the status of a build in the table."""
+        try:
+            for row in range(self.builds_table.rowCount()):
+                if self.builds_table.item(row, 0).text() == build_id:
+                    self.builds_table.setItem(row, 2, QTableWidgetItem(status))
+                    break
+        except Exception as e:
+            logger.error(f"Error updating build status: {e}")
+            
+    def update_upload_status(self, build_id: str, status: str):
+        """Update the upload status of a build in the table."""
+        try:
+            for row in range(self.builds_table.rowCount()):
+                if self.builds_table.item(row, 0).text() == build_id:
+                    current_status = self.builds_table.item(row, 2).text()
+                    self.builds_table.setItem(row, 2, QTableWidgetItem(f"{current_status} - {status}"))
+                    break
+        except Exception as e:
+            logger.error(f"Error updating upload status: {e}")
+            
+    def update_upload_retry(self, build_id: str, attempt: int):
+        """Update the upload retry status of a build in the table."""
+        try:
+            for row in range(self.builds_table.rowCount()):
+                if self.builds_table.item(row, 0).text() == build_id:
+                    current_status = self.builds_table.item(row, 2).text()
+                    self.builds_table.setItem(row, 2, QTableWidgetItem(f"{current_status} (Retry {attempt})"))
+                    break
+        except Exception as e:
+            logger.error(f"Error updating upload retry status: {e}")
+            
     def show_error(self, message: str):
-        """Show error message in status bar."""
-        self.status_bar.setText(f"Error: {message}")
-        self.status_bar.setStyleSheet("color: red;")
-        
-    def clear_error(self):
-        """Clear error message from status bar."""
-        self.status_bar.clear()
-        self.status_bar.setStyleSheet("") 
+        """Show error message."""
+        try:
+            self._show_error("Error", message)
+        except Exception as e:
+            logger.error(f"Error showing error message: {e}")
+            
+    def cleanup(self):
+        """Clean up resources."""
+        try:
+            # Clear table
+            self.builds_table.setRowCount(0)
+            # Clear filters
+            self.search_input.clear()
+            self.version_filter.setCurrentIndex(0)
+            self.status_filter.setCurrentIndex(0)
+            # Clear status
+            self.status_bar.clear()
+        except Exception as e:
+            logger.error(f"Error during cleanup: {e}") 

@@ -61,4 +61,9 @@ class HealthController(QObject):
         last_check = self.model.get_last_check(webapp)
         if last_check:
             return last_check.strftime("%H:%M:%S")
-        return None 
+        return None
+        
+    def cleanup(self) -> None:
+        """Clean up resources when the application closes."""
+        logger.info("Cleaning up health controller")
+        self.stop_monitoring() 

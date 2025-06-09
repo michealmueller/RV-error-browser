@@ -5,15 +5,20 @@ import logging
 from typing import Dict, List, Optional, Callable
 from datetime import datetime
 from pathlib import Path
+from PySide6.QtCore import QObject, Signal
 
 from ..services.azure_service import AzureService, AzureServiceError
 
 logger = logging.getLogger(__name__)
 
-class BuildManager:
+class BuildManager(QObject):
     """Manager for handling mobile builds."""
+    build_list_updated = Signal(list)
+    build_status_changed = Signal(str, str)  # build_id, status
+    error_occurred = Signal(str)
     
     def __init__(self):
+        super().__init__()
         self._builds: Dict[str, List[Dict]] = {
             "android": [],
             "ios": []
@@ -63,14 +68,17 @@ class BuildManager:
             # Update build status
             build["status"] = "downloaded"
             build["local_path"] = str(local_path)
+            self.build_status_changed.emit(build_id, "downloaded")
             
             return str(local_path)
             
         except AzureServiceError as e:
             logger.error(f"Azure error downloading build {build_id}: {e}")
+            self.error_occurred.emit(str(e))
             raise
         except Exception as e:
             logger.error(f"Error downloading build {build_id}: {e}")
+            self.error_occurred.emit(str(e))
             raise
             
     def upload_build(
@@ -107,14 +115,17 @@ class BuildManager:
             # Update build status
             build["status"] = "uploaded"
             build["blob_url"] = blob_url
+            self.build_status_changed.emit(build_id, "uploaded")
             
             return blob_url
             
         except AzureServiceError as e:
             logger.error(f"Azure error uploading build {build_id}: {e}")
+            self.error_occurred.emit(str(e))
             raise
         except Exception as e:
             logger.error(f"Error uploading build {build_id}: {e}")
+            self.error_occurred.emit(str(e))
             raise
             
     def fetch_builds(
@@ -126,6 +137,7 @@ class BuildManager:
         """Fetch builds for a platform."""
         try:
             if not force_refresh and self._builds[platform]:
+                self.build_list_updated.emit(self._builds[platform])
                 return self._builds[platform]
                 
             if progress_callback:
@@ -154,13 +166,16 @@ class BuildManager:
                 progress_callback(100, "Builds fetched successfully")
                 
             self._builds[platform] = builds
+            self.build_list_updated.emit(builds)
             return builds
             
         except AzureServiceError as e:
             logger.error(f"Azure error fetching builds: {e}")
+            self.error_occurred.emit(str(e))
             raise
         except Exception as e:
             logger.error(f"Error fetching builds: {e}")
+            self.error_occurred.emit(str(e))
             raise
             
     def filter_builds(self, platform: str, filters: Dict) -> List[Dict]:

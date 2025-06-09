@@ -1,5 +1,5 @@
 """
-Progress dialog for tracking build operations.
+Progress dialog widget for QuantumOps.
 """
 import logging
 from typing import Optional
@@ -18,6 +18,12 @@ class ProgressDialog(QDialog):
     cancelled = Signal()
     
     def __init__(self, title: str, parent: Optional[QWidget] = None):
+        """Initialize progress dialog.
+        
+        Args:
+            title: Dialog title
+            parent: Parent widget
+        """
         super().__init__(parent)
         self.setWindowTitle(title)
         self.setModal(True)
@@ -52,7 +58,12 @@ class ProgressDialog(QDialog):
             logger.error(f"Error handling cancel: {e}")
             
     def update_progress(self, value: int, status: str):
-        """Update progress bar and status."""
+        """Update progress bar and status.
+        
+        Args:
+            value: Progress value (0-100)
+            status: Status message
+        """
         try:
             self.progress_bar.setValue(value)
             self.status_label.setText(status)
@@ -60,7 +71,11 @@ class ProgressDialog(QDialog):
             logger.error(f"Error updating progress: {e}")
             
     def set_indeterminate(self, status: str):
-        """Set progress bar to indeterminate mode."""
+        """Set progress bar to indeterminate mode.
+        
+        Args:
+            status: Status message
+        """
         try:
             self.progress_bar.setRange(0, 0)
             self.status_label.setText(status)

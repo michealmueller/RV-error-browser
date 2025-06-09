@@ -72,3 +72,6 @@ test_*.log
 
 # Environment variables and secrets
 .env
+
+# AI Information files (.aii) are tracked in git
+!*.aii

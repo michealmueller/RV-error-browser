@@ -24,8 +24,24 @@ This document describes the configuration files used by QuantumOps and their str
 ## Environment Variables
 - **Purpose:** Store secrets and sensitive configuration (e.g., Azure credentials).
 - **Usage:**
-  - `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` for Service Principal authentication
+  - Azure Service Principal Authentication:
+    - `AZURE_TENANT_ID`: Azure AD tenant ID
+    - `AZURE_CLIENT_ID`: Service Principal client ID
+    - `AZURE_CLIENT_SECRET`: Service Principal client secret
+  - Azure Storage Configuration:
+    - `AZURE_STORAGE_ACCOUNT`: Storage account name
+    - `AZURE_STORAGE_CONTAINER`: Default container name (optional)
   - Other secrets as required by your build or deployment process
+
+## Azure Service Configuration
+- **Initialization:**
+  - Service requires valid Service Principal credentials
+  - Container must exist or be created during initialization
+  - All operations check for proper initialization
+- **Error Handling:**
+  - Custom `AzureServiceError` for all Azure-related errors
+  - Proper error messages for authentication, container, and blob operations
+  - Comprehensive logging for troubleshooting
 
 ## Adding New Configurations
 - Place new config files in the `config/` directory

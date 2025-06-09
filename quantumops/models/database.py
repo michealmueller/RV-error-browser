@@ -1,109 +1,188 @@
 """
-Database model for handling PostgreSQL connections and queries.
+Database model for QuantumOps.
 """
-import logging
-from typing import Optional, List, Dict, Any
 import psycopg2
-from psycopg2.extras import RealDictCursor
-from PySide6.QtCore import QObject, Signal
+from psycopg2.extras import DictCursor
+from typing import Dict, List, Any, Optional
+import logging
 
 logger = logging.getLogger(__name__)
 
-class DatabaseModel(QObject):
-    """Model for database operations."""
+class Database:
+    """Database model for QuantumOps."""
     
-    # Signals
-    connection_status_changed = Signal(bool, str)  # (connected, message)
-    query_results_ready = Signal(list)  # List of dict results
-    error_occurred = Signal(str)  # Error message
+    def __init__(self, config: Dict[str, str]):
+        """Initialize database connection.
+        
+        Args:
+            config: Database configuration dictionary
+        """
+        self.config = config
+        self.conn = None
+        self.connect()
     
-    def __init__(self):
-        super().__init__()
-        self._connection: Optional[psycopg2.extensions.connection] = None
-        self._cursor: Optional[psycopg2.extensions.cursor] = None
-        self._connected = False
+    def connect(self) -> None:
+        """Connect to the database."""
+        try:
+            self.conn = psycopg2.connect(**self.config)
+            self.conn.autocommit = True
+        except psycopg2.Error as e:
+            logger.error(f"Failed to connect to database: {e}")
+            raise
+    
+    def close(self) -> None:
+        """Close database connection."""
+        if self.conn:
+            self.conn.close()
+            self.conn = None
+    
+    def execute(self, query: str, params: Optional[tuple] = None) -> None:
+        """Execute a query.
         
-    @property
-    def is_connected(self) -> bool:
-        """Return whether we're connected to the database."""
-        return self._connected
+        Args:
+            query: SQL query
+            params: Query parameters
+        """
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute(query, params)
+        except psycopg2.Error as e:
+            logger.error(f"Failed to execute query: {e}")
+            raise
+    
+    def fetch_one(self, query: str, params: Optional[tuple] = None) -> Optional[Dict[str, Any]]:
+        """Fetch one row from the database.
         
-    def connect(self, host: str, port: int, database: str, user: str, password: str) -> None:
-        """Connect to the PostgreSQL database."""
+        Args:
+            query: SQL query
+            params: Query parameters
+            
+        Returns:
+            Dictionary containing row data or None if no row found
+        """
         try:
-            if self._connection:
-                self.disconnect()
-                
-            self._connection = psycopg2.connect(
-                host=host,
-                port=port,
-                database=database,
-                user=user,
-                password=password,
-                cursor_factory=RealDictCursor
-            )
-            self._cursor = self._connection.cursor()
-            self._connected = True
-            self.connection_status_changed.emit(True, "Connected successfully")
-            logger.info(f"Connected to database {database} on {host}:{port}")
+            with self.conn.cursor(cursor_factory=DictCursor) as cur:
+                cur.execute(query, params)
+                return dict(cur.fetchone()) if cur.rowcount > 0 else None
+        except psycopg2.Error as e:
+            logger.error(f"Failed to fetch row: {e}")
+            raise
+    
+    def fetch_all(self, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
+        """Fetch all rows from the database.
+        
+        Args:
+            query: SQL query
+            params: Query parameters
             
-        except Exception as e:
-            self._connected = False
-            error_msg = f"Failed to connect: {str(e)}"
-            self.connection_status_changed.emit(False, error_msg)
-            self.error_occurred.emit(error_msg)
-            logger.error(error_msg)
-            
-    def disconnect(self) -> None:
-        """Disconnect from the database."""
+        Returns:
+            List of dictionaries containing row data
+        """
         try:
-            if self._cursor:
-                self._cursor.close()
-            if self._connection:
-                self._connection.close()
-            self._connected = False
-            self.connection_status_changed.emit(False, "Disconnected")
-            logger.info("Disconnected from database")
+            with self.conn.cursor(cursor_factory=DictCursor) as cur:
+                cur.execute(query, params)
+                return [dict(row) for row in cur.fetchall()]
+        except psycopg2.Error as e:
+            logger.error(f"Failed to fetch rows: {e}")
+            raise
+    
+    def insert_build(self, build_id: str, platform: str, version: str, status: str) -> None:
+        """Insert a build record.
+        
+        Args:
+            build_id: Build ID
+            platform: Platform (android/ios)
+            version: Version number
+            status: Build status
+        """
+        query = """
+            INSERT INTO builds (build_id, platform, version, status)
+            VALUES (%s, %s, %s, %s)
+        """
+        self.execute(query, (build_id, platform, version, status))
+    
+    def update_build_status(self, build_id: str, status: str) -> None:
+        """Update build status.
+        
+        Args:
+            build_id: Build ID
+            status: New status
+        """
+        query = """
+            UPDATE builds
+            SET status = %s
+            WHERE build_id = %s
+        """
+        self.execute(query, (status, build_id))
+    
+    def get_build(self, build_id: str) -> Optional[Dict[str, Any]]:
+        """Get build by ID.
+        
+        Args:
+            build_id: Build ID
             
-        except Exception as e:
-            error_msg = f"Error during disconnect: {str(e)}"
-            self.error_occurred.emit(error_msg)
-            logger.error(error_msg)
+        Returns:
+            Build data dictionary or None if not found
+        """
+        query = """
+            SELECT *
+            FROM builds
+            WHERE build_id = %s
+        """
+        return self.fetch_one(query, (build_id,))
+    
+    def get_builds(self, platform: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get all builds.
+        
+        Args:
+            platform: Optional platform filter
             
-    def execute_query(self, query: str, params: Optional[Dict[str, Any]] = None) -> None:
-        """Execute a query and emit results."""
-        if not self._connected:
-            self.error_occurred.emit("Not connected to database")
-            return
+        Returns:
+            List of build data dictionaries
+        """
+        query = """
+            SELECT *
+            FROM builds
+        """
+        params = None
+        if platform:
+            query += " WHERE platform = %s"
+            params = (platform,)
+        query += " ORDER BY created_at DESC"
+        return self.fetch_all(query, params)
+    
+    def add_history(self, build_id: str, platform: str, version: str, action: str, status: str) -> None:
+        """Add history record.
+        
+        Args:
+            build_id: Build ID
+            platform: Platform (android/ios)
+            version: Version number
+            action: Action performed
+            status: Action status
+        """
+        query = """
+            INSERT INTO history (build_id, platform, version, action, status)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        self.execute(query, (build_id, platform, version, action, status))
+    
+    def get_history(self, build_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get history records.
+        
+        Args:
+            build_id: Optional build ID filter
             
-        try:
-            self._cursor.execute(query, params or {})
-            results = self._cursor.fetchall()
-            self.query_results_ready.emit(results)
-            logger.info(f"Query executed successfully: {query[:100]}...")
-            
-        except Exception as e:
-            error_msg = f"Query execution failed: {str(e)}"
-            self.error_occurred.emit(error_msg)
-            logger.error(error_msg)
-            
-    def get_tables(self) -> List[str]:
-        """Get list of tables in the database."""
-        if not self._connected:
-            return []
-            
-        try:
-            query = """
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = 'public'
-                ORDER BY table_name;
-            """
-            self._cursor.execute(query)
-            return [row['table_name'] for row in self._cursor.fetchall()]
-            
-        except Exception as e:
-            error_msg = f"Failed to get tables: {str(e)}"
-            self.error_occurred.emit(error_msg)
-            logger.error(error_msg)
-            return [] 
+        Returns:
+            List of history data dictionaries
+        """
+        query = """
+            SELECT *
+            FROM history
+        """
+        params = None
+        if build_id:
+            query += " WHERE build_id = %s"
+            params = (build_id,)
+        query += " ORDER BY created_at DESC"
+        return self.fetch_all(query, params) 

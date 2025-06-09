@@ -43,7 +43,7 @@ class MainController(QObject):
         """Refresh build list."""
         try:
             platform = self.view.platform_combo.currentText()
-            self.model.refresh_builds(platform)
+            self.model.fetch_builds(platform, force_refresh=True)
         except Exception as e:
             logger.error(f"Failed to refresh builds: {e}")
             self.error_occurred.emit(str(e))
