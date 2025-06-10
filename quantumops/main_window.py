@@ -459,6 +459,11 @@ class MainWindow(QMainWindow):
             # Set the splitter as the central widget
             self.setCentralWidget(main_splitter)
             
+            # Apply beautiful styling again after all widgets are set up
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(100, self._apply_beautiful_styling)
+            QTimer.singleShot(500, self._apply_beautiful_styling)
+            
         except Exception as e:
             logger.error(f"Error setting up UI: {str(e)}")
             raise
@@ -501,9 +506,9 @@ class MainWindow(QMainWindow):
                 QLabel {
                     font-size: 16px;
                     font-weight: bold;
-                    color: #ffffff;
+                    color: #333;
                     padding: 10px;
-                    background-color: #2d2d2d;
+                    background-color: #f7fafd;
                     border-radius: 5px;
                 }
             """)
@@ -515,7 +520,7 @@ class MainWindow(QMainWindow):
             self.api_status_container.setLayout(self.api_status_layout)
             self.api_status_container.setStyleSheet("""
                 QWidget {
-                    background-color: #1e1e1e;
+                    background-color: white;
                     border-radius: 5px;
                     padding: 10px;
                 }
@@ -541,20 +546,20 @@ class MainWindow(QMainWindow):
             tab_widget = QTabWidget()
             tab_widget.setStyleSheet("""
                 QTabWidget::pane {
-                    border: 1px solid #3d3d3d;
-                    background-color: #1e1e1e;
+                    border: 1px solid #e0e0e0;
+                    background-color: white;
                 }
                 QTabBar::tab {
-                    background-color: #2d2d2d;
-                    color: #ffffff;
+                    background-color: #f7fafd;
+                    color: #333;
                     padding: 8px 16px;
-                    border: 1px solid #3d3d3d;
+                    border: 1px solid #e0e0e0;
                     border-bottom: none;
                     border-top-left-radius: 4px;
                     border-top-right-radius: 4px;
                 }
                 QTabBar::tab:selected {
-                    background-color: #1e1e1e;
+                    background-color: white;
                     border-bottom: 1px solid #1e1e1e;
                 }
                 QTabBar::tab:hover {
@@ -580,14 +585,14 @@ class MainWindow(QMainWindow):
         source_panel = QGroupBox("Log Source Selection")
         source_panel.setStyleSheet("""
             QGroupBox {
-                background-color: #2d2d2d;
-                border: 1px solid #3d3d3d;
+                background-color: #f7fafd;
+                border: 1px solid #e0e0e0;
                 border-radius: 4px;
                 margin-top: 1em;
                 padding: 10px;
             }
             QGroupBox::title {
-                color: #ffffff;
+                color: #333;
                 subcontrol-origin: margin;
                 left: 10px;
                 padding: 0 3px;
@@ -598,7 +603,7 @@ class MainWindow(QMainWindow):
         # Web App Selection
         webapp_layout = QHBoxLayout()
         webapp_label = QLabel("Web App:")
-        webapp_label.setStyleSheet("color: #ffffff;")
+        webapp_label.setStyleSheet("color: #333;")
         webapp_layout.addWidget(webapp_label)
         
         self.webapp_combo = QComboBox()
@@ -606,9 +611,9 @@ class MainWindow(QMainWindow):
         self.webapp_combo.setToolTip("Select a web app to view its logs")
         self.webapp_combo.setStyleSheet("""
             QComboBox {
-                background-color: #2d2d2d;
-                color: #ffffff;
-                border: 1px solid #3d3d3d;
+                background-color: #f7fafd;
+                color: #333;
+                border: 1px solid #e0e0e0;
                 padding: 5px;
                 min-width: 250px;
                 border-radius: 4px;
@@ -645,9 +650,9 @@ class MainWindow(QMainWindow):
         self.fetch_logs_btn.clicked.connect(self.handle_fetch_azure_logs)
         self.fetch_logs_btn.setStyleSheet("""
             QPushButton {
-                background-color: #2d2d2d;
-                color: #ffffff;
-                border: 1px solid #3d3d3d;
+                background-color: #f7fafd;
+                color: #333;
+                border: 1px solid #e0e0e0;
                 padding: 5px 10px;
                 border-radius: 4px;
             }
@@ -674,7 +679,7 @@ class MainWindow(QMainWindow):
         
         # Status Label
         self.loading_status = QLabel()
-        self.loading_status.setStyleSheet("color: #ffffff;")
+        self.loading_status.setStyleSheet("color: #333;")
         self.loading_status.hide()
         source_layout.addWidget(self.loading_status)
         
@@ -688,12 +693,12 @@ class MainWindow(QMainWindow):
         self.log_source_viewer.setReadOnly(True)
         self.log_source_viewer.setStyleSheet("""
             QTextEdit {
-                background-color: #1e1e1e;
-                color: #ffffff;
+                background-color: white;
+                color: #333;
                 font-family: 'Consolas', 'Monaco', monospace;
                 font-size: 12px;
                 padding: 8px;
-                border: 1px solid #3d3d3d;
+                border: 1px solid #e0e0e0;
                 border-radius: 4px;
             }
         """)
@@ -707,12 +712,12 @@ class MainWindow(QMainWindow):
         self.system_log_viewer.setReadOnly(True)
         self.system_log_viewer.setStyleSheet("""
             QTextEdit {
-                background-color: #1e1e1e;
-                color: #ffffff;
+                background-color: white;
+                color: #333;
                 font-family: 'Consolas', 'Monaco', monospace;
                 font-size: 12px;
                 padding: 8px;
-                border: 1px solid #3d3d3d;
+                border: 1px solid #e0e0e0;
                 border-radius: 4px;
             }
         """)
@@ -739,14 +744,14 @@ class MainWindow(QMainWindow):
             connection_group = QGroupBox("Database Connection")
             connection_group.setStyleSheet("""
                 QGroupBox {
-                    background-color: #2d2d2d;
-                    border: 1px solid #3d3d3d;
+                    background-color: #f7fafd;
+                    border: 1px solid #e0e0e0;
                     border-radius: 4px;
                     margin-top: 1em;
                     padding: 10px;
                 }
                 QGroupBox::title {
-                    color: #ffffff;
+                    color: #333;
                     subcontrol-origin: margin;
                     left: 10px;
                     padding: 0 3px;
@@ -759,9 +764,9 @@ class MainWindow(QMainWindow):
             self.connection_combo = QComboBox()
             self.connection_combo.setStyleSheet("""
                 QComboBox {
-                    background-color: #2d2d2d;
-                    color: #ffffff;
-                    border: 1px solid #3d3d3d;
+                    background-color: #f7fafd;
+                    color: #333;
+                    border: 1px solid #e0e0e0;
                     padding: 5px;
                     min-width: 250px;
                     border-radius: 4px;
@@ -793,9 +798,9 @@ class MainWindow(QMainWindow):
             for btn in [self.add_connection_btn, self.edit_connection_btn, self.delete_connection_btn]:
                 btn.setStyleSheet("""
                     QPushButton {
-                        background-color: #2d2d2d;
-                        color: #ffffff;
-                        border: 1px solid #3d3d3d;
+                        background-color: #f7fafd;
+                        color: #333;
+                        border: 1px solid #e0e0e0;
                         padding: 5px 10px;
                         border-radius: 4px;
                     }
@@ -821,9 +826,9 @@ class MainWindow(QMainWindow):
                          self.user_label, self.password_label]:
                 field.setStyleSheet("""
                     QLineEdit {
-                        background-color: #2d2d2d;
-                        color: #ffffff;
-                        border: 1px solid #3d3d3d;
+                        background-color: #f7fafd;
+                        color: #333;
+                        border: 1px solid #e0e0e0;
                         padding: 5px;
                         border-radius: 4px;
                     }
@@ -850,9 +855,9 @@ class MainWindow(QMainWindow):
             for btn in [self.connect_btn, self.disconnect_btn]:
                 btn.setStyleSheet("""
                     QPushButton {
-                        background-color: #2d2d2d;
-                        color: #ffffff;
-                        border: 1px solid #3d3d3d;
+                        background-color: #f7fafd;
+                        color: #333;
+                        border: 1px solid #e0e0e0;
                         padding: 5px 10px;
                         border-radius: 4px;
                     }
@@ -876,14 +881,14 @@ class MainWindow(QMainWindow):
             query_group = QGroupBox("Query")
             query_group.setStyleSheet("""
                 QGroupBox {
-                    background-color: #2d2d2d;
-                    border: 1px solid #3d3d3d;
+                    background-color: #f7fafd;
+                    border: 1px solid #e0e0e0;
                     border-radius: 4px;
                     margin-top: 1em;
                     padding: 10px;
                 }
                 QGroupBox::title {
-                    color: #ffffff;
+                    color: #333;
                     subcontrol-origin: margin;
                     left: 10px;
                     padding: 0 3px;
@@ -897,9 +902,9 @@ class MainWindow(QMainWindow):
             self.table_input.setPlaceholderText("Enter table name...")
             self.table_input.setStyleSheet("""
                 QLineEdit {
-                    background-color: #2d2d2d;
-                    color: #ffffff;
-                    border: 1px solid #3d3d3d;
+                    background-color: #f7fafd;
+                    color: #333;
+                    border: 1px solid #e0e0e0;
                     padding: 5px;
                     border-radius: 4px;
                 }
@@ -915,9 +920,9 @@ class MainWindow(QMainWindow):
             self.query_btn.setEnabled(False)
             self.query_btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #2d2d2d;
-                    color: #ffffff;
-                    border: 1px solid #3d3d3d;
+                    background-color: #f7fafd;
+                    color: #333;
+                    border: 1px solid #e0e0e0;
                     padding: 5px 10px;
                     border-radius: 4px;
                 }
@@ -938,20 +943,20 @@ class MainWindow(QMainWindow):
             self.results_table = QTableWidget()
             self.results_table.setStyleSheet("""
                 QTableWidget {
-                    background-color: #1e1e1e;
-                    color: #ffffff;
+                    background-color: white;
+                    color: #333;
                     gridline-color: #3d3d3d;
-                    border: 1px solid #3d3d3d;
+                    border: 1px solid #e0e0e0;
                     border-radius: 4px;
                 }
                 QTableWidget::item {
                     padding: 5px;
                 }
                 QHeaderView::section {
-                    background-color: #2d2d2d;
-                    color: #ffffff;
+                    background-color: #f7fafd;
+                    color: #333;
                     padding: 5px;
-                    border: 1px solid #3d3d3d;
+                    border: 1px solid #e0e0e0;
                 }
             """)
             query_layout.addWidget(self.results_table)
@@ -985,7 +990,7 @@ class MainWindow(QMainWindow):
             
             # API name label
             name_label = QLabel(api_url.split('/')[2])
-            name_label.setStyleSheet("color: #ffffff;")
+            name_label.setStyleSheet("color: #333;")
             status_layout.addWidget(name_label)
             
             # Status indicator
@@ -1641,12 +1646,12 @@ class MainWindow(QMainWindow):
 
     def set_theme(self, mode):
         import qdarktheme
-        qdarktheme.setup_theme(mode)
+        # qdarktheme.setup_theme(mode)  # DISABLED for beautiful colorful UI
         self.update_all_widget_styles()
         if mode == "light":
             self.log_window.setStyleSheet("color: #222; background: #fff;")
         else:
-            self.log_window.setStyleSheet("color: #fff; background: #222;")
+            self.log_window.setStyleSheet("color: #333; background: white;")
         self.append_terminal_line(f"Theme set to {mode}", msg_type="system")
 
     def set_branding_theme(self, brand):
@@ -1717,7 +1722,7 @@ class MainWindow(QMainWindow):
                     font-size: 16px;
                     font-weight: bold;
                     background-color: {colors['primary']};
-                    color: #fff;
+                    color: #333;
                     border-radius: 6px;
                     border: none;
                 }}
@@ -1735,7 +1740,7 @@ class MainWindow(QMainWindow):
                     min-height: 28px;
                     font-size: 14px;
                     background-color: {colors['primary']};
-                    color: #fff;
+                    color: #333;
                     border-radius: 4px;
                     border: none;
                 }}
@@ -1752,7 +1757,7 @@ class MainWindow(QMainWindow):
     def update_log_styles(self):
         colors = get_current_brand_colors()
         # Example: update log window background and text color
-        self.log_window.setStyleSheet(f"color: #fff; background: #222; border: 1px solid {colors['primary']};")
+        self.log_window.setStyleSheet(f"color: #333; background: white; border: 1px solid {colors['primary']};")
         # You may want to update log message color mapping as well
 
     def update_all_widget_styles(self):
@@ -1786,7 +1791,7 @@ class MainWindow(QMainWindow):
         combo_style = f'''
             QComboBox {{
                 background-color: #2b2b2b;
-                color: #ffffff;
+                color: #333;
                 border: 1px solid {brand_colors['primary']};
                 border-radius: 4px;
                 padding: 5px;
@@ -1811,7 +1816,7 @@ class MainWindow(QMainWindow):
         line_edit_style = f'''
             QLineEdit {{
                 background-color: #2b2b2b;
-                color: #ffffff;
+                color: #333;
                 border: 1px solid {brand_colors['primary']};
                 border-radius: 4px;
                 padding: 5px;
@@ -1830,7 +1835,7 @@ class MainWindow(QMainWindow):
         table_style = f'''
             QTableWidget {{
                 background-color: #2b2b2b;
-                color: #ffffff;
+                color: #333;
                 gridline-color: {brand_colors['primary']};
                 border: 1px solid {brand_colors['primary']};
                 border-radius: 4px;
@@ -1840,11 +1845,11 @@ class MainWindow(QMainWindow):
             }}
             QTableWidget::item:selected {{
                 background-color: {brand_colors['primary']};
-                color: #ffffff;
+                color: #333;
             }}
             QHeaderView::section {{
-                background-color: #1e1e1e;
-                color: #ffffff;
+                background-color: white;
+                color: #333;
                 padding: 5px;
                 border: 1px solid {brand_colors['primary']};
             }}
@@ -1859,7 +1864,7 @@ class MainWindow(QMainWindow):
         text_browser_style = f'''
             QTextBrowser {{
                 background-color: #2b2b2b;
-                color: #ffffff;
+                color: #333;
                 border: 1px solid {brand_colors['primary']};
                 border-radius: 4px;
                 padding: 5px;
@@ -1872,14 +1877,14 @@ class MainWindow(QMainWindow):
         dialog_style = f'''
             QDialog {{
                 background-color: #2b2b2b;
-                color: #ffffff;
+                color: #333;
             }}
             QLabel {{
-                color: #ffffff;
+                color: #333;
             }}
             QDialogButtonBox QPushButton {{
                 background-color: {brand_colors['primary']};
-                color: #ffffff;
+                color: #333;
                 border: none;
                 border-radius: 4px;
                 padding: 5px 15px;
@@ -2004,8 +2009,8 @@ class MainWindow(QMainWindow):
         self.log_source_viewer.setReadOnly(True)
         self.log_source_viewer.setStyleSheet("""
             QTextEdit {
-                background-color: #1e1e1e;
-                color: #ffffff;
+                background-color: white;
+                color: #333;
                 font-family: 'Consolas', 'Monaco', monospace;
                 font-size: 12px;
                 padding: 8px;
@@ -2021,8 +2026,8 @@ class MainWindow(QMainWindow):
         self.system_log_viewer.setReadOnly(True)
         self.system_log_viewer.setStyleSheet("""
             QTextEdit {
-                background-color: #1e1e1e;
-                color: #ffffff;
+                background-color: white;
+                color: #333;
                 font-family: 'Consolas', 'Monaco', monospace;
                 font-size: 12px;
                 padding: 8px;
@@ -2149,64 +2154,4 @@ class MainWindow(QMainWindow):
 
     def _apply_beautiful_styling(self):
         """Apply simple beautiful colorful UI styling"""
-        print("🎨 Applying beautiful blue and white styling!")
-        self.setStyleSheet("""
-            QMainWindow {
-                background: #f7fafd;
-            }
-            QPushButton {
-                background: #2196f3;
-                color: white;
-                border-radius: 8px;
-                padding: 8px 16px;
-                font-size: 14px;
-                font-weight: 500;
-                border: none;
-            }
-            QPushButton:hover {
-                background: #1976d2;
-            }
-            QPushButton:disabled {
-                background: #b0bec5;
-                color: #ececec;
-            }
-            QGroupBox {
-                background: white;
-                border: 2px solid #e0e0e0;
-                border-radius: 12px;
-                margin-top: 10px;
-                padding-top: 15px;
-                font-weight: bold;
-                color: #1976d2;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 15px;
-                padding: 0 8px;
-                color: #1976d2;
-                background: white;
-            }
-            QTextBrowser {
-                background: white;
-                border: 1px solid #e0e0e0;
-                border-radius: 8px;
-                padding: 10px;
-                color: #333;
-            }
-            QTabWidget::pane {
-                background: white;
-                border: 1px solid #e0e0e0;
-                border-radius: 8px;
-            }
-            QTabBar::tab {
-                background: #f5f5f5;
-                padding: 10px 20px;
-                margin: 2px;
-                border-radius: 6px;
-                color: #666;
-            }
-            QTabBar::tab:selected {
-                background: #2196f3;
-                color: white;
-            }
-        """) 
+        print("🎨 Applying ModernTheme styling!")
