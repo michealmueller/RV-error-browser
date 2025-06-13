@@ -253,7 +253,7 @@ class ApiHealthWorker(QObject):
 
 class MainWindow(QMainWindow):
     main_thread_signal = Signal(object)
-
+    
     def __init__(self):
         super().__init__()
         self.main_thread_signal.connect(lambda f: f())
@@ -441,7 +441,7 @@ class MainWindow(QMainWindow):
         try:
             self.setWindowTitle("QuantumOps")
             self.setMinimumSize(1200, 800)
-            # Create menu bar
+        # Create menu bar
             self._create_menu_bar()
             # Apply beautiful styling
             self._apply_beautiful_styling()
@@ -969,8 +969,8 @@ class MainWindow(QMainWindow):
             
             # Initialize the connection combo box
             self.update_connection_combo()
-            
-            # Connect signals
+        
+        # Connect signals
             self.connection_combo.currentIndexChanged.connect(self.handle_connection_selected)
             
         except Exception as e:

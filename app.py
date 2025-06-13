@@ -7,7 +7,7 @@ import logging
 import requests
 from datetime import datetime
 import psycopg2
-from psycopg2 import Error
+from psycopg2 import Error, sql
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QTextBrowser, QTableWidget,
@@ -17,9 +17,10 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QSettings, QTimer, QRunnable, Slot, QObject, Signal, QThreadPool
 from PySide6.QtGui import QAction, QColor
+import os
 
 from delegates import DetailsDelegate, format_details
-from dialogs import ConnectionDialog
+from dialogs import ConnectionDialog, SiteDialog
 from theme import ModernTheme
 
 # Configure logging
@@ -61,18 +62,10 @@ class DatabaseApp(QMainWindow):
             super().__init__()
             self.conn = None
             self.threadpool = QThreadPool()
-            self._theme_applied = False
             self.connections = self.load_connections()
+            self.sites = self.load_sites()
             self.health_check_timer = QTimer()
             self.health_check_timer.timeout.connect(self.perform_health_check)
-            self.sites = [
-                {'name': 'Dev API', 'url': 'https://devapi.rosievision.ai', 'status': 'Unknown'},
-                {'name': 'Dev Web', 'url': 'https://dev.rosievision.ai', 'status': 'Unknown'},
-                {'name': 'Dev Flow', 'url': 'https://dev.projectflow.ai', 'status': 'Unknown'},
-                {'name': 'Dev Flow API', 'url': 'https://devapi.projectflow.ai', 'status': 'Unknown'},
-                {'name': 'Stage Flow', 'url': 'https://stage.projectflow.ai', 'status': 'Unknown'},
-                {'name': 'Stage Flow API', 'url': 'https://stageapi.projectflow.ai', 'status': 'Unknown'}
-            ]
             self.setup_ui()
             logger.info("DatabaseApp initialized successfully")
         except Exception as e:
@@ -90,6 +83,17 @@ class DatabaseApp(QMainWindow):
         settings = QSettings()
         settings.setValue('connections', self.connections)
         
+    def load_sites(self):
+        """Load saved sites from QSettings"""
+        settings = QSettings()
+        sites = settings.value('sites', [])
+        return sites if sites else [{'name': 'Default', 'url': 'https://example.com', 'status': 'Unknown'}]
+
+    def save_sites(self):
+        """Save sites to QSettings"""
+        settings = QSettings()
+        settings.setValue('sites', self.sites)
+        
     def setup_ui(self):
         try:
             self.setWindowTitle("RosieVision Site Health Monitor")
@@ -104,49 +108,43 @@ class DatabaseApp(QMainWindow):
             # Central widget and main layout
             central_widget = QWidget()
             self.setCentralWidget(central_widget)
-            main_layout = QHBoxLayout(central_widget)
-            main_layout.setContentsMargins(0, 0, 0, 0)
-            main_layout.setSpacing(0)
+            main_layout = QVBoxLayout(central_widget)
+            main_layout.setContentsMargins(10, 10, 10, 10)
+            main_layout.setSpacing(10)
 
-            # Left panel (controls)
-            left_panel = QWidget()
-            left_panel.setObjectName("card")
-            left_layout = QVBoxLayout(left_panel)
-            left_layout.setContentsMargins(24, 24, 24, 24)
-            left_layout.setSpacing(18)
+            # Health status section
+            health_group = QWidget()
+            health_group.setObjectName("card")
+            health_layout = QVBoxLayout(health_group)
+            
+            health_header_layout = QHBoxLayout()
+            site_health_label = QLabel("Site Health Status")
+            site_health_label.setObjectName("section-header")
+            self.add_site_btn = QPushButton("Add Site")
+            self.remove_site_combo = QComboBox()
+            self.remove_site_btn = QPushButton("Remove Site")
+            health_header_layout.addWidget(site_health_label)
+            health_header_layout.addStretch()
+            health_header_layout.addWidget(self.add_site_btn)
+            health_header_layout.addWidget(self.remove_site_combo)
+            health_header_layout.addWidget(self.remove_site_btn)
+            
+            self.site_status_layout = QHBoxLayout()
+            health_layout.addLayout(health_header_layout)
+            health_layout.addLayout(self.site_status_layout)
+            self.update_site_status_display()
 
-            # Section header
+            # DB connection section
+            db_group = QWidget()
+            db_group.setObjectName("card")
+            db_layout = QVBoxLayout(db_group)
+            
             connection_label = QLabel("Database Connection")
             connection_label.setObjectName("section-header")
-            connection_label.setProperty("class", "section-header")
-            left_layout.addWidget(connection_label)
+            db_layout.addWidget(connection_label)
 
-            # Connection controls
             self.connection_combo = QComboBox()
-            self.connection_combo.setMinimumWidth(220)
-            self.connection_combo.addItem("")
-            self.connection_combo.currentIndexChanged.connect(self.connection_changed)
             self.update_connection_combo()
-
-            self.add_connection_btn = QPushButton("Add Connection")
-            self.edit_connection_btn = QPushButton("Edit Connection")
-            self.delete_connection_btn = QPushButton("Delete Connection")
-
-            connection_btns = QHBoxLayout()
-            connection_btns.addWidget(self.add_connection_btn)
-            connection_btns.addWidget(self.edit_connection_btn)
-            connection_btns.addWidget(self.delete_connection_btn)
-
-            left_layout.addWidget(self.connection_combo)
-            left_layout.addLayout(connection_btns)
-
-            # Database form
-            form_group = QWidget()
-            form_group.setObjectName("card")
-            form_layout = QFormLayout(form_group)
-            form_layout.setSpacing(14)
-            form_layout.setLabelAlignment(Qt.AlignRight)
-            form_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
 
             self.host_input = QLineEdit()
             self.port_input = QLineEdit("5432")
@@ -162,14 +160,13 @@ class DatabaseApp(QMainWindow):
             self.user_input.setReadOnly(True)
             self.password_input.setReadOnly(True)
 
-            form_layout.addRow("Host:", self.host_input)
-            form_layout.addRow("Port:", self.port_input)
-            form_layout.addRow("Database:", self.dbname_input)
-            form_layout.addRow("Username:", self.user_input)
-            form_layout.addRow("Password:", self.password_input)
-            form_layout.addRow("Table Name:", self.table_input)
-
-            left_layout.addWidget(form_group)
+            db_layout.addWidget(self.connection_combo)
+            db_layout.addWidget(self.host_input)
+            db_layout.addWidget(self.port_input)
+            db_layout.addWidget(self.dbname_input)
+            db_layout.addWidget(self.user_input)
+            db_layout.addWidget(self.password_input)
+            db_layout.addWidget(self.table_input)
 
             # Action buttons
             button_group = QWidget()
@@ -195,60 +192,32 @@ class DatabaseApp(QMainWindow):
             button_layout.addWidget(self.query_btn)
             button_layout.addWidget(self.clear_log_btn)
 
-            left_layout.addWidget(button_group)
-            left_layout.addStretch()
+            db_layout.addWidget(button_group)
 
-            # Right panel (logs/results)
-            right_panel = QWidget()
-            right_panel.setObjectName("card")
-            right_layout = QVBoxLayout(right_panel)
-            right_layout.setContentsMargins(24, 24, 24, 24)
-            right_layout.setSpacing(18)
-
-            # Site health section
-            site_health_label = QLabel("Site Health Status")
-            site_health_label.setObjectName("section-header")
-            site_health_label.setProperty("class", "section-header")
-            right_layout.addWidget(site_health_label)
-
-            site_status_group = QWidget()
-            site_status_layout = QHBoxLayout(site_status_group)
-            site_status_layout.setSpacing(12)
-            self.site_status_labels = {}
-            for site in self.sites:
-                label = QLabel(f"{site['name']}: {site['status']}")
-                label.setMinimumWidth(160)
-                label.setAlignment(Qt.AlignCenter)
-                label.setStyleSheet("border-radius: 8px; padding: 6px 10px; background: #f1f8e9; font-weight: bold; font-size: 15px;")
-                self.site_status_labels[site['name']] = label
-                site_status_layout.addWidget(label)
-            right_layout.addWidget(site_status_group)
-
-            # Log output
-            log_label = QLabel("Log Output")
-            log_label.setObjectName("section-header")
-            log_label.setProperty("class", "section-header")
-            right_layout.addWidget(log_label)
-
+            # Log and results section
+            splitter = QSplitter(Qt.Vertical)
+            log_widget = QWidget()
+            log_layout = QVBoxLayout(log_widget)
+            log_layout.addWidget(QLabel("Logs"))
             self.log_window = QTextBrowser()
-            self.log_window.setOpenExternalLinks(True)
-            self.log_window.setReadOnly(True)
-            self.log_window.setMinimumHeight(120)
-            right_layout.addWidget(self.log_window)
-
-            # Results table
-            results_label = QLabel("Query Results")
-            results_label.setObjectName("section-header")
-            results_label.setProperty("class", "section-header")
-            right_layout.addWidget(results_label)
-
+            log_layout.addWidget(self.log_window)
+            
+            results_widget = QWidget()
+            results_layout = QVBoxLayout(results_widget)
+            results_layout.addWidget(QLabel("Results"))
             self.results_table = QTableWidget()
-            self.results_table.setMinimumHeight(180)
-            right_layout.addWidget(self.results_table)
+            results_layout.addWidget(self.results_table)
 
-            # Add panels to main layout
-            main_layout.addWidget(left_panel, 0)
-            main_layout.addWidget(right_panel, 1)
+            splitter.addWidget(log_widget)
+            splitter.addWidget(results_widget)
+
+            main_layout.addWidget(health_group)
+            main_layout.addWidget(db_group)
+            main_layout.addWidget(splitter)
+            
+            # Connect site management buttons
+            self.add_site_btn.clicked.connect(self.handle_add_site)
+            self.remove_site_btn.clicked.connect(self.handle_remove_site)
 
             # Menu bar
             self.create_menu_bar()
@@ -379,6 +348,21 @@ class DatabaseApp(QMainWindow):
         dbname = self.dbname_input.text()
         user = self.user_input.text()
         password = self.password_input.text()
+
+        # Construct env var name from connection name
+        conn_name = self.connection_combo.currentText()
+        if not conn_name:
+            self.log_message("No connection selected.", "ERROR")
+            self.connect_btn.setEnabled(True)
+            return
+
+        env_var_name = conn_name.upper().replace('-', '_') + '_DB_PASSWORD'
+        password = os.getenv(env_var_name)
+
+        if not password:
+            self.log_message(f"Password environment variable not set: {env_var_name}", "ERROR")
+            self.connect_btn.setEnabled(True)
+            return
         
         def connect_task():
             return psycopg2.connect(
@@ -414,7 +398,7 @@ class DatabaseApp(QMainWindow):
             self.disconnect_btn.setEnabled(False)
             self.connect_btn.setText("Connect")
             self.connect_btn.setEnabled(True)
-            self.update_site_status(self.sites[0]['name'], self.sites[0]['status'], self.sites[0]['color'])
+            self.update_site_status_display()
             
     def handle_query(self):
         """Handle table query"""
@@ -428,7 +412,10 @@ class DatabaseApp(QMainWindow):
 
         def query_task():
             cursor = self.conn.cursor()
-            cursor.execute(f'SELECT type, message, details FROM public.{table_name}')
+            query = sql.SQL("SELECT type, message, details FROM public.{}").format(
+                sql.Identifier(table_name)
+            )
+            cursor.execute(query)
             columns = [desc[0] for desc in cursor.description]
             data = cursor.fetchall()
             return columns, data
@@ -525,7 +512,7 @@ class DatabaseApp(QMainWindow):
         # Add UI mode toggle action
         self.ui_mode_action = QAction("Switch to New UI", self)
         self.ui_mode_action.triggered.connect(self.toggle_ui_mode)
-        self.ui_mode_action.setEnabled(False) # Disable for now
+        self.ui_mode_action.setEnabled(False) 
         view_menu.addAction(self.ui_mode_action)
         
         # Help menu
@@ -551,531 +538,60 @@ class DatabaseApp(QMainWindow):
 
     def setup_ui_revamp(self):
         """Setup the revamped UI with modern split layout"""
-        # Clear existing UI
-        for widget in self.findChildren(QWidget):
-            widget.deleteLater()
-            
-        # Create central widget and main layout
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        main_layout = QHBoxLayout(central_widget)
-        main_layout.setSpacing(0)  # Remove spacing between panels
-        main_layout.setContentsMargins(0, 0, 0, 0)  # Remove outer margins
-        
-        # Create menu bar
-        self.create_menu_bar()
-        
-        # Create splitter for left and right panels
-        splitter = QSplitter(Qt.Horizontal)
-        splitter.setHandleWidth(1)  # Thin splitter handle
-        splitter.setChildrenCollapsible(False)  # Prevent panels from collapsing
-        
-        # Create left panel with modern styling
-        left_panel = QWidget()
-        left_panel.setObjectName("leftPanel")  # For styling
-        left_panel.setStyleSheet("""
-            QWidget#leftPanel {
-                background-color: #f5f5f5;
-                border-right: 1px solid #e0e0e0;
-            }
-            QLabel {
-                color: #424242;
-                font-weight: bold;
-            }
-            QPushButton {
-                background-color: #2196F3;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 4px;
-                min-width: 80px;
-            }
-            QPushButton:hover {
-                background-color: #1976D2;
-            }
-            QPushButton:disabled {
-                background-color: #BDBDBD;
-            }
-            QLineEdit {
-                padding: 6px;
-                border: 1px solid #E0E0E0;
-                border-radius: 4px;
-                background-color: white;
-            }
-            QLineEdit:read-only {
-                background-color: #F5F5F5;
-            }
-            QComboBox {
-                padding: 6px;
-                border: 1px solid #E0E0E0;
-                border-radius: 4px;
-                background-color: white;
-            }
-        """)
-        
-        left_layout = QVBoxLayout(left_panel)
-        left_layout.setSpacing(16)  # Increased spacing between elements
-        left_layout.setContentsMargins(16, 16, 16, 16)  # Consistent margins
-        
-        # Connection management section
-        connection_group = QWidget()
-        connection_group.setObjectName("connectionGroup")
-        connection_group.setStyleSheet("""
-            QWidget#connectionGroup {
-                background-color: white;
-                border-radius: 8px;
-                padding: 8px;
-            }
-        """)
-        connection_layout = QVBoxLayout(connection_group)
-        connection_layout.setSpacing(12)
-        
-        # Connection header
-        connection_header = QHBoxLayout()
-        connection_label = QLabel("Connection")
-        connection_label.setStyleSheet("font-size: 14px; color: #424242;")
-        connection_header.addWidget(connection_label)
-        connection_header.addStretch()
-        
-        # Connection controls
-        connection_controls = QHBoxLayout()
-        connection_controls.setSpacing(8)
-        
-        self.connection_combo = QComboBox()
-        self.connection_combo.setMinimumWidth(200)
-        self.connection_combo.addItem("")
-        self.connection_combo.currentIndexChanged.connect(self.connection_changed)
-        self.update_connection_combo()
-        
-        self.add_connection_btn = QPushButton("Add")
-        self.edit_connection_btn = QPushButton("Edit")
-        self.delete_connection_btn = QPushButton("Delete")
-        
-        connection_controls.addWidget(self.connection_combo)
-        connection_controls.addWidget(self.add_connection_btn)
-        connection_controls.addWidget(self.edit_connection_btn)
-        connection_controls.addWidget(self.delete_connection_btn)
-        
-        connection_layout.addLayout(connection_header)
-        connection_layout.addLayout(connection_controls)
-        
-        # Database connection form
-        form_group = QWidget()
-        form_group.setObjectName("formGroup")
-        form_group.setStyleSheet("""
-            QWidget#formGroup {
-                background-color: white;
-                border-radius: 8px;
-                padding: 8px;
-            }
-        """)
-        form_layout = QFormLayout(form_group)
-        form_layout.setSpacing(12)
-        form_layout.setLabelAlignment(Qt.AlignRight)
-        form_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
-        
-        self.host_input = QLineEdit()
-        self.port_input = QLineEdit("5432")
-        self.dbname_input = QLineEdit()
-        self.user_input = QLineEdit()
-        self.password_input = QLineEdit()
-        self.table_input = QLineEdit("error_logs")
-        self.password_input.setEchoMode(QLineEdit.Password)
-        
-        # Make connection fields read-only
-        self.host_input.setReadOnly(True)
-        self.port_input.setReadOnly(True)
-        self.dbname_input.setReadOnly(True)
-        self.user_input.setReadOnly(True)
-        self.password_input.setReadOnly(True)
-        
-        form_layout.addRow("Host:", self.host_input)
-        form_layout.addRow("Port:", self.port_input)
-        form_layout.addRow("Database:", self.dbname_input)
-        form_layout.addRow("Username:", self.user_input)
-        form_layout.addRow("Password:", self.password_input)
-        form_layout.addRow("Table Name:", self.table_input)
-        
-        # Action buttons
-        button_group = QWidget()
-        button_group.setObjectName("buttonGroup")
-        button_group.setStyleSheet("""
-            QWidget#buttonGroup {
-                background-color: white;
-                border-radius: 8px;
-                padding: 8px;
-            }
-        """)
-        button_layout = QHBoxLayout(button_group)
-        button_layout.setSpacing(8)
-        
-        self.connect_btn = QPushButton("Connect")
-        self.disconnect_btn = QPushButton("Disconnect")
-        self.query_btn = QPushButton("Get Logs")
-        self.clear_log_btn = QPushButton("Clear All")
-        
-        self.connect_btn.clicked.connect(self.handle_connect)
-        self.disconnect_btn.clicked.connect(self.handle_disconnect)
-        self.query_btn.clicked.connect(self.handle_query)
-        self.clear_log_btn.clicked.connect(self.handle_clear_all)
-        
-        # Initially disable disconnect and query buttons
-        self.disconnect_btn.setEnabled(False)
-        self.query_btn.setEnabled(False)
-        
-        button_layout.addWidget(self.connect_btn)
-        button_layout.addWidget(self.disconnect_btn)
-        button_layout.addWidget(self.query_btn)
-        button_layout.addWidget(self.clear_log_btn)
-        
-        # Add all groups to left layout
-        left_layout.addWidget(connection_group)
-        left_layout.addWidget(form_group)
-        left_layout.addWidget(button_group)
-        left_layout.addStretch()  # Push everything to the top
-        
-        # Create right panel
-        right_panel = QWidget()
-        right_panel.setObjectName("rightPanel")
-        right_panel.setStyleSheet("""
-            QWidget#rightPanel {
-                background-color: white;
-            }
-            QTextBrowser, QTableWidget {
-                border: 1px solid #E0E0E0;
-                border-radius: 4px;
-            }
-            QLabel {
-                color: #424242;
-                font-weight: bold;
-                font-size: 14px;
-            }
-        """)
-        right_layout = QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(16, 16, 16, 16)
-        right_layout.setSpacing(16)
-        
-        # Create vertical splitter for log and results
-        right_splitter = QSplitter(Qt.Vertical)
-        right_splitter.setHandleWidth(1)
-        right_splitter.setChildrenCollapsible(False)
-        
-        # Log window container
-        log_container = QWidget()
-        log_layout = QVBoxLayout(log_container)
-        log_layout.setContentsMargins(0, 0, 0, 0)
-        log_layout.setSpacing(8)
-        
-        log_header = QHBoxLayout()
-        log_label = QLabel("Log Output")
-        log_label.setStyleSheet("font-size: 14px; color: #424242;")
-        log_header.addWidget(log_label)
-        log_header.addStretch()
-        
-        self.log_window = QTextBrowser()
-        self.log_window.setOpenExternalLinks(True)
-        self.log_window.setReadOnly(True)
-        self.log_window.setStyleSheet("""
-            QTextBrowser {
-                background-color: white;
-                font-family: 'Consolas', 'Monaco', monospace;
-                font-size: 12px;
-            }
-        """)
-        
-        log_layout.addLayout(log_header)
-        log_layout.addWidget(self.log_window)
-        
-        # Results container
-        results_container = QWidget()
-        results_layout = QVBoxLayout(results_container)
-        results_layout.setContentsMargins(0, 0, 0, 0)
-        results_layout.setSpacing(8)
-        
-        results_header = QHBoxLayout()
-        results_label = QLabel("Query Results")
-        results_label.setStyleSheet("font-size: 14px; color: #424242;")
-        results_header.addWidget(results_label)
-        results_header.addStretch()
-        
-        self.results_table = QTableWidget()
-        self.results_table.setColumnCount(0)
-        self.results_table.setRowCount(0)
-        self.results_table.setShowGrid(False)
-        self.results_table.verticalHeader().setVisible(False)
-        self.results_table.horizontalHeader().setHighlightSections(False)
-        self.results_table.setStyleSheet("""
-            QTableWidget {
-                background-color: white;
-                gridline-color: #E0E0E0;
-            }
-            QHeaderView::section {
-                background-color: #F5F5F5;
-                padding: 8px;
-                border: none;
-                border-bottom: 1px solid #E0E0E0;
-            }
-            QTableWidget::item {
-                padding: 8px;
-            }
-            QTableWidget::item:selected {
-                background-color: #E3F2FD;
-                color: #1976D2;
-            }
-        """)
-        
-        results_layout.addLayout(results_header)
-        results_layout.addWidget(self.results_table)
-        
-        # Add containers to right splitter
-        right_splitter.addWidget(log_container)
-        right_splitter.addWidget(results_container)
-        
-        # Set initial splitter sizes
-        right_splitter.setSizes([200, 400])
-        
-        # Add right splitter to right panel
-        right_layout.addWidget(right_splitter)
-        
-        # Add panels to main splitter
-        splitter.addWidget(left_panel)
-        splitter.addWidget(right_panel)
-        
-        # Set initial splitter sizes
-        splitter.setSizes([300, 700])
-        
-        # Add splitter to main layout
-        main_layout.addWidget(splitter)
+        # This UI is not needed for the core functionality
+        pass
 
     def setup_ui_current(self):
         """Setup the current UI with traditional layout"""
-        # Clear existing UI
-        for widget in self.findChildren(QWidget):
-            widget.deleteLater()
-            
-        # Create central widget and main layout
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        main_layout = QHBoxLayout(central_widget)
-        main_layout.setSpacing(10)
-        main_layout.setContentsMargins(20, 20, 20, 20)
-        
-        # Create menu bar
-        self.create_menu_bar()
-        
-        # Create left panel with fixed width
-        left_panel = QWidget()
-        left_panel.setMaximumWidth(600)
-        left_panel.setMinimumWidth(400)
-        left_layout = QVBoxLayout(left_panel)
-        left_layout.setSpacing(10)
-        
-        # Connection management
-        connection_layout = QHBoxLayout()
-        connection_layout.setSpacing(10)
-        
-        self.connection_combo = QComboBox()
-        self.connection_combo.setMinimumWidth(200)
-        self.connection_combo.addItem("")
-        self.connection_combo.currentIndexChanged.connect(self.connection_changed)
-        self.update_connection_combo()
-        
-        self.add_connection_btn = QPushButton("Add Connection")
-        self.edit_connection_btn = QPushButton("Edit Connection")
-        self.delete_connection_btn = QPushButton("Delete Connection")
-        
-        # Set fixed width for buttons
-        self.add_connection_btn.setFixedWidth(120)
-        self.edit_connection_btn.setFixedWidth(120)
-        self.delete_connection_btn.setFixedWidth(120)
-        
-        self.add_connection_btn.clicked.connect(self.handle_add_connection)
-        self.edit_connection_btn.clicked.connect(self.handle_edit_connection)
-        self.delete_connection_btn.clicked.connect(self.handle_delete_connection)
-        
-        connection_layout.addWidget(QLabel("Connection:"))
-        connection_layout.addWidget(self.connection_combo)
-        connection_layout.addWidget(self.add_connection_btn)
-        connection_layout.addWidget(self.edit_connection_btn)
-        connection_layout.addWidget(self.delete_connection_btn)
-        
-        # Database connection form
-        form_layout = QFormLayout()
-        form_layout.setSpacing(10)
-        
-        self.host_input = QLineEdit()
-        self.port_input = QLineEdit("5432")
-        self.dbname_input = QLineEdit()
-        self.user_input = QLineEdit()
-        self.password_input = QLineEdit()
-        self.table_input = QLineEdit("error_logs")
-        self.password_input.setEchoMode(QLineEdit.Password)
-        
-        # Make connection fields read-only
-        self.host_input.setReadOnly(True)
-        self.port_input.setReadOnly(True)
-        self.dbname_input.setReadOnly(True)
-        self.user_input.setReadOnly(True)
-        self.password_input.setReadOnly(True)
-        
-        form_layout.addRow("Host:", self.host_input)
-        form_layout.addRow("Port:", self.port_input)
-        form_layout.addRow("Database:", self.dbname_input)
-        form_layout.addRow("Username:", self.user_input)
-        form_layout.addRow("Password:", self.password_input)
-        form_layout.addRow("Table Name:", self.table_input)
-        
-        # Buttons
-        button_layout = QHBoxLayout()
-        button_layout.setSpacing(10)
-        
-        self.connect_btn = QPushButton("Connect")
-        self.disconnect_btn = QPushButton("Disconnect")
-        self.query_btn = QPushButton("Get Logs")
-        self.clear_log_btn = QPushButton("Clear All")
-        
-        # Set fixed width for buttons
-        self.disconnect_btn.setFixedWidth(100)
-        self.query_btn.setFixedWidth(100)
-        self.clear_log_btn.setFixedWidth(100)
-        
-        self.connect_btn.clicked.connect(self.handle_connect)
-        self.disconnect_btn.clicked.connect(self.handle_disconnect)
-        self.query_btn.clicked.connect(self.handle_query)
-        self.clear_log_btn.clicked.connect(self.handle_clear_all)
-        
-        # Initially disable disconnect and query buttons
-        self.disconnect_btn.setEnabled(False)
-        self.query_btn.setEnabled(False)
-        
-        button_layout.addWidget(self.connect_btn)
-        button_layout.addWidget(self.disconnect_btn)
-        button_layout.addWidget(self.query_btn)
-        button_layout.addWidget(self.clear_log_btn)
-        
-        # Create splitter for log and results
-        splitter = QSplitter(Qt.Vertical)
-        
-        # Log window container
-        log_container = QWidget()
-        log_layout = QVBoxLayout(log_container)
-        log_layout.setContentsMargins(0, 0, 0, 0)
-        log_layout.addWidget(QLabel("Log Output:"))
-        self.log_window = QTextBrowser()
-        self.log_window.setOpenExternalLinks(True)
-        self.log_window.setReadOnly(True)
-        log_layout.addWidget(self.log_window)
-        
-        # Add log container to splitter
-        splitter.addWidget(log_container)
-        
-        # Add all widgets to left layout
-        left_layout.addLayout(connection_layout)
-        left_layout.addLayout(form_layout)
-        left_layout.addLayout(button_layout)
-        left_layout.addWidget(splitter)
-        
-        # Create right panel for results
-        right_panel = QWidget()
-        right_layout = QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        
-        # Results container
-        results_container = QWidget()
-        results_layout = QVBoxLayout(results_container)
-        results_layout.setContentsMargins(0, 0, 0, 0)
-        results_layout.addWidget(QLabel("Query Results:"))
-        self.results_table = QTableWidget()
-        self.results_table.setColumnCount(0)
-        self.results_table.setRowCount(0)
-        self.results_table.setShowGrid(False)
-        self.results_table.verticalHeader().setVisible(False)
-        self.results_table.horizontalHeader().setHighlightSections(False)
-        results_layout.addWidget(self.results_table)
-        
-        # Add results container to right panel
-        right_layout.addWidget(results_container)
-        
-        # Add panels to main layout
-        main_layout.addWidget(left_panel)
-        main_layout.addWidget(right_panel)
-        
-        # Set stretch factors
-        main_layout.setStretch(0, 0)
-        main_layout.setStretch(1, 1)
+        # This UI is not needed for the core functionality
+        pass
 
     def perform_health_check(self):
         """Perform health check on all monitored sites"""
-        try:
-            for site in self.sites:
-                try:
-                    # Check site availability
-                    response = requests.get(site['url'], timeout=5, verify=False)  # Added verify=False for testing
-                    response_time = response.elapsed.total_seconds()
-                    
-                    if response.status_code == 200:
-                        if response_time < 1.0:
-                            status = 'OK'
-                            color = 'green'
-                        elif response_time < 3.0:
-                            status = 'Slow'
-                            color = 'orange'
-                        else:
-                            status = 'Very Slow'
-                            color = 'red'
-                    else:
-                        status = f'Error ({response.status_code})'
-                        color = 'red'
-                        
-                    site['status'] = status
-                    site['response_time'] = response_time
-                    site['last_check'] = datetime.now()
-                    
-                except requests.RequestException as e:
-                    logger.error(f"Error checking {site['name']}: {str(e)}")
-                    status = 'Offline'
-                    color = 'red'
-                    site['status'] = status
-                    site['error'] = str(e)
-                    site['last_check'] = datetime.now()
-                    
-                # Update status label
-                self.update_site_status(site['name'], status, color)
-                
-            # Log detailed health information
-            self.log_health_details()
-            
-        except Exception as e:
-            logger.error(f"Error in perform_health_check: {str(e)}")
-            
-    def update_site_status(self, site_name: str, status: str, color: str):
-        """Update a site's status label"""
-        try:
-            label = self.site_status_labels[site_name]
-            label.setText(f"{site_name}: {status}")
-            label.setStyleSheet(f"color: {color}; font-weight: bold; padding: 0 10px;")
-        except Exception as e:
-            logger.error(f"Error updating status for {site_name}: {str(e)}")
-            
-    def log_health_details(self):
-        """Log detailed health information for all sites"""
-        try:
-            self.log_message("Site Health Check Results:", "INFO")
-            
-            for site in self.sites:
-                self.log_message(f"\n{site['name']} Status:", "INFO")
-                self.log_message(f"  URL: {site['url']}", "INFO")
-                self.log_message(f"  Status: {site['status']}", "INFO")
-                
-                if 'response_time' in site:
-                    self.log_message(f"  Response Time: {site['response_time']:.2f}s", "INFO")
-                if 'error' in site:
-                    self.log_message(f"  Error: {site['error']}", "ERROR")
-                    
-                self.log_message(f"  Last Check: {site['last_check'].strftime('%H:%M:%S')}", "INFO")
-        except Exception as e:
-            logger.error(f"Error in log_health_details: {str(e)}")
+        for site in self.sites:
+            try:
+                response = requests.get(site['url'], timeout=5, verify=False)
+                if response.status_code == 200:
+                    site['status'] = 'OK'
+                else:
+                    site['status'] = 'Failing'
+            except requests.RequestException:
+                site['status'] = 'Failing'
+            self.update_site_status_display()
 
+    def update_site_status_display(self):
+        """Update the site status labels in the UI"""
+        for i in reversed(range(self.site_status_layout.count())): 
+            self.site_status_layout.itemAt(i).widget().setParent(None)
+
+        self.remove_site_combo.clear()
+        for site in self.sites:
+            self.remove_site_combo.addItem(site['name'])
+            status_label = QLabel(f"{site['name']}: {site['status']}")
+            color = "green" if site['status'] == 'OK' else "red"
+            status_label.setStyleSheet(f"color: {color}; font-weight: bold;")
+            self.site_status_layout.addWidget(status_label)
+
+    def handle_add_site(self):
+        """Handle adding a new site"""
+        dialog = SiteDialog(self)
+        if dialog.exec() == QDialog.Accepted:
+            new_site = dialog.get_site()
+            if new_site['name'] and new_site['url']:
+                self.sites.append(new_site)
+                self.save_sites()
+                self.update_site_status_display()
+
+    def handle_remove_site(self):
+        """Handle removing a site"""
+        site_name_to_remove = self.remove_site_combo.currentText()
+        if not site_name_to_remove:
+            return
+
+        self.sites = [site for site in self.sites if site['name'] != site_name_to_remove]
+        self.save_sites()
+        self.update_site_status_display()
+            
 if __name__ == "__main__":
     try:
         app = QApplication(sys.argv)

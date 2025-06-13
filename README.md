@@ -41,6 +41,16 @@ pip install -r requirements.txt
 2. Configure database connection:
    - Set database connection parameters in `.env` file
 
+To connect to a database, you must first add a new connection using the "Add Connection" button in the UI. Once a connection is saved, you must set an environment variable to provide the password.
+
+The application constructs the environment variable name from the connection name by converting it to uppercase, replacing hyphens with underscores, and appending `_DB_PASSWORD`.
+
+For example, if you create a connection named `RV-Dev`, you must set the following environment variable before launching the application:
+
+```bash
+export RV_DEV_PASSWORD="your_password_here"
+```
+
 ## Usage
 
 Run the application:
@@ -49,6 +59,10 @@ python main.py
 ```
 
 ## Development
+
+### Security
+
+The application uses parameterized queries to prevent SQL injection vulnerabilities. All user-supplied input is safely quoted, ensuring that the database remains secure.
 
 ### Running Tests
 
