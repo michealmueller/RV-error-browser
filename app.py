@@ -15,21 +15,53 @@ from PySide6.QtWidgets import (
     QSplitter, QDialog, QMenuBar, QMenu, QDialogButtonBox, QTextEdit,
     QApplication, QStatusBar
 )
-from PySide6.QtCore import Qt, QSettings, QTimer
+from PySide6.QtCore import Qt, QSettings, QTimer, QRunnable, Slot, QObject, Signal, QThreadPool
 from PySide6.QtGui import QAction, QColor
 
 from delegates import DetailsDelegate, format_details
 from dialogs import ConnectionDialog
+from theme import ModernTheme
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+class WorkerSignals(QObject):
+    """
+    Defines the signals available from a running worker thread.
+    """
+    finished = Signal()
+    error = Signal(tuple)
+    result = Signal(object)
+
+class Worker(QRunnable):
+    """
+    Worker thread for running functions in the background.
+    """
+    def __init__(self, fn, *args, **kwargs):
+        super().__init__()
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+        self.signals = WorkerSignals()
+
+    @Slot()
+    def run(self):
+        try:
+            result = self.fn(*self.args, **self.kwargs)
+            self.signals.result.emit(result)
+        except Exception as e:
+            self.signals.error.emit((type(e), str(e), e.__traceback__))
+        finally:
+            self.signals.finished.emit()
 
 class DatabaseApp(QMainWindow):
     def __init__(self):
         try:
             super().__init__()
             self.conn = None
+            self.threadpool = QThreadPool()
+            self._theme_applied = False
             self.connections = self.load_connections()
             self.health_check_timer = QTimer()
             self.health_check_timer.timeout.connect(self.perform_health_check)
@@ -65,82 +97,9 @@ class DatabaseApp(QMainWindow):
             self.setMinimumSize(900, 500)
 
             # Modern stylesheet
-            self.setStyleSheet('''
-                QMainWindow {
-                    background: #f7fafd;
-                }
-                QMenuBar {
-                    background: #ffffff;
-                    border-bottom: 1px solid #e0e0e0;
-                    font-size: 15px;
-                    padding: 4px 10px;
-                }
-                QMenuBar::item {
-                    background: transparent;
-                    padding: 6px 18px;
-                    border-radius: 6px;
-                }
-                QMenuBar::item:selected {
-                    background: #e3f2fd;
-                }
-                QMenu {
-                    background: #ffffff;
-                    border: 1px solid #e0e0e0;
-                }
-                QPushButton {
-                    background: #2196f3;
-                    color: #fff;
-                    border-radius: 8px;
-                    padding: 8px 18px;
-                    font-size: 15px;
-                    font-weight: 500;
-                }
-                QPushButton:disabled {
-                    background: #b0bec5;
-                    color: #ececec;
-                }
-                QPushButton:hover {
-                    background: #1976d2;
-                }
-                QLineEdit, QComboBox {
-                    background: #fff;
-                    border: 1px solid #b0bec5;
-                    border-radius: 6px;
-                    padding: 7px 10px;
-                    font-size: 15px;
-                }
-                QLabel.section-header {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #1976d2;
-                    margin-bottom: 8px;
-                }
-                QWidget#card {
-                    background: #fff;
-                    border-radius: 12px;
-                    border: 1px solid #e0e0e0;
-                    box-shadow: 0 2px 8px rgba(33,150,243,0.04);
-                    padding: 18px 18px 10px 18px;
-                }
-                QTextBrowser {
-                    background: #f7fafd;
-                    border: none;
-                    font-family: 'Fira Mono', 'Consolas', monospace;
-                    font-size: 14px;
-                    color: #333;
-                }
-                QTableWidget {
-                    background: #fff;
-                    border-radius: 8px;
-                    border: 1px solid #e0e0e0;
-                    font-size: 14px;
-                }
-                QStatusBar {
-                    background: #ffffff;
-                    border-top: 1px solid #e0e0e0;
-                    font-size: 15px;
-                }
-            ''')
+            if not self._theme_applied:
+                self.setStyleSheet(ModernTheme.get_stylesheet())
+                self._theme_applied = True
 
             # Central widget and main layout
             central_widget = QWidget()
@@ -400,44 +359,49 @@ class DatabaseApp(QMainWindow):
         else:
             logger.info(message)
             
+    def execute_in_thread(self, fn, on_result, on_error=None, on_finished=None):
+        """Execute a function in a background thread."""
+        worker = Worker(fn)
+        worker.signals.result.connect(on_result)
+        if on_error:
+            worker.signals.error.connect(on_error)
+        if on_finished:
+            worker.signals.finished.connect(on_finished)
+        self.threadpool.start(worker)
+
     def handle_connect(self):
-        """Handle database connection"""
+        """Handle database connection in a background thread."""
+        self.log_message(f'Attempting to connect to database...', "INFO")
+        self.connect_btn.setEnabled(False)
+
         host = self.host_input.text()
         port = self.port_input.text()
         dbname = self.dbname_input.text()
         user = self.user_input.text()
         password = self.password_input.text()
         
-        try:
-            self.log_message(f'Attempting to connect to database...', "INFO")
-            self.log_message(f'Connection details:', "INFO")
-            self.log_message(f'  Host: {host}:{port}', "INFO")
-            self.log_message(f'  Database: {dbname}', "INFO")
-            self.log_message(f'  User: {user}', "INFO")
-            
-            self.conn = psycopg2.connect(
-                host=host,
-                port=port,
-                dbname=dbname,
-                user=user,
-                password=password
+        def connect_task():
+            return psycopg2.connect(
+                host=host, port=port, dbname=dbname, user=user, password=password
             )
-            self.log_message(f'Successfully connected to database: {dbname}', "SUCCESS")
-            self.log_message(f'Connection established at: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', "INFO")
-            self.query_btn.setEnabled(True)
-            self.disconnect_btn.setEnabled(True)
-            self.connect_btn.setText("Connected!")
-            self.connect_btn.setEnabled(False)
-            
-            # Perform initial health check
-            self.perform_health_check()
-            
-        except Error as e:
-            self.log_message(f'Error connecting to database: {str(e)}', "ERROR")
-            self.log_message(f'Connection attempt failed at: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', "ERROR")
-            self.query_btn.setEnabled(False)
-            self.disconnect_btn.setEnabled(False)
-            
+
+        self.execute_in_thread(connect_task, self.on_connection_success, self.on_connection_error)
+
+    def on_connection_success(self, conn):
+        """Handle successful database connection."""
+        self.conn = conn
+        self.log_message(f'Successfully connected to database: {self.dbname_input.text()}', "SUCCESS")
+        self.query_btn.setEnabled(True)
+        self.disconnect_btn.setEnabled(True)
+        self.connect_btn.setText("Connected!")
+        self.perform_health_check()
+
+    def on_connection_error(self, error_tuple):
+        """Handle database connection error."""
+        exctype, value, tb = error_tuple
+        self.log_message(f'Error connecting to database: {value}', "ERROR")
+        self.connect_btn.setEnabled(True)
+
     def handle_disconnect(self):
         """Handle database disconnection"""
         if self.conn:
@@ -459,47 +423,45 @@ class DatabaseApp(QMainWindow):
             return
             
         table_name = self.table_input.text()
-        try:
-            self.log_message(f'Executing query on table: {table_name}', "INFO")
-            self.log_message(f'Query: SELECT type, message, details FROM public.{table_name}', "INFO")
-            
+        self.log_message(f'Executing query on table: {table_name}', "INFO")
+        self.query_btn.setEnabled(False)
+
+        def query_task():
             cursor = self.conn.cursor()
             cursor.execute(f'SELECT type, message, details FROM public.{table_name}')
             columns = [desc[0] for desc in cursor.description]
             data = cursor.fetchall()
-            
-            self.log_message(f'Query executed successfully', "SUCCESS")
-            self.log_message(f'Retrieved {len(data)} rows', "INFO")
-            self.log_message(f'Columns: {", ".join(columns)}', "INFO")
-            
-            # Update table widget
-            self.results_table.setColumnCount(len(columns))
-            self.results_table.setRowCount(len(data))
-            self.results_table.setHorizontalHeaderLabels(columns)
-            
-            # Set custom delegate for details column
-            self.results_table.setItemDelegateForColumn(2, DetailsDelegate())
-            
-            for i, row in enumerate(data):
-                for j, value in enumerate(row):
-                    if j == 2 and value:
-                        formatted_details = format_details(value)
-                        item = QTableWidgetItem()
-                        item.setData(Qt.DisplayRole, formatted_details)
-                    else:
-                        item = QTableWidgetItem(str(value))
-                    self.results_table.setItem(i, j, item)
-                    
-            # Adjust column widths
-            self.results_table.resizeColumnsToContents()
-            self.results_table.resizeRowsToContents()
-            
-            self.log_message(f'Results displayed in table', "SUCCESS")
-            
-        except Error as e:
-            self.log_message(f'Error querying table: {str(e)}', "ERROR")
-            self.log_message(f'Query failed at: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', "ERROR")
-            
+            return columns, data
+
+        self.execute_in_thread(query_task, self.on_query_success, self.on_query_error, lambda: self.query_btn.setEnabled(True))
+
+    def on_query_success(self, result):
+        """Handle successful query execution."""
+        columns, data = result
+        self.log_message(f'Query executed successfully. Retrieved {len(data)} rows', "SUCCESS")
+
+        self.results_table.setColumnCount(len(columns))
+        self.results_table.setRowCount(len(data))
+        self.results_table.setHorizontalHeaderLabels(columns)
+        
+        self.results_table.setItemDelegateForColumn(2, DetailsDelegate())
+        
+        for i, row in enumerate(data):
+            for j, value in enumerate(row):
+                item_data = format_details(value) if j == 2 and value else str(value)
+                item = QTableWidgetItem()
+                item.setData(Qt.DisplayRole, item_data)
+                self.results_table.setItem(i, j, item)
+                
+        self.results_table.resizeColumnsToContents()
+        self.results_table.resizeRowsToContents()
+        self.log_message(f'Results displayed in table', "SUCCESS")
+
+    def on_query_error(self, error_tuple):
+        """Handle query error."""
+        exctype, value, tb = error_tuple
+        self.log_message(f'Error querying table: {value}', "ERROR")
+
     def handle_clear_all(self):
         """Clear both the log window and results table"""
         if self.conn:
@@ -563,6 +525,7 @@ class DatabaseApp(QMainWindow):
         # Add UI mode toggle action
         self.ui_mode_action = QAction("Switch to New UI", self)
         self.ui_mode_action.triggered.connect(self.toggle_ui_mode)
+        self.ui_mode_action.setEnabled(False) # Disable for now
         view_menu.addAction(self.ui_mode_action)
         
         # Help menu
