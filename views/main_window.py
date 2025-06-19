@@ -39,12 +39,12 @@ class StatusIndicator(QLabel):
         
     def set_status(self, is_healthy: bool) -> None:
         """Set the status indicator color."""
-        color = QColor("#2ecc71") if is_healthy else QColor("#e74c3c")
+        color = QColor("#28a745") if is_healthy else QColor("#dc3545")  # Bootstrap success/danger colors
         self.setStyleSheet(f"""
             QLabel {{
                 background-color: {color.name()};
                 border-radius: 6px;
-                border: 1px solid #2d2d2d;
+                border: 1px solid #dee2e6;
             }}
         """)
 
@@ -125,6 +125,106 @@ class MainWindow(QMainWindow):
         
         # Connect signals
         self._connect_ui_signals()
+        
+        # Set application-wide stylesheet for light theme
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #f8f9fa;
+            }
+            QWidget {
+                background-color: #ffffff;
+                color: #212529;
+            }
+            QGroupBox {
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                margin-top: 8px;
+                font-weight: bold;
+            }
+            QGroupBox::title {
+                color: #495057;
+            }
+            QTableWidget {
+                background-color: #ffffff;
+                alternate-background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+            }
+            QTableWidget::item:selected {
+                background-color: #e9ecef;
+                color: #212529;
+            }
+            QHeaderView::section {
+                background-color: #e9ecef;
+                color: #212529;
+                border: none;
+                padding: 4px;
+            }
+            QComboBox {
+                background-color: #ffffff;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                padding: 4px;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 4px solid transparent;
+                border-right: 4px solid transparent;
+                border-top: 4px solid #212529;
+                margin-right: 4px;
+            }
+            QPushButton {
+                background-color: #f8f9fa;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                padding: 4px 8px;
+                color: #212529;
+            }
+            QPushButton:hover {
+                background-color: #e9ecef;
+            }
+            QPushButton:pressed {
+                background-color: #dee2e6;
+            }
+            QLineEdit {
+                background-color: #ffffff;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                padding: 4px;
+            }
+            QTextEdit {
+                background-color: #ffffff;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+            }
+            QStatusBar {
+                background-color: #f8f9fa;
+                color: #212529;
+            }
+            QMenuBar {
+                background-color: #f8f9fa;
+                border-bottom: 1px solid #dee2e6;
+            }
+            QMenuBar::item {
+                background-color: transparent;
+                padding: 4px 8px;
+            }
+            QMenuBar::item:selected {
+                background-color: #e9ecef;
+            }
+            QMenu {
+                background-color: #ffffff;
+                border: 1px solid #dee2e6;
+            }
+            QMenu::item {
+                padding: 4px 20px;
+            }
+            QMenu::item:selected {
+                background-color: #e9ecef;
+            }
+        """)
         
     def _create_header(self, parent_layout):
         """Create the header section with platform selector and main actions."""
@@ -612,8 +712,8 @@ class MainWindow(QMainWindow):
         self.selected_webapp = self.webapp_combo.currentData()
         # Re-instantiate LogController with new webapp
         self.log_controller = LogController(self.selected_webapp)
-        # ... any additional logic to update log view ...
-        
+        # ... any additional logic to update log view ... 
+
     def _on_platform_changed(self, platform: str):
         """Handle platform selection change."""
         logger.info(f"Platform changed to: {platform}")
@@ -758,7 +858,7 @@ class MainWindow(QMainWindow):
             share_btn.setToolTip("Share build URL")
             share_btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #6f42c1;
+                    background-color: #6c757d;
                     color: white;
                     border: none;
                     border-radius: 4px;
@@ -766,7 +866,7 @@ class MainWindow(QMainWindow):
                     font-weight: bold;
                 }
                 QPushButton:hover {
-                    background-color: #5a32a3;
+                    background-color: #5a6268;
                 }
             """)
             share_btn.clicked.connect(lambda: self._handle_share(build))
