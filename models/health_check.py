@@ -2,6 +2,8 @@
 Health check model for QuantumOps.
 """
 import logging
+import json
+from pathlib import Path
 from typing import Dict, Optional
 import requests
 from PySide6.QtCore import QObject, Signal, QTimer, QThread, Qt
@@ -38,20 +40,54 @@ class HealthCheckModel(QObject):
     
     def __init__(self):
         super().__init__()
-        self.webapps = {
-            "RV-Dev-api": "https://rv-dev-api.azurewebsites.net/health",
-            "RV-Staging-api": "https://rv-staging-api.azurewebsites.net/health",
-            "PF-Dev-web": "https://pf-dev-web.azurewebsites.net/health",
-            "PF-Dev-api": "https://pf-dev-api.azurewebsites.net/health",
-            "PF-Staging-web": "https://pf-staging-web.azurewebsites.net/health",
-            "PF-Staging-api": "https://pf-staging-api.azurewebsites.net/health"
-        }
+        self.config_file = Path("config/health_endpoints.json")
+        self.webapps = self._load_endpoints()
         self.health_status: Dict[str, bool] = {}
         self.last_check: Dict[str, datetime] = {}
         self._timer = QTimer()
         self._timer.timeout.connect(self.check_all_health)
         self._interval = 30000  # Default 30 seconds
         self._workers: Dict[str, HealthCheckWorker] = {}
+        
+    def _load_endpoints(self) -> Dict[str, str]:
+        """Load health check endpoints from configuration file."""
+        try:
+            if self.config_file.exists():
+                with open(self.config_file, 'r') as f:
+                    data = json.load(f)
+                    return data.get("endpoints", {})
+            else:
+                # Default endpoints if config file doesn't exist
+                default_endpoints = {
+                    "RV-Dev-api": "https://rv-dev-api.azurewebsites.net/health",
+                    "RV-Staging-api": "https://rv-staging-api.azurewebsites.net/health",
+                    "PF-Dev-web": "https://pf-dev-web.azurewebsites.net/health",
+                    "PF-Dev-api": "https://pf-dev-api.azurewebsites.net/health",
+                    "PF-Staging-web": "https://pf-staging-web.azurewebsites.net/health",
+                    "PF-Staging-api": "https://pf-staging-api.azurewebsites.net/health"
+                }
+                self._save_endpoints(default_endpoints)
+                return default_endpoints
+        except Exception as e:
+            logger.error(f"Failed to load health endpoints: {e}")
+            return {}
+            
+    def _save_endpoints(self, endpoints: Dict[str, str]) -> None:
+        """Save health check endpoints to configuration file."""
+        try:
+            # Ensure config directory exists
+            self.config_file.parent.mkdir(parents=True, exist_ok=True)
+            
+            data = {"endpoints": endpoints}
+            with open(self.config_file, 'w') as f:
+                json.dump(data, f, indent=2)
+            logger.info(f"Health endpoints saved to {self.config_file}")
+        except Exception as e:
+            logger.error(f"Failed to save health endpoints: {e}")
+            
+    def save_endpoints(self) -> None:
+        """Save current endpoints to configuration file."""
+        self._save_endpoints(self.webapps)
         
     def start_monitoring(self) -> None:
         """Start health check monitoring."""

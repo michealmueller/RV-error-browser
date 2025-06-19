@@ -201,11 +201,34 @@ class HealthSettingsDialog(QDialog):
         
     def _delete_endpoint(self, row):
         """Delete an endpoint."""
-        name = self.table.item(row, 0).text()
-        del self.webapps[name]
-        self.table.removeRow(row)
+        try:
+            name_item = self.table.item(row, 0)
+            if name_item is None:
+                logger.warning(f"Cannot delete endpoint at row {row}: name item is None")
+                return
+                
+            name = name_item.text()
+            if name in self.webapps:
+                del self.webapps[name]
+                self.table.removeRow(row)
+                logger.info(f"Deleted endpoint: {name}")
+            else:
+                logger.warning(f"Endpoint {name} not found in webapps dictionary")
+        except Exception as e:
+            logger.error(f"Error deleting endpoint at row {row}: {e}")
+            QMessageBox.warning(self, "Error", f"Failed to delete endpoint: {str(e)}")
         
     def accept(self):
         """Save changes and close dialog."""
-        self.health_model.webapps = dict(self.webapps)
-        super().accept() 
+        try:
+            # Update the model's webapps dictionary
+            self.health_model.webapps = dict(self.webapps)
+            
+            # Save to configuration file
+            self.health_model.save_endpoints()
+            
+            logger.info("Health check settings saved successfully")
+            super().accept()
+        except Exception as e:
+            logger.error(f"Failed to save health check settings: {e}")
+            QMessageBox.critical(self, "Error", f"Failed to save settings: {str(e)}") 

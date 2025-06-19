@@ -719,7 +719,7 @@ class MainWindow(QMainWindow):
         if dialog.exec() == QDialog.Accepted:
             # Trigger a health check refresh
             self.health_controller.start_monitoring()
-            self._append_log("Health check settings updated", "info")
+            self._append_log("Health check settings updated")
 
     def _setup_status_bar(self):
         """Set up the status bar."""
