@@ -26,9 +26,7 @@ class MainController(QObject):
         self.view = view
         
         # Connect signals
-        self.view.refresh_builds.connect(self.refresh_builds)
-        self.view.download_selected.connect(self.download_builds)
-        self.view.upload_selected.connect(self.upload_builds)
+        self.view.refresh_requested.connect(self.refresh_builds)
         
         # Connect model signals
         self.model.build_list_updated.connect(self.build_list_updated)
@@ -42,8 +40,8 @@ class MainController(QObject):
     def refresh_builds(self):
         """Refresh build list."""
         try:
-            platform = self.view.platform_combo.currentText()
-            self.model.refresh_builds(platform)
+            platform = self.view.platform_combo.currentText().lower()
+            self.model.fetch_builds(platform, force_refresh=True)
         except Exception as e:
             logger.error(f"Failed to refresh builds: {e}")
             self.error_occurred.emit(str(e))

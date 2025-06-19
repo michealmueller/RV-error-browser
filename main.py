@@ -28,6 +28,14 @@ from services.azure_service import AzureService
 
 def main():
     """Main application entry point."""
+    # Load environment variables from .env file
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+        print("Environment variables loaded from .env file")
+    except ImportError:
+        print("python-dotenv not available, using system environment variables")
+    
     # Create application
     app = QApplication(sys.argv)
     app.setApplicationName("QuantumOps")

@@ -1638,8 +1638,9 @@ class MainWindow(QMainWindow):
         self.append_terminal_line(f"Auto-resize window set to {enabled}", msg_type="system")
 
     def set_theme(self, mode):
-        import qdarktheme
-        qdarktheme.setup_theme(mode)
+        # Remove or comment out the following lines:
+        # import qdarktheme
+        # qdarktheme.setup_theme(mode)
         self.update_all_widget_styles()
         if mode == "light":
             self.log_window.setStyleSheet("color: #222; background: #fff;")

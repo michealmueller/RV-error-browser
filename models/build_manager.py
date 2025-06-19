@@ -31,6 +31,13 @@ class BuildManager(QObject):
         self._download_dir.mkdir(parents=True, exist_ok=True)
         self._azure_service = AzureService()
         
+        # Auto-initialize Azure service
+        try:
+            self._azure_service.initialize()
+        except Exception as e:
+            logger.warning(f"Azure service initialization failed: {e}")
+            # Continue without Azure - mock mode will be used
+        
     def initialize_azure(self, container_name: str) -> None:
         """Initialize Azure service."""
         try:
@@ -234,8 +241,8 @@ class BuildManager(QObject):
         else:
             # Return all builds from all platforms
             all_builds = []
-            for platform_builds in self._builds.values():
-                all_builds.extend(platform_builds)
+            for builds in self._builds.values():
+                all_builds.extend(builds)
             return all_builds
             
     def get_local_path(self, build_id: str, platform: str) -> Optional[str]:
@@ -260,4 +267,8 @@ class BuildManager(QObject):
             return build.get("blob_url") if build else None
         except Exception as e:
             logger.error(f"Error getting blob URL for build {build_id}: {e}")
-            return None 
+            return None
+            
+    def refresh_builds(self, platform: str, force_refresh: bool = False) -> List[Dict]:
+        """Refresh builds for a platform."""
+        return self.fetch_builds(platform, force_refresh=True)  # Always force refresh when explicitly requested 

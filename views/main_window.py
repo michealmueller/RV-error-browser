@@ -26,6 +26,8 @@ from .history_dialog import HistoryDialog
 from .preview_dialog import PreviewDialog
 import json
 from pathlib import Path
+from datetime import datetime
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -85,17 +87,30 @@ class ProgressDialog(QDialog):
 class MainWindow(QMainWindow):
     """Main window for the application."""
     
+    refresh_requested = Signal()
+    
     def __init__(self):
         """Initialize main window."""
         super().__init__()
+        
+        # Set up build managers first
+        self._setup_build_managers()
+        
+        # Initialize webapps and selected_webapp before controllers
         self.webapps = self._load_webapps()
         self.selected_webapp = self.webapps[0] if self.webapps else None
-        self.history_manager = HistoryManager()
-        self._init_ui()
+        
+        # Initialize controllers
         self._setup_controllers()
-        self._setup_build_managers()
+        
+        # Initialize UI
+        self._init_ui()
+        
+        # Connect signals
         self._connect_signals()
-        self._setup_status_bar()
+        
+        self.health_statuses = {}  # Store health statuses
+        self.history_manager = HistoryManager()
         self._progress_dialog = None
         logger.info("Main window initialized")
         
@@ -114,8 +129,14 @@ class MainWindow(QMainWindow):
         # Create header section
         self._create_header(main_layout)
         
-        # Create main content area
-        self._create_main_content(main_layout)
+        # Create tab widget for build views
+        tab_widget = QTabWidget()
+        tab_widget.addTab(self.android_view, "Android Builds")
+        tab_widget.addTab(self.ios_view, "iOS Builds")
+        main_layout.addWidget(tab_widget)
+        
+        # Create bottom panels for health status and logs
+        self._create_bottom_panels(main_layout)
         
         # Create status bar
         self._setup_status_bar()
@@ -411,74 +432,6 @@ class MainWindow(QMainWindow):
         
         parent_layout.addWidget(controls_widget)
         
-    def _create_builds_section(self, parent_layout):
-        """Create the builds table section."""
-        builds_group = QGroupBox("Builds")
-        builds_group.setStyleSheet("""
-            QGroupBox {
-                font-weight: bold;
-                font-size: 16px;
-                color: #2c3e50;
-                border: 2px solid #bdc3c7;
-                border-radius: 8px;
-                margin-top: 10px;
-                padding-top: 10px;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px 0 5px;
-            }
-        """)
-        builds_layout = QVBoxLayout(builds_group)
-        
-        # Create builds table
-        self.builds_table = QTableWidget()
-        self.builds_table.setColumnCount(7)
-        self.builds_table.setHorizontalHeaderLabels([
-            "Build ID", "Version", "Status", "Size", "Date", "Actions", "Share"
-        ])
-        self.builds_table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.builds_table.setSelectionMode(QTableWidget.SingleSelection)
-        self.builds_table.setAlternatingRowColors(True)
-        self.builds_table.setStyleSheet("""
-            QTableWidget {
-                background-color: white;
-                alternate-background-color: #f8f9fa;
-                gridline-color: #dee2e6;
-                border: 1px solid #dee2e6;
-                border-radius: 6px;
-            }
-            QTableWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #dee2e6;
-            }
-            QTableWidget::item:selected {
-                background-color: #3498db;
-                color: white;
-            }
-            QHeaderView::section {
-                background-color: #34495e;
-                color: white;
-                padding: 12px 8px;
-                border: none;
-                font-weight: bold;
-            }
-        """)
-        
-        # Set column widths
-        self.builds_table.setColumnWidth(0, 200)  # Build ID
-        self.builds_table.setColumnWidth(1, 120)  # Version
-        self.builds_table.setColumnWidth(2, 100)  # Status
-        self.builds_table.setColumnWidth(3, 80)   # Size
-        self.builds_table.setColumnWidth(4, 150)  # Date
-        self.builds_table.setColumnWidth(5, 200)  # Actions
-        self.builds_table.setColumnWidth(6, 100)  # Share
-        
-        builds_layout.addWidget(self.builds_table)
-        
-        parent_layout.addWidget(builds_group, 1)  # Give it most of the space
-        
     def _create_bottom_panels(self, parent_layout):
         """Create the bottom panels for health status and logs."""
         bottom_widget = QWidget()
@@ -545,14 +498,9 @@ class MainWindow(QMainWindow):
         # Platform and webapp changes
         self.platform_combo.currentTextChanged.connect(self._on_platform_changed)
         self.webapp_combo.currentIndexChanged.connect(self._on_webapp_changed)
-        
-        # Search and filters
-        self.search_input.textChanged.connect(self._on_search_changed)
-        self.version_filter.currentIndexChanged.connect(self._on_filter_changed)
-        self.status_filter.currentIndexChanged.connect(self._on_filter_changed)
-        
-        # Refresh button
-        self.refresh_button.clicked.connect(self.refresh_builds)
+        # Connect refresh button to emit refresh_requested
+        if hasattr(self, 'refresh_button'):
+            self.refresh_button.clicked.connect(self.refresh_requested.emit)
         
     def _on_search_changed(self, text: str):
         """Handle search input changes."""
@@ -569,6 +517,8 @@ class MainWindow(QMainWindow):
         # Health controller
         self.health_controller = HealthController()
         self.health_controller.status_updated.connect(self._update_health_status)
+        self.health_controller.error_occurred.connect(self._append_log)  # Connect error signal to log
+        self.health_controller.start_monitoring()  # Start health monitoring
         
         # Log controller
         self.log_controller = LogController(self.selected_webapp)
@@ -584,6 +534,14 @@ class MainWindow(QMainWindow):
         # Create models
         self.android_model = BuildManager()
         self.ios_model = BuildManager()
+        
+        # Initialize Azure for both models
+        try:
+            container_name = os.getenv("AZURE_STORAGE_CONTAINER", "builds")
+            self.android_model.initialize_azure(container_name)
+            self.ios_model.initialize_azure(container_name)
+        except Exception as e:
+            self._handle_error(f"Failed to initialize Azure service: {e}")
         
         # Create build views for each platform
         self.android_view = BuildView("android")
@@ -623,21 +581,51 @@ class MainWindow(QMainWindow):
         
         # Settings menu
         settings_menu = menubar.addMenu("Settings")
+        
+        # Add Health Check Settings action
+        health_settings_action = settings_menu.addAction("Health Check Settings")
+        health_settings_action.triggered.connect(self.show_health_settings)
+        
+        settings_menu.addSeparator()
+        
         sp_info_action = QAction("View SP Info", self)
         sp_info_action.triggered.connect(self._show_sp_info)
         settings_menu.addAction(sp_info_action)
         
-    def _update_health_status(self, status: dict):
+    def _update_health_status(self, webapp: str, is_healthy: bool):
         """Update health status display."""
-        text = []
-        for app, health in status.items():
-            color = "green" if health["healthy"] else "red"
-            text.append(f'<span style="color: {color}">●</span> {app}: {health["message"]}')
-        self.health_status.setText("<br>".join(text))
+        # Update the status in our dictionary
+        self.health_statuses[webapp] = is_healthy
+        
+        # Create the status text with all services
+        status_lines = []
+        for app, healthy in self.health_statuses.items():
+            color = "#28a745" if healthy else "#dc3545"  # Bootstrap success/danger colors
+            status = "Healthy" if healthy else "Unhealthy"
+            status_lines.append(f'<div style="margin: 4px 0;"><span style="color: {color};">●</span> {app}: {status}</div>')
+        
+        # Update the label with all statuses
+        self.health_status.setText(f"""
+            <div style="
+                background-color: #f8f9fa;
+                border-radius: 4px;
+                padding: 8px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+                font-size: 13px;
+                line-height: 1.4;
+            ">
+                {"".join(status_lines)}
+            </div>
+        """)
         
     def _append_log(self, message: str):
-        """Append message to log area."""
-        self.log_area.append(message)
+        """Append message to log area with timestamp."""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        formatted_message = f"[{timestamp}] {message}"
+        self.log_area.append(formatted_message)
+        # Auto-scroll to bottom
+        scrollbar = self.log_area.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
         
     def _set_health_interval(self, interval: int):
         """Set health check interval."""
@@ -688,6 +676,7 @@ class MainWindow(QMainWindow):
                 self.android_model.fetch_builds("android", force_refresh=True)
             elif platform == "ios":
                 self.ios_model.fetch_builds("ios", force_refresh=True)
+            self.show_status(f"Refreshing {platform} builds...")
         except Exception as e:
             self._handle_error(f"Failed to refresh builds: {e}")
         
@@ -717,226 +706,31 @@ class MainWindow(QMainWindow):
     def _on_platform_changed(self, platform: str):
         """Handle platform selection change."""
         logger.info(f"Platform changed to: {platform}")
-        # Update the builds table based on the selected platform
-        self._update_builds_table(platform.lower())
+        # The platform change is now handled by the tab-based approach
+        # No need to update a single builds table anymore
         
-    def _update_builds_table(self, platform: str):
-        """Update the builds table with data for the selected platform."""
-        try:
-            if platform == "android":
-                builds = self.android_model.get_builds()
-            elif platform == "ios":
-                builds = self.ios_model.get_builds()
-            else:
-                builds = []
-                
-            self._populate_builds_table(builds)
-        except Exception as e:
-            logger.error(f"Error updating builds table: {e}")
-            self._handle_error(f"Failed to update builds table: {e}")
-            
-    def _populate_builds_table(self, builds: list):
-        """Populate the builds table with the given builds data."""
-        self.builds_table.setRowCount(0)
-        if not builds:
-            return
-            
-        self.builds_table.setRowCount(len(builds))
-        
-        for row, build in enumerate(builds):
-            # Build ID
-            self.builds_table.setItem(row, 0, QTableWidgetItem(build.get("id", "")))
-            
-            # Version
-            self.builds_table.setItem(row, 1, QTableWidgetItem(build.get("version", "")))
-            
-            # Status with color coding
-            status_item = QTableWidgetItem(build.get("status", ""))
-            status = build.get("status", "")
-            if status == "uploaded":
-                status_item.setBackground(QColor("#d4edda"))  # Light green
-            elif status == "downloaded":
-                status_item.setBackground(QColor("#d1ecf1"))  # Light blue
-            elif status == "available":
-                status_item.setBackground(QColor("#fff3cd"))  # Light yellow
-            self.builds_table.setItem(row, 2, status_item)
-            
-            # Size
-            size = build.get("size", 0)
-            size_text = f"{size / (1024*1024):.1f} MB" if size > 0 else "Unknown"
-            self.builds_table.setItem(row, 3, QTableWidgetItem(size_text))
-            
-            # Date
-            self.builds_table.setItem(row, 4, QTableWidgetItem(build.get("date", "")))
-            
-            # Actions
-            actions_widget = self._create_actions_widget(build)
-            self.builds_table.setCellWidget(row, 5, actions_widget)
-            
-            # Share
-            share_widget = self._create_share_widget(build)
-            self.builds_table.setCellWidget(row, 6, share_widget)
-            
-    def _create_actions_widget(self, build: dict) -> QWidget:
-        """Create the actions widget for a build row."""
-        widget = QWidget()
-        layout = QHBoxLayout(widget)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(4)
-        
-        # Download button
-        download_btn = QPushButton("↓")
-        download_btn.setToolTip("Download build")
-        download_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #28a745;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                padding: 4px 8px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #218838;
-            }
-        """)
-        download_btn.clicked.connect(lambda: self._handle_download(build))
-        layout.addWidget(download_btn)
-        
-        # Upload button (only if downloaded)
-        if build.get("status") == "downloaded":
-            upload_btn = QPushButton("↑")
-            upload_btn.setToolTip("Upload build")
-            upload_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #007bff;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    padding: 4px 8px;
-                    font-weight: bold;
-                }
-                QPushButton:hover {
-                    background-color: #0056b3;
-                }
-            """)
-            upload_btn.clicked.connect(lambda: self._handle_upload(build))
-            layout.addWidget(upload_btn)
-        
-        # Install button (only if downloaded)
-        if build.get("status") == "downloaded":
-            install_btn = QPushButton("▶")
-            install_btn.setToolTip("Install build")
-            install_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #ffc107;
-                    color: #212529;
-                    border: none;
-                    border-radius: 4px;
-                    padding: 4px 8px;
-                    font-weight: bold;
-                }
-                QPushButton:hover {
-                    background-color: #e0a800;
-                }
-            """)
-            install_btn.clicked.connect(lambda: self._handle_install(build))
-            layout.addWidget(install_btn)
-        
-        layout.addStretch()
-        return widget
-        
-    def _create_share_widget(self, build: dict) -> QWidget:
-        """Create the share widget for a build row."""
-        widget = QWidget()
-        layout = QHBoxLayout(widget)
-        layout.setContentsMargins(2, 2, 2, 2)
-        
-        # Share button (only if uploaded)
-        if build.get("status") == "uploaded":
-            share_btn = QPushButton("🔗")
-            share_btn.setToolTip("Share build URL")
-            share_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #6c757d;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    padding: 4px 8px;
-                    font-weight: bold;
-                }
-                QPushButton:hover {
-                    background-color: #5a6268;
-                }
-            """)
-            share_btn.clicked.connect(lambda: self._handle_share(build))
-            layout.addWidget(share_btn)
-        
-        layout.addStretch()
-        return widget
-        
-    def _handle_download(self, build: dict):
-        """Handle download button click."""
-        try:
-            platform = self.platform_combo.currentText().lower()
-            build_id = build.get("id", "")
-            if platform == "android":
-                self.android_controller.download_build(build_id, platform)
-            elif platform == "ios":
-                self.ios_controller.download_build(build_id, platform)
-        except Exception as e:
-            self._handle_error(f"Failed to download build: {e}")
-            
-    def _handle_upload(self, build: dict):
-        """Handle upload button click."""
-        try:
-            platform = self.platform_combo.currentText().lower()
-            build_id = build.get("id", "")
-            local_path = build.get("local_path", "")
-            if platform == "android":
-                self.android_controller.upload_build(build_id, local_path, platform)
-            elif platform == "ios":
-                self.ios_controller.upload_build(build_id, local_path, platform)
-        except Exception as e:
-            self._handle_error(f"Failed to upload build: {e}")
-            
-    def _handle_install(self, build: dict):
-        """Handle install button click."""
-        try:
-            build_id = build.get("id", "")
-            if self.platform_combo.currentText().lower() == "android":
-                self.android_controller.install_requested.emit(build_id)
-            else:
-                self.ios_controller.install_requested.emit(build_id)
-        except Exception as e:
-            self._handle_error(f"Failed to install build: {e}")
-            
-    def _handle_share(self, build: dict):
-        """Handle share button click."""
-        try:
-            build_id = build.get("id", "")
-            if self.platform_combo.currentText().lower() == "android":
-                self.android_controller.share_requested.emit(build_id)
-            else:
-                self.ios_controller.share_requested.emit(build_id)
-        except Exception as e:
-            self._handle_error(f"Failed to share build: {e}")
-        
+    def show_health_settings(self):
+        """Show health check settings dialog."""
+        from views.health_settings_dialog import HealthSettingsDialog
+        dialog = HealthSettingsDialog(self.health_controller.model, self)
+        if dialog.exec() == QDialog.Accepted:
+            # Trigger a health check refresh
+            self.health_controller.start_monitoring()
+            self._append_log("Health check settings updated", "info")
+
     def _setup_status_bar(self):
-        """Set up status bar for displaying error messages."""
+        """Set up the status bar."""
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         
-        # Create permanent widget for error messages
-        self.error_label = QLabel()
-        self.error_label.setStyleSheet("color: red;")
-        self.error_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.status_bar.addPermanentWidget(self.error_label)
-        
-        # Create temporary widget for status messages
-        self.status_label = QLabel()
-        self.status_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        # Status label
+        self.status_label = QLabel("Ready")
         self.status_bar.addWidget(self.status_label)
+        
+        # Error label
+        self.error_label = QLabel()
+        self.error_label.setStyleSheet("color: #dc3545;")  # Bootstrap danger color
+        self.status_bar.addPermanentWidget(self.error_label)
         
     def _handle_error(self, error_message: str):
         """Central error handler for all controllers."""
@@ -974,56 +768,31 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'build_controller'):
             self.build_controller.error_occurred.connect(self._handle_error)
             
-        # Connect status signals
-        if hasattr(self, 'main_controller'):
-            self.main_controller.build_list_updated.connect(
-                lambda builds: self.show_status(f"Fetched {len(builds)} builds")
-            )
-            self.main_controller.build_status_changed.connect(
-                lambda build_id, status: self.show_status(f"Build {build_id}: {status}")
-            )
-
         # Connect build operation signals
-        if hasattr(self, 'build_controller'):
-            self.build_controller.build_downloaded.connect(self._handle_build_download)
-            self.build_controller.build_uploaded.connect(self._handle_build_upload)
-            self.build_controller.upload_retry.connect(self._handle_upload_retry)
+        if hasattr(self, 'android_controller'):
+            self.android_controller.builds_fetched.connect(self._handle_builds_fetched)
+            self.android_controller.build_downloaded.connect(self._handle_build_download)
+            self.android_controller.build_uploaded.connect(self._handle_build_upload)
+            self.android_controller.upload_retry.connect(self._handle_upload_retry)
             
-            # Show progress dialog for downloads
-            self.build_controller.download_started.connect(
-                lambda build_id: self._show_progress_dialog(f"Downloading build {build_id}")
-            )
+        if hasattr(self, 'ios_controller'):
+            self.ios_controller.builds_fetched.connect(self._handle_builds_fetched)
+            self.ios_controller.build_downloaded.connect(self._handle_build_download)
+            self.ios_controller.build_uploaded.connect(self._handle_build_upload)
+            self.ios_controller.upload_retry.connect(self._handle_upload_retry)
             
-            # Show progress dialog for uploads
-            self.build_controller.upload_started.connect(
-                lambda build_id: self._show_progress_dialog(f"Uploading build {build_id}")
-            )
-            
-            # Update progress for downloads
-            self.build_controller.download_progress.connect(
-                lambda build_id, progress: self._progress_dialog.update_progress(
-                    progress, f"Downloading build {build_id}: {progress}%"
-                ) if self._progress_dialog else None
-            )
-            
-            # Update progress for uploads
-            self.build_controller.upload_progress.connect(
-                lambda build_id, progress: self._progress_dialog.update_progress(
-                    progress, f"Uploading build {build_id}: {progress}%"
-                ) if self._progress_dialog else None
-            )
+        # Connect platform combo
+        if hasattr(self, 'platform_combo'):
+            self.platform_combo.currentTextChanged.connect(self.refresh_builds)
 
-    refresh_builds = Signal()
-    download_selected = Signal(list)
-    upload_selected = Signal(list)
-
-    def _show_progress_dialog(self, title: str) -> ProgressDialog:
-        """Show progress dialog and return it."""
-        if self._progress_dialog:
-            self._progress_dialog.close()
-        self._progress_dialog = ProgressDialog(title, self)
-        self._progress_dialog.show()
-        return self._progress_dialog
+    def _handle_builds_fetched(self, builds):
+        """Handle fetched builds."""
+        platform = self.platform_combo.currentText().lower()
+        if platform == "android":
+            self.android_view.update_builds(builds)
+        elif platform == "ios":
+            self.ios_view.update_builds(builds)
+        self.show_status(f"Fetched {len(builds)} {platform} builds")
         
     def _handle_build_download(self, build_id: str, local_path: str):
         """Handle build download completion."""

@@ -3,18 +3,15 @@
 import sys
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
-# Collect all hidden imports for PySide6, qdarktheme, azure, etc.
+# Collect all hidden imports for PySide6, azure, etc.
 hidden_imports = []
 hidden_imports += collect_submodules('PySide6')
-hidden_imports += collect_submodules('qdarktheme')
 hidden_imports += collect_submodules('azure')
-hidden_imports += collect_submodules('azure.storage')
-hidden_imports += collect_submodules('azure.storage.blob')
 
-# Collect all data files for PySide6 (Qt plugins, etc.)
+# Collect all data files
 data_files = []
 data_files += collect_data_files('PySide6')
-data_files += collect_data_files('qdarktheme')
+data_files += collect_data_files('azure')
 
 # Add project data files (if present)
 project_data = [

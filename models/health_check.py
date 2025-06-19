@@ -4,10 +4,31 @@ Health check model for QuantumOps.
 import logging
 from typing import Dict, Optional
 import requests
-from PySide6.QtCore import QObject, Signal, QTimer
+from PySide6.QtCore import QObject, Signal, QTimer, QThread, Qt
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+class HealthCheckWorker(QThread):
+    """Worker thread for health checks."""
+    
+    check_complete = Signal(str, bool)  # webapp_name, is_healthy
+    error_occurred = Signal(str)  # error message
+    
+    def __init__(self, webapp: str, url: str):
+        super().__init__()
+        self.webapp = webapp
+        self.url = url
+        
+    def run(self):
+        """Run the health check."""
+        try:
+            response = requests.get(self.url, timeout=5)
+            is_healthy = response.status_code == 200
+            self.check_complete.emit(self.webapp, is_healthy)
+        except Exception as e:
+            self.error_occurred.emit(f"Error checking {self.webapp}: {str(e)}")
+            self.check_complete.emit(self.webapp, False)
 
 class HealthCheckModel(QObject):
     """Model for handling health check operations."""
@@ -30,15 +51,23 @@ class HealthCheckModel(QObject):
         self._timer = QTimer()
         self._timer.timeout.connect(self.check_all_health)
         self._interval = 30000  # Default 30 seconds
+        self._workers: Dict[str, HealthCheckWorker] = {}
         
     def start_monitoring(self) -> None:
         """Start health check monitoring."""
         self._timer.start(self._interval)
-        self.check_all_health()  # Initial check
+        # Delay initial check by 1 second to not block startup
+        QTimer.singleShot(1000, self.check_all_health)
         
     def stop_monitoring(self) -> None:
         """Stop health check monitoring."""
         self._timer.stop()
+        # Stop any running workers
+        for worker in self._workers.values():
+            if worker.isRunning():
+                worker.quit()
+                worker.wait()
+        self._workers.clear()
         
     def set_interval(self, interval_ms: int) -> None:
         """Set the health check interval in milliseconds."""
@@ -52,20 +81,28 @@ class HealthCheckModel(QObject):
             self.check_health(webapp, url)
             
     def check_health(self, webapp: str, url: str) -> None:
-        """Check health status for a specific web app."""
-        try:
-            response = requests.get(url, timeout=5)
-            is_healthy = response.status_code == 200
-            self.health_status[webapp] = is_healthy
-            self.last_check[webapp] = datetime.now()
-            self.status_updated.emit(webapp, is_healthy)
-            logger.info(f"Health check for {webapp}: {'Healthy' if is_healthy else 'Unhealthy'}")
-        except Exception as e:
-            self.health_status[webapp] = False
-            self.last_check[webapp] = datetime.now()
-            self.status_updated.emit(webapp, False)
-            self.error_occurred.emit(f"Error checking {webapp}: {str(e)}")
-            logger.error(f"Health check error for {webapp}: {str(e)}")
+        """Check health status for a specific web app asynchronously."""
+        # Clean up previous worker if it exists
+        if webapp in self._workers:
+            old_worker = self._workers[webapp]
+            if old_worker.isRunning():
+                old_worker.quit()
+                old_worker.wait()
+            old_worker.deleteLater()
+            
+        # Create new worker
+        worker = HealthCheckWorker(webapp, url)
+        worker.check_complete.connect(self._handle_check_complete)
+        worker.error_occurred.connect(self.error_occurred)
+        self._workers[webapp] = worker
+        worker.start()
+        
+    def _handle_check_complete(self, webapp: str, is_healthy: bool) -> None:
+        """Handle completion of a health check."""
+        self.health_status[webapp] = is_healthy
+        self.last_check[webapp] = datetime.now()
+        self.status_updated.emit(webapp, is_healthy)
+        logger.info(f"Health check for {webapp}: {'Healthy' if is_healthy else 'Unhealthy'}")
             
     def get_health_status(self, webapp: str) -> Optional[bool]:
         """Get the health status for a specific web app."""

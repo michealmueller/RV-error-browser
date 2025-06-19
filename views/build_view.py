@@ -9,6 +9,8 @@ from PySide6.QtWidgets import (
     QTableWidgetItem, QMessageBox, QProgressBar
 )
 from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtGui import QColor
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +60,9 @@ class BuildView(QWidget):
         filter_layout.addWidget(self.status_filter)
         
         # Refresh button
-        refresh_btn = QPushButton("Refresh")
-        refresh_btn.clicked.connect(self.fetch_requested)
-        filter_layout.addWidget(refresh_btn)
+        self.refresh_btn = QPushButton("⟳ Refresh")
+        self.refresh_btn.clicked.connect(self.fetch_requested)
+        filter_layout.addWidget(self.refresh_btn)
         
         layout.addLayout(filter_layout)
         
@@ -78,6 +80,71 @@ class BuildView(QWidget):
         # Status bar
         self.status_bar = QLabel()
         layout.addWidget(self.status_bar)
+        
+        # Apply styling
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #ffffff;
+                color: #212529;
+            }
+            QLineEdit {
+                padding: 6px;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+            }
+            QComboBox {
+                padding: 6px;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                min-width: 120px;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 4px solid transparent;
+                border-right: 4px solid transparent;
+                border-top: 4px solid #212529;
+                margin-right: 4px;
+            }
+            QPushButton {
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                padding: 6px 12px;
+                min-width: 80px;
+            }
+            QPushButton:hover {
+                background-color: #e9ecef;
+            }
+            QPushButton:pressed {
+                background-color: #dee2e6;
+            }
+            QTableWidget {
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                background-color: #ffffff;
+            }
+            QTableWidget::item {
+                padding: 8px;
+            }
+            QTableWidget::item:selected {
+                background-color: #e9ecef;
+                color: #212529;
+            }
+            QHeaderView::section {
+                background-color: #f8f9fa;
+                color: #212529;
+                padding: 8px;
+                border: none;
+                border-right: 1px solid #dee2e6;
+                border-bottom: 1px solid #dee2e6;
+            }
+            QLabel {
+                color: #6c757d;
+            }
+        """)
         
     def _handle_search(self, text: str):
         """Handle search input changes."""
@@ -122,78 +189,146 @@ class BuildView(QWidget):
         """Update the builds table with new data."""
         try:
             self.builds_table.setRowCount(0)
-            if not builds:
-                self.status_bar.setText("No builds found")
-                return
+            for build in builds:
+                row = self.builds_table.rowCount()
+                self.builds_table.insertRow(row)
                 
-            self.builds_table.setRowCount(len(builds))
+                # Build ID
+                self.builds_table.setItem(row, 0, QTableWidgetItem(str(build.get("id", ""))))
+                
+                # Version
+                self.builds_table.setItem(row, 1, QTableWidgetItem(str(build.get("version", "unknown"))))
+                
+                # Status
+                status = build.get("status", "unknown")
+                status_item = QTableWidgetItem(status)
+                if status == "available":
+                    status_item.setForeground(QColor("#28a745"))  # Bootstrap success color
+                elif status == "downloaded":
+                    status_item.setForeground(QColor("#007bff"))  # Bootstrap primary color
+                elif status == "uploaded":
+                    status_item.setForeground(QColor("#17a2b8"))  # Bootstrap info color
+                else:
+                    status_item.setForeground(QColor("#6c757d"))  # Bootstrap secondary color
+                self.builds_table.setItem(row, 2, status_item)
+                
+                # Size
+                size = build.get("size", 0)
+                size_str = self._format_size(size)
+                self.builds_table.setItem(row, 3, QTableWidgetItem(size_str))
+                
+                # Date
+                date_str = build.get("date", "")
+                if date_str:
+                    try:
+                        date = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+                        formatted_date = date.strftime("%Y-%m-%d %H:%M:%S")
+                    except ValueError:
+                        formatted_date = date_str
+                else:
+                    formatted_date = "unknown"
+                self.builds_table.setItem(row, 4, QTableWidgetItem(formatted_date))
+                
+                # Actions
+                actions_widget = QWidget()
+                actions_layout = QHBoxLayout(actions_widget)
+                actions_layout.setContentsMargins(4, 4, 4, 4)
+                
+                # Download button
+                if status == "available":
+                    download_btn = QPushButton("Download")
+                    download_btn.setStyleSheet("""
+                        QPushButton {
+                            background-color: #28a745;
+                            color: white;
+                            border: none;
+                            padding: 4px 8px;
+                        }
+                        QPushButton:hover {
+                            background-color: #218838;
+                        }
+                    """)
+                    download_btn.clicked.connect(
+                        lambda checked, bid=build.get("id", ""): 
+                        self.download_requested.emit(bid, self.platform)
+                    )
+                    actions_layout.addWidget(download_btn)
+                
+                # Upload button (only show if downloaded)
+                if status == "downloaded":
+                    upload_btn = QPushButton("Upload")
+                    upload_btn.setStyleSheet("""
+                        QPushButton {
+                            background-color: #007bff;
+                            color: white;
+                            border: none;
+                            padding: 4px 8px;
+                        }
+                        QPushButton:hover {
+                            background-color: #0056b3;
+                        }
+                    """)
+                    upload_btn.clicked.connect(
+                        lambda checked, bid=build.get("id", ""): 
+                        self.upload_requested.emit(bid, build.get("local_path", ""))
+                    )
+                    actions_layout.addWidget(upload_btn)
+                
+                # Share button (only show if uploaded)
+                if status == "uploaded":
+                    share_btn = QPushButton("Share")
+                    share_btn.setStyleSheet("""
+                        QPushButton {
+                            background-color: #17a2b8;
+                            color: white;
+                            border: none;
+                            padding: 4px 8px;
+                        }
+                        QPushButton:hover {
+                            background-color: #138496;
+                        }
+                    """)
+                    share_btn.clicked.connect(
+                        lambda checked, bid=build.get("id", ""): 
+                        self.share_requested.emit(bid)
+                    )
+                    actions_layout.addWidget(share_btn)
+                
+                actions_layout.addStretch()
+                self.builds_table.setCellWidget(row, 5, actions_widget)
             
             # Update version filter
-            versions = sorted(set(build.get("version", "") for build in builds))
-            current_version = self.version_filter.currentData()
+            versions = sorted(set(build.get("version", "unknown") for build in builds))
+            current_version = self.version_filter.currentText()
             self.version_filter.clear()
             self.version_filter.addItem("All Versions", "")
             for version in versions:
-                if version:  # Skip empty versions
-                    self.version_filter.addItem(version, version)
-            if current_version:
-                index = self.version_filter.findData(current_version)
+                self.version_filter.addItem(str(version), version)
+            if current_version in versions:
+                index = self.version_filter.findText(current_version)
                 if index >= 0:
                     self.version_filter.setCurrentIndex(index)
-                    
-            # Populate table
-            for row, build in enumerate(builds):
-                self.builds_table.setItem(row, 0, QTableWidgetItem(build.get("id", "")))
-                self.builds_table.setItem(row, 1, QTableWidgetItem(build.get("version", "")))
-                self.builds_table.setItem(row, 2, QTableWidgetItem(build.get("status", "")))
-                self.builds_table.setItem(row, 3, QTableWidgetItem(str(build.get("size", 0))))
-                self.builds_table.setItem(row, 4, QTableWidgetItem(build.get("date", "")))
-                
-                # Add action buttons
-                actions_widget = QWidget()
-                actions_layout = QHBoxLayout(actions_widget)
-                actions_layout.setContentsMargins(0, 0, 0, 0)
-                
-                # Download button
-                download_btn = QPushButton("Download")
-                download_btn.clicked.connect(lambda checked, bid=build.get("id", ""): 
-                    self.download_requested.emit(bid, self.platform))
-                actions_layout.addWidget(download_btn)
-                
-                # Upload button (only show if downloaded)
-                if build.get("status") == "downloaded":
-                    upload_btn = QPushButton("Upload")
-                    upload_btn.clicked.connect(lambda checked, bid=build.get("id", ""): 
-                        self._handle_upload_click(bid))
-                    actions_layout.addWidget(upload_btn)
-                
-                # Install button (only show if downloaded)
-                if build.get("status") == "downloaded":
-                    install_btn = QPushButton("Install")
-                    install_btn.clicked.connect(lambda checked, bid=build.get("id", ""): 
-                        self.install_requested.emit(bid))
-                    actions_layout.addWidget(install_btn)
-                
-                # Share button (only show if uploaded)
-                if build.get("status") == "uploaded":
-                    share_btn = QPushButton("Share")
-                    share_btn.clicked.connect(lambda checked, bid=build.get("id", ""): 
-                        self.share_requested.emit(bid))
-                    actions_layout.addWidget(share_btn)
-                
-                self.builds_table.setCellWidget(row, 5, actions_widget)
-                
+            
+            # Resize columns
+            self.builds_table.resizeColumnsToContents()
+            
+            # Update status
             self.status_bar.setText(f"Showing {len(builds)} builds")
+            self.status_bar.setStyleSheet("color: #28a745;")  # Bootstrap success color
             
         except Exception as e:
             logger.error(f"Error updating builds: {e}")
-            self._show_error("Update Error", str(e))
-    
-    def _handle_upload_click(self, build_id: str):
-        """Handle upload button click - this would need to get the local path from the model."""
-        # For now, emit with empty local_path - the controller should handle this
-        self.upload_requested.emit(build_id, "")
+            self.status_bar.setText(f"Error updating builds: {e}")
+            self.status_bar.setStyleSheet("color: #dc3545;")  # Bootstrap danger color
             
+    def _format_size(self, size_bytes: int) -> str:
+        """Format size in bytes to human readable format."""
+        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if size_bytes < 1024:
+                return f"{size_bytes:.1f} {unit}"
+            size_bytes /= 1024
+        return f"{size_bytes:.1f} PB"
+    
     def show_error(self, message: str):
         """Show error message in status bar."""
         self.status_bar.setText(f"Error: {message}")
@@ -209,7 +344,7 @@ class BuildView(QWidget):
         try:
             for row in range(self.builds_table.rowCount()):
                 if self.builds_table.item(row, 0).text() == build_id:
-                    self.builds_table.setItem(row, 2, QTableWidgetItem(status))
+                    self.builds_table.item(row, 2).setText(status)
                     break
         except Exception as e:
             logger.error(f"Error updating build status: {e}")
@@ -221,7 +356,7 @@ class BuildView(QWidget):
                 if self.builds_table.item(row, 0).text() == build_id:
                     # Update status column with upload info
                     current_status = self.builds_table.item(row, 2).text()
-                    self.builds_table.setItem(row, 2, QTableWidgetItem(f"{current_status} - {status}"))
+                    self.builds_table.item(row, 2).setText(f"{current_status} - {status}")
                     break
         except Exception as e:
             logger.error(f"Error updating upload status: {e}")
@@ -232,7 +367,7 @@ class BuildView(QWidget):
             for row in range(self.builds_table.rowCount()):
                 if self.builds_table.item(row, 0).text() == build_id:
                     current_status = self.builds_table.item(row, 2).text()
-                    self.builds_table.setItem(row, 2, QTableWidgetItem(f"{current_status} - Retry {attempt}"))
+                    self.builds_table.item(row, 2).setText(f"{current_status} - Retry {attempt}")
                     break
         except Exception as e:
             logger.error(f"Error updating upload retry: {e}") 
