@@ -52,10 +52,29 @@ def query_table(conn, table_name: str) -> List[tuple]:
     logger.info(f"Called query_table(table_name={table_name})")
     try:
         cursor = conn.cursor()
-        cursor.execute(f'SELECT type, message, details FROM public.{table_name}')
+        cursor.execute(f'SELECT "createdAt", type, message, details FROM public.{table_name}')
         data = cursor.fetchall()
         logger.info(f"Fetched {len(data)} rows from table {table_name}")
         return data
     except Error as e:
         logger.error(f"Error querying table {table_name}: {e}")
+        raise
+
+def update_download_url(conn, table: str, build_id: str, url: str) -> None:
+    """
+    Update the download_url for a build in the specified table by id.
+    Args:
+        conn: psycopg2 connection object
+        table: table name (android_builds or ios_builds)
+        build_id: the build's id (UUID or int as string)
+        url: the download URL to set
+    """
+    logger.info(f"Updating download_url for build {build_id} in {table} to {url}")
+    try:
+        cursor = conn.cursor()
+        cursor.execute(f'UPDATE public.{table} SET download_url = %s WHERE id = %s', (url, build_id))
+        conn.commit()
+        logger.info(f"Updated download_url for build {build_id} in {table}")
+    except Error as e:
+        logger.error(f"Error updating download_url for build {build_id} in {table}: {e}")
         raise 

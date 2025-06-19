@@ -1,0 +1,7 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/">
+        <file>images/projectflow_logo.png</file>
+        <file>images/rosievision_logo.png</file>
+    </qresource>
+</RCC>

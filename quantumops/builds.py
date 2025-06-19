@@ -9,6 +9,8 @@ import requests
 from azure.storage.blob import BlobClient
 import os
 import logging
+from azure.identity import ClientSecretCredential
+from azure.storage.blob import BlobServiceClient
 
 logger = logging.getLogger(__name__)
 logger.info("Loaded quantumops.builds module.")
@@ -18,36 +20,68 @@ def fetch_builds(platform: str) -> List[Dict[str, Any]]:
     process = subprocess.Popen([
         "npx", "eas", "build:list", "--platform", platform, "--json", "--non-interactive"
     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    json_output = ""
-    while True:
-        stdout_line = process.stdout.readline() if process.stdout else ''
-        stderr_line = process.stderr.readline() if process.stderr else ''
-        if stdout_line:
-            json_output += stdout_line
-        if not stdout_line and not stderr_line and process.poll() is not None:
-            break
-    process.wait()
+    try:
+        stdout, stderr = process.communicate(timeout=60)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        stdout, stderr = process.communicate()
+        logger.error(f"EAS CLI timed out for platform {platform}.")
+        raise RuntimeError(f"EAS CLI timed out for platform {platform}.")
+    if process.returncode != 0:
+        logger.error(f"EAS CLI failed for platform {platform}: {stderr}")
+        raise RuntimeError(f"EAS CLI failed for platform {platform}: {stderr}")
+    json_output = stdout
     match = re.search(r'(\[.*\])', json_output, re.DOTALL)
     if not match:
         logger.error("Could not extract JSON array from EAS CLI output.")
         raise ValueError("Could not extract JSON array from EAS CLI output.")
     json_str = match.group(1)
     try:
-        builds = json.loads(json_str)
-        logger.info(f"Parsed {len(builds)} builds from EAS CLI output for {platform}")
+        builds_json = json.loads(json_str)
+        logger.info(f"Parsed {len(builds_json)} builds from EAS CLI output for {platform}")
+        builds = []
+        for build in builds_json:
+            builds.append({
+                "id": build.get("id", ""),
+                "status": build.get("status", ""),
+                "platform": build.get("platform", ""),
+                "profile": build.get("buildProfile", "N/A"),
+                "app_version": build.get("appVersion", "N/A"),
+                "build_url": build.get("artifacts", {}).get("buildUrl", ""),
+                "error": build.get("error", {}).get("message", "") if build.get("error") else "",
+                "fingerprint": build.get("gitCommitHash", "N/A")[:7],
+                "build_number": build.get("appBuildVersion", "N/A"),
+            })
         return builds
     except Exception as e:
         logger.error(f"JSON parsing failed: {e}")
         raise
 
-def upload_build_to_azure(local_path: str, blob_url: str, sas_token: str) -> str:
-    logger.info(f"Called upload_build_to_azure(local_path={local_path}, blob_url={blob_url})")
-    blob_client = BlobClient.from_blob_url(f"{blob_url}?{sas_token.split('?',1)[1]}")
+def upload_build_to_azure(local_path: str, blob_name: str) -> str:
+    # Load credentials from environment
+    tenant_id = os.environ["AZURE_TENANT_ID"]
+    client_id = os.environ["AZURE_CLIENT_ID"]
+    client_secret = os.environ["AZURE_CLIENT_SECRET"]
+    storage_account = os.environ["AZURE_STORAGE_ACCOUNT"]
+    container_name = os.environ["AZURE_STORAGE_CONTAINER"]
+
+    credential = ClientSecretCredential(
+        tenant_id=tenant_id,
+        client_id=client_id,
+        client_secret=client_secret
+    )
+    blob_service_client = BlobServiceClient(
+        f"https://{storage_account}.blob.core.windows.net",
+        credential=credential
+    )
+    container_client = blob_service_client.get_container_client(container_name)
+    blob_client = container_client.get_blob_client(blob_name)
     with open(local_path, "rb") as data:
         blob_client.upload_blob(data, overwrite=True)
-    if not blob_client.exists():
-        logger.error("Blob not found after upload!")
-        raise RuntimeError("Blob not found after upload!")
-    os.remove(local_path)
-    logger.info(f"Upload complete: {blob_url}")
-    return blob_url 
+    return blob_client.url
+
+def enable_refresh_button(main_window, platform):
+    if platform == "android":
+        main_window.android_refresh_btn.setEnabled(True)
+    else:
+        main_window.ios_refresh_btn.setEnabled(True) 

@@ -1,29 +1,38 @@
+"""
+Setup script for QuantumOps package.
+"""
 from setuptools import setup, find_packages
+from pathlib import Path
+
+# Read version from config file
+version_file = Path("config") / "version.txt"
+with open(version_file, "r") as f:
+    version = f.read().strip()
+
+# Read requirements from requirements.txt
+with open("requirements.txt", "r") as f:
+    requirements = [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
 setup(
-    name="RosieVision-Error-Browser",
-    version="0.1.0",
+    name="quantumops",
+    version=version,
+    description="Mobile build management and deployment tool",
+    author="RosieVision",
+    author_email="info@rosievision.com",
     packages=find_packages(),
-    install_requires=[
-        "pyside6",
-        "psycopg2-binary",
-        "pyinstaller"
-    ],
+    include_package_data=True,
+    install_requires=requirements,
     entry_points={
-        'console_scripts': [
-            'rosievision-error-browser=main:main',
+        "console_scripts": [
+            "quantumops=main:main",
         ],
     },
-    author="Micheal Mueller",
-    author_email="msquared86@gmail.commichealmueller",
-    description="A modern PySide6-based application for viewing RosieVision error logs",
-    long_description=open("README.md").read(),
-    long_description_content_type="text/markdown",
-    url="https://github.com/msquared86/RV-error-browser",
+    python_requires=">=3.11",
     classifiers=[
-        "Programming Language :: Python :: 3",
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: Software Development :: Build Tools",
     ],
-    python_requires=">=3.8",
 ) 
