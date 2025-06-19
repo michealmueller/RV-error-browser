@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QLabel, QPushButton, QTextEdit, QComboBox,
     QGroupBox, QSplitter, QMenu, QTabWidget, QMessageBox,
     QTableWidget, QTableWidgetItem, QMenuBar, QFileDialog,
-    QStatusBar, QProgressBar, QDialog, QLineEdit
+    QStatusBar, QProgressBar, QDialog, QLineEdit, QSizePolicy
 )
 from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QColor, QPalette, QAction
@@ -476,7 +476,7 @@ class MainWindow(QMainWindow):
         
         self.log_area = QTextEdit()
         self.log_area.setReadOnly(True)
-        self.log_area.setMaximumHeight(150)
+        self.log_area.setMinimumHeight(200)  # Set minimum height for better visibility
         self.log_area.setStyleSheet("""
             QTextEdit {
                 background-color: #f8f9fa;
@@ -488,6 +488,9 @@ class MainWindow(QMainWindow):
             }
         """)
         log_layout.addWidget(self.log_area)
+        
+        # Set the log group to expand vertically
+        log_group.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
         bottom_layout.addWidget(log_group, 1)  # Give logs more space
         

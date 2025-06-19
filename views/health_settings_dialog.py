@@ -112,15 +112,23 @@ class HealthSettingsDialog(QDialog):
             actions_widget = self._create_actions_widget(row)
             self.table.setCellWidget(row, 2, actions_widget)
             
+        # Auto-resize rows to fit content
+        self.table.resizeRowsToContents()
         self.table.resizeColumnsToContents()
+        
+        # Set minimum row height to ensure buttons are fully visible
+        for row in range(self.table.rowCount()):
+            self.table.setRowHeight(row, max(40, self.table.rowHeight(row)))
         
     def _create_actions_widget(self, row):
         """Create actions widget for a table row."""
         widget = QWidget()
         layout = QHBoxLayout(widget)
         layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(4)
         
         edit_btn = QPushButton("Edit")
+        edit_btn.setFixedHeight(28)  # Set fixed height for consistent sizing
         edit_btn.clicked.connect(lambda: self._edit_endpoint(row))
         edit_btn.setStyleSheet("""
             QPushButton {
@@ -128,6 +136,8 @@ class HealthSettingsDialog(QDialog):
                 color: white;
                 border: none;
                 padding: 4px 8px;
+                border-radius: 3px;
+                font-size: 11px;
             }
             QPushButton:hover {
                 background-color: #0056b3;
@@ -135,6 +145,7 @@ class HealthSettingsDialog(QDialog):
         """)
         
         delete_btn = QPushButton("Delete")
+        delete_btn.setFixedHeight(28)  # Set fixed height for consistent sizing
         delete_btn.clicked.connect(lambda: self._delete_endpoint(row))
         delete_btn.setStyleSheet("""
             QPushButton {
@@ -142,6 +153,8 @@ class HealthSettingsDialog(QDialog):
                 color: white;
                 border: none;
                 padding: 4px 8px;
+                border-radius: 3px;
+                font-size: 11px;
             }
             QPushButton:hover {
                 background-color: #c82333;
