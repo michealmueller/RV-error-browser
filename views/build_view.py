@@ -18,7 +18,11 @@ class BuildView(QWidget):
     # Signals
     build_selected = Signal(str)  # build_id
     filter_changed = Signal(dict)  # filter criteria
-    refresh_requested = Signal()
+    fetch_requested = Signal()
+    download_requested = Signal(str, str)  # build_id, platform
+    upload_requested = Signal(str, str)  # build_id, local_path
+    install_requested = Signal(str)  # build_id
+    share_requested = Signal(str)  # build_id
     
     def __init__(self, platform: str):
         super().__init__()
@@ -55,16 +59,16 @@ class BuildView(QWidget):
         
         # Refresh button
         refresh_btn = QPushButton("Refresh")
-        refresh_btn.clicked.connect(self.refresh_requested)
+        refresh_btn.clicked.connect(self.fetch_requested)
         filter_layout.addWidget(refresh_btn)
         
         layout.addLayout(filter_layout)
         
         # Builds table
         self.builds_table = QTableWidget()
-        self.builds_table.setColumnCount(5)
+        self.builds_table.setColumnCount(6)
         self.builds_table.setHorizontalHeaderLabels([
-            "Build ID", "Version", "Status", "Size", "Date"
+            "Build ID", "Version", "Status", "Size", "Date", "Actions"
         ])
         self.builds_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.builds_table.setSelectionMode(QTableWidget.SingleSelection)
@@ -145,11 +149,50 @@ class BuildView(QWidget):
                 self.builds_table.setItem(row, 3, QTableWidgetItem(str(build.get("size", 0))))
                 self.builds_table.setItem(row, 4, QTableWidgetItem(build.get("date", "")))
                 
+                # Add action buttons
+                actions_widget = QWidget()
+                actions_layout = QHBoxLayout(actions_widget)
+                actions_layout.setContentsMargins(0, 0, 0, 0)
+                
+                # Download button
+                download_btn = QPushButton("Download")
+                download_btn.clicked.connect(lambda checked, bid=build.get("id", ""): 
+                    self.download_requested.emit(bid, self.platform))
+                actions_layout.addWidget(download_btn)
+                
+                # Upload button (only show if downloaded)
+                if build.get("status") == "downloaded":
+                    upload_btn = QPushButton("Upload")
+                    upload_btn.clicked.connect(lambda checked, bid=build.get("id", ""): 
+                        self._handle_upload_click(bid))
+                    actions_layout.addWidget(upload_btn)
+                
+                # Install button (only show if downloaded)
+                if build.get("status") == "downloaded":
+                    install_btn = QPushButton("Install")
+                    install_btn.clicked.connect(lambda checked, bid=build.get("id", ""): 
+                        self.install_requested.emit(bid))
+                    actions_layout.addWidget(install_btn)
+                
+                # Share button (only show if uploaded)
+                if build.get("status") == "uploaded":
+                    share_btn = QPushButton("Share")
+                    share_btn.clicked.connect(lambda checked, bid=build.get("id", ""): 
+                        self.share_requested.emit(bid))
+                    actions_layout.addWidget(share_btn)
+                
+                self.builds_table.setCellWidget(row, 5, actions_widget)
+                
             self.status_bar.setText(f"Showing {len(builds)} builds")
             
         except Exception as e:
             logger.error(f"Error updating builds: {e}")
             self._show_error("Update Error", str(e))
+    
+    def _handle_upload_click(self, build_id: str):
+        """Handle upload button click - this would need to get the local path from the model."""
+        # For now, emit with empty local_path - the controller should handle this
+        self.upload_requested.emit(build_id, "")
             
     def show_error(self, message: str):
         """Show error message in status bar."""
@@ -159,4 +202,37 @@ class BuildView(QWidget):
     def clear_error(self):
         """Clear error message from status bar."""
         self.status_bar.clear()
-        self.status_bar.setStyleSheet("") 
+        self.status_bar.setStyleSheet("")
+    
+    def update_build_status(self, build_id: str, status: str):
+        """Update the status of a specific build in the table."""
+        try:
+            for row in range(self.builds_table.rowCount()):
+                if self.builds_table.item(row, 0).text() == build_id:
+                    self.builds_table.setItem(row, 2, QTableWidgetItem(status))
+                    break
+        except Exception as e:
+            logger.error(f"Error updating build status: {e}")
+    
+    def update_upload_status(self, build_id: str, status: str):
+        """Update upload status for a build."""
+        try:
+            for row in range(self.builds_table.rowCount()):
+                if self.builds_table.item(row, 0).text() == build_id:
+                    # Update status column with upload info
+                    current_status = self.builds_table.item(row, 2).text()
+                    self.builds_table.setItem(row, 2, QTableWidgetItem(f"{current_status} - {status}"))
+                    break
+        except Exception as e:
+            logger.error(f"Error updating upload status: {e}")
+    
+    def update_upload_retry(self, build_id: str, attempt: int):
+        """Update upload retry information."""
+        try:
+            for row in range(self.builds_table.rowCount()):
+                if self.builds_table.item(row, 0).text() == build_id:
+                    current_status = self.builds_table.item(row, 2).text()
+                    self.builds_table.setItem(row, 2, QTableWidgetItem(f"{current_status} - Retry {attempt}"))
+                    break
+        except Exception as e:
+            logger.error(f"Error updating upload retry: {e}") 

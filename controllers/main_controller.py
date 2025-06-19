@@ -6,8 +6,8 @@ from typing import Optional
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from ..models.build_manager import BuildManager
-from ..views.main_window import MainWindow
+from models.build_manager import BuildManager
+from views.main_window import MainWindow
 
 logger = logging.getLogger(__name__)
 

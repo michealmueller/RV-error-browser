@@ -1,7 +1,7 @@
 import pytest
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QPalette, QColor
-from quantumops.theming import apply_branding_theme, BRANDING_THEMES
+from theming import apply_branding_theme, BRANDING_THEMES
 
 @pytest.mark.parametrize("brand,theme", BRANDING_THEMES.items())
 def test_apply_branding_theme_sets_palette(qapp, brand, theme):

@@ -30,12 +30,12 @@ from dialogs import ConnectionDialog
 from quantumops import database
 from quantumops import builds
 import tempfile
-from quantumops.theming import get_current_brand_colors
+from theming import get_current_brand_colors
 import html
 import time
 import functools
 import threading
-from quantumops.constants import (
+from constants import (
     AZURE_TENANT_ID,
     AZURE_CLIENT_ID,
     AZURE_CLIENT_SECRET,
@@ -43,9 +43,11 @@ from quantumops.constants import (
     AZURE_STORAGE_CONTAINER,
     DB_CONNECTIONS
 )
-from quantumops.utils import ensure_main_thread, log_azure_operation, log_database_operation
-from quantumops.azure_webapp import AzureWebApp
+from utils import ensure_main_thread, log_azure_operation, log_database_operation
+from azure_webapp import AzureWebApp
 import gc
+from logging_utils import append_terminal_line as log_util
+from theming import apply_branding_theme
 
 # Import and compile resources
 from compile_resources import compile_resources

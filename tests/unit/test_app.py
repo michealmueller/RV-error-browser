@@ -2,15 +2,15 @@ import pytest
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QInputDialog
 from PySide6.QtTest import QTest
 from PySide6.QtCore import Qt
-from app import DatabaseApp
+from theming import BRANDING_THEMES, get_current_brand_colors
 from datetime import datetime
 import psycopg2
 from psycopg2 import Error
 import io
 import json as pyjson
 from unittest.mock import patch, MagicMock
-from quantumops.theming import BRANDING_THEMES, get_current_brand_colors
 import os
+from main_window import DatabaseApp
 
 @pytest.fixture
 def app(qtbot, mocker):
@@ -335,7 +335,7 @@ def test_fetch_and_display_builds_parses_json(eas_json_output, qtbot):
     process_build.wait.return_value = 0
     with patch('subprocess.Popen') as mock_popen:
         mock_popen.side_effect = [process_init, process_build]
-        from app import DatabaseApp
+        from main_window import DatabaseApp
         app = DatabaseApp()
         qtbot.addWidget(app)
         app.fetch_and_display_builds('android')
@@ -437,7 +437,7 @@ def test_log_message_colors_update_with_theme(app, qtbot):
         # Optionally, parse log HTML for color spans if custom coloring is used 
 
 def test_build_filename_pattern(monkeypatch):
-    from quantumops.main_window import DatabaseApp
+    from main_window import DatabaseApp
     app = DatabaseApp()
     build = {
         'profile': 'development',

@@ -4,8 +4,8 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtTest import QTest
 from PySide6.QtCore import Qt, QTimer
 from app import DatabaseApp
-from ..utils import create_test_database, drop_test_database, get_test_connection
-from ..db_config import DB_CONFIG
+from utils import create_test_database, drop_test_database, get_test_connection
+from db_config import DB_CONFIG
 import os
 import psycopg2
 

@@ -3,8 +3,8 @@ Database controller for coordinating between model and view.
 """
 import logging
 from PySide6.QtCore import QObject
-from quantumops.models.database import DatabaseModel
-from quantumops.views.database_view import DatabaseView
+from models.database import DatabaseModel
+from views.database_view import DatabaseView
 
 logger = logging.getLogger(__name__)
 

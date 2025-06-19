@@ -5,7 +5,7 @@ from typing import Optional, Callable
 import threading
 import logging
 from PySide6.QtCore import QObject, Signal
-from quantumops.azure_webapp import AzureWebApp
+from azure_webapp import AzureWebApp
 
 logger = logging.getLogger(__name__)
 

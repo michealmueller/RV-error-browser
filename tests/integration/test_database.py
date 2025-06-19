@@ -1,7 +1,7 @@
 import pytest
 import psycopg2
-from ..utils import create_test_database, drop_test_database, get_test_connection
-from ..db_config import DB_CONFIG
+from utils import create_test_database, drop_test_database, get_test_connection
+from db_config import DB_CONFIG
 
 @pytest.fixture(scope="session")
 def test_db():

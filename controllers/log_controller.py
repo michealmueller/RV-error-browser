@@ -4,8 +4,8 @@ Log controller for QuantumOps.
 import logging
 from typing import Optional
 from PySide6.QtCore import QObject, Slot, Signal
-from quantumops.models.log_stream import LogStreamModel
-from quantumops.azure_webapp import AzureWebApp
+from models.log_stream import LogStreamModel
+from azure_webapp import AzureWebApp
 
 logger = logging.getLogger(__name__)
 

@@ -6,10 +6,10 @@ import subprocess
 import os
 from PySide6.QtCore import QObject, Signal, Slot, QTimer
 from PySide6.QtWidgets import QMessageBox
-from quantumops.models.build_manager import BuildManager
-from quantumops.views.build_view import BuildView
-from quantumops.views.progress_dialog import ProgressDialog
-from quantumops.services.azure_service import AzureServiceError
+from models.build_manager import BuildManager
+from views.build_view import BuildView
+from views.progress_dialog import ProgressDialog
+from services.azure_service import AzureServiceError
 
 logger = logging.getLogger(__name__)
 

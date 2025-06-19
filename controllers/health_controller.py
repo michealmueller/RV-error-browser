@@ -4,7 +4,7 @@ Health check controller for QuantumOps.
 import logging
 from typing import Optional
 from PySide6.QtCore import QObject, Slot, Signal
-from quantumops.models.health_check import HealthCheckModel
+from models.health_check import HealthCheckModel
 
 logger = logging.getLogger(__name__)
 
@@ -61,4 +61,9 @@ class HealthController(QObject):
         last_check = self.model.get_last_check(webapp)
         if last_check:
             return last_check.strftime("%H:%M:%S")
-        return None 
+        return None
+        
+    def cleanup(self) -> None:
+        """Clean up resources when the controller is being destroyed."""
+        logger.info("Cleaning up health controller")
+        self.stop_monitoring() 

@@ -14,7 +14,7 @@ from azure.core.exceptions import (
     HttpResponseError
 )
 
-from quantumops.services.azure_service import AzureService, AzureServiceError
+from services.azure_service import AzureService, AzureServiceError
 
 @pytest.fixture
 def azure_service():

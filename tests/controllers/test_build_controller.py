@@ -6,9 +6,9 @@ from unittest.mock import Mock, patch, call
 from PySide6.QtWidgets import QMessageBox
 from PySide6.QtCore import QObject
 
-from quantumops.controllers.build_controller import BuildController
-from quantumops.models.build_manager import BuildManager
-from quantumops.services.azure_service import AzureServiceError
+from controllers.build_controller import BuildController
+from models.build_manager import BuildManager
+from services.azure_service import AzureServiceError
 
 @pytest.fixture
 def build_manager():

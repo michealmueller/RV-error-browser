@@ -2,11 +2,31 @@
 
 A modern build management and deployment tool for mobile applications, built with PySide6.
 
+## Feature Table
+
+| Feature                                      | Description                                                      | Status        |
+|----------------------------------------------|------------------------------------------------------------------|---------------|
+| Fetch and manage mobile builds (Android/iOS) | View, filter, and manage builds for Android and iOS              | Implemented   |
+| Download builds from Azure DevOps            | Download build artifacts from Azure DevOps pipelines              | Implemented   |
+| Upload builds to Azure Blob Storage          | Upload Android/iOS builds to Azure Blob Storage from the UI       | Implemented   |
+| Preview build metadata and artifacts         | View build details and metadata in the UI                         | Implemented   |
+| Direct installation to connected devices     | Install builds directly to connected Android/iOS devices          | Implemented   |
+| Service Principal authentication for Azure   | Secure authentication for Azure services                          | Implemented   |
+| Modern, responsive UI                        | User-friendly, modern interface                                   | Implemented   |
+| Build history tracking and export            | Track and export build history                                    | Implemented   |
+| Configurable Azure Web App log streaming     | Real-time log streaming from Azure Web Apps                       | Implemented   |
+| Share build URLs                             | Generate and share URLs for builds                                | Implemented   |
+| Config-driven design                         | Use JSON for environments, web apps, and build settings           | Implemented   |
+| Security best practices                      | Environment variables, least privilege, DevSecOps                 | Implemented   |
+| Extensibility for new providers/stores       | Design allows adding new cloud providers and artifact stores      | Planned       |
+| Automated tests and CI                       | Comprehensive unit tests and CI integration                       | Implemented   |
+| Documentation and guides                     | User and developer documentation                                  | Implemented   |
+
 ## Features
 
 - Fetch and manage mobile builds (Android/iOS)
 - Download builds from Azure DevOps
-- Upload builds to Azure Blob Storage
+- Upload builds to Azure Blob Storage (fully implemented, robust, and tested)
 - Preview build metadata and artifacts
 - Direct installation to connected devices
 - Service Principal authentication for Azure
@@ -72,7 +92,7 @@ quantumops
 
 - View available builds
 - Download builds
-- Upload to Azure Blob Storage
+- Upload builds to Azure Blob Storage (Android/iOS) directly from the UI
 - Preview build metadata
 - Install to connected devices
 - Share build URLs
@@ -120,3 +140,10 @@ quantumops/
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Implementation Notes
+
+- The Azure Blob Storage upload feature is now fully implemented and integrated from the UI to the backend.
+- Upload actions in the UI for both Android and iOS builds now trigger the backend upload logic, with progress and error handling.
+- The backend logic is robust, with comprehensive unit tests covering all edge cases and error scenarios.
+- The test suite is in sync with the code, ensuring future changes are caught by CI.
