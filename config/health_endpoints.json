@@ -1,10 +1,8 @@
 {
   "endpoints": {
-    "RV-Dev-api": "https://rv-dev-api.azurewebsites.net/health",
-    "RV-Staging-api": "https://rv-staging-api.azurewebsites.net/health",
-    "PF-Dev-web": "https://pf-dev-web.azurewebsites.net/health",
-    "PF-Dev-api": "https://pf-dev-api.azurewebsites.net/health",
-    "PF-Staging-web": "https://pf-staging-web.azurewebsites.net/health",
-    "PF-Staging-api": "https://pf-staging-api.azurewebsites.net/health"
+    "RV-Dev-api": "https://moapidev.rosievision.ai/health",
+    "RV-Staging-api": "https://moapistage.rosievision.ai/health",    
+    "PF-Dev-api": "https://devapi.projectflow.ai/health",
+    "PF-Staging-api": "https://stageapi.projectflow.ai/health"
   }
-} 
+}
