@@ -71,3 +71,4 @@ test_*.log
 
 # Environment variables and secrets
 .env
+qops_venv
