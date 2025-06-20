@@ -43,7 +43,7 @@ class BuildController(QObject):
         self._model.upload_retry.connect(self.upload_retry)
         
         # Connect view signals
-        self._view.fetch_requested.connect(self._model.fetch_builds)
+        self._view.fetch_requested.connect(lambda: self._model.fetch_builds(self._view.platform))
         self._view.download_requested.connect(self._model.download_build)
         self._view.upload_requested.connect(self._handle_upload_request)
         self._view.install_requested.connect(self._handle_install_request)
@@ -315,7 +315,8 @@ class BuildController(QObject):
             
     def _show_progress(self, title: str, message: str) -> None:
         """Show progress dialog."""
-        self._progress_dialog = ProgressDialog(title, message)
+        self._progress_dialog = ProgressDialog(title)
+        self._progress_dialog.status_label.setText(message)
         self._progress_dialog.show()
         
     def _hide_progress(self) -> None:

@@ -265,63 +265,34 @@ class MainWindow(QMainWindow):
         """)
         header_layout.addWidget(title_label)
         
-        header_layout.addStretch()
+        # Platform selector and actions
+        controls_layout = QHBoxLayout()
         
-        # Platform selector
-        platform_label = QLabel("Platform:")
-        platform_label.setStyleSheet("font-weight: bold; color: #34495e;")
-        header_layout.addWidget(platform_label)
-        
-        self.platform_combo = QComboBox()
-        self.platform_combo.addItems(["Android", "iOS"])
-        self.platform_combo.setStyleSheet("""
-            QComboBox {
-                padding: 8px;
-                border: 2px solid #bdc3c7;
-                border-radius: 6px;
-                background: white;
-                min-width: 120px;
-            }
-            QComboBox::drop-down {
+        # Refresh button
+        refresh_button = QPushButton("🔄 Refresh")
+        refresh_button.setStyleSheet("""
+            QPushButton {
+                background-color: #007bff;
+                color: white;
                 border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: bold;
             }
-            QComboBox::down-arrow {
-                image: none;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 5px solid #34495e;
+            QPushButton:hover {
+                background-color: #0056b3;
+            }
+            QPushButton:pressed {
+                background-color: #004085;
             }
         """)
-        header_layout.addWidget(self.platform_combo)
+        refresh_button.clicked.connect(self.refresh_builds)
+        controls_layout.addWidget(refresh_button)
         
-        # Azure Web App selector
-        webapp_label = QLabel("Azure Web App:")
-        webapp_label.setStyleSheet("font-weight: bold; color: #34495e; margin-left: 20px;")
-        header_layout.addWidget(webapp_label)
+        controls_layout.addStretch()
         
-        self.webapp_combo = QComboBox()
-        for webapp in self.webapps:
-            label = f"{webapp['name']} ({webapp['resource_group']})"
-            self.webapp_combo.addItem(label, webapp)
-        self.webapp_combo.setStyleSheet("""
-            QComboBox {
-                padding: 8px;
-                border: 2px solid #bdc3c7;
-                border-radius: 6px;
-                background: white;
-                min-width: 200px;
-            }
-            QComboBox::drop-down {
-                border: none;
-            }
-            QComboBox::down-arrow {
-                image: none;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 5px solid #34495e;
-            }
-        """)
-        header_layout.addWidget(self.webapp_combo)
+        # Add controls to header
+        header_layout.addLayout(controls_layout)
         
         parent_layout.addWidget(header_widget)
         
@@ -409,27 +380,6 @@ class MainWindow(QMainWindow):
         """)
         controls_layout.addWidget(self.status_filter)
         
-        # Refresh button
-        self.refresh_button = QPushButton("⟳ Refresh")
-        self.refresh_button.setStyleSheet("""
-            QPushButton {
-                background-color: #3498db;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 6px;
-                font-weight: bold;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #2980b9;
-            }
-            QPushButton:pressed {
-                background-color: #21618c;
-            }
-        """)
-        controls_layout.addWidget(self.refresh_button)
-        
         parent_layout.addWidget(controls_widget)
         
     def _create_bottom_panels(self, parent_layout):
@@ -497,13 +447,10 @@ class MainWindow(QMainWindow):
         parent_layout.addWidget(bottom_widget)
         
     def _connect_ui_signals(self):
-        """Connect UI signals to their handlers."""
-        # Platform and webapp changes
-        self.platform_combo.currentTextChanged.connect(self._on_platform_changed)
-        self.webapp_combo.currentIndexChanged.connect(self._on_webapp_changed)
-        # Connect refresh button to emit refresh_requested
-        if hasattr(self, 'refresh_button'):
-            self.refresh_button.clicked.connect(self.refresh_requested.emit)
+        """Connect UI signals."""
+        # Connect search and filter signals
+        self.search_input.textChanged.connect(self._on_search_changed)
+        self.status_filter.currentTextChanged.connect(self._on_filter_changed)
         
     def _on_search_changed(self, text: str):
         """Handle search input changes."""
@@ -532,6 +479,14 @@ class MainWindow(QMainWindow):
         self.database_view = DatabaseView()
         self.database_controller = DatabaseController(self.database_model, self.database_view)
         
+        # Build controllers
+        self.android_controller = BuildController(self.android_model, self.android_view)
+        self.ios_controller = BuildController(self.ios_model, self.ios_view)
+        
+        # Connect upload signals
+        self.android_view.upload_requested.connect(self._handle_android_upload)
+        self.ios_view.upload_requested.connect(self._handle_ios_upload)
+        
     def _setup_build_managers(self):
         """Set up build managers and controllers."""
         # Create models
@@ -549,14 +504,6 @@ class MainWindow(QMainWindow):
         # Create build views for each platform
         self.android_view = BuildView("android")
         self.ios_view = BuildView("ios")
-        
-        # Create controllers
-        self.android_controller = BuildController(self.android_model, self.android_view)
-        self.ios_controller = BuildController(self.ios_model, self.ios_view)
-        
-        # Connect upload signals
-        self.android_view.upload_requested.connect(self._handle_android_upload)
-        self.ios_view.upload_requested.connect(self._handle_ios_upload)
         
     def _create_menu_bar(self):
         """Create the menu bar."""
@@ -671,15 +618,13 @@ class MainWindow(QMainWindow):
         dialog = HistoryDialog(self.history_manager, self)
         dialog.exec()
         
-    def refresh_builds(self):
-        """Refresh build list for the current platform."""
+    def refresh_builds(self, *_):
+        """Refresh build list for both platforms."""
         try:
-            platform = self.platform_combo.currentText().lower()
-            if platform == "android":
-                self.android_model.fetch_builds("android", force_refresh=True)
-            elif platform == "ios":
-                self.ios_model.fetch_builds("ios", force_refresh=True)
-            self.show_status(f"Refreshing {platform} builds...")
+            # Refresh both Android and iOS builds
+            self.android_controller.fetch_builds("android", force_refresh=True)
+            self.ios_controller.fetch_builds("ios", force_refresh=True)
+            self.show_status("Refreshing builds...")
         except Exception as e:
             self._handle_error(f"Failed to refresh builds: {e}")
         
@@ -706,12 +651,6 @@ class MainWindow(QMainWindow):
         self.log_controller = LogController(self.selected_webapp)
         # ... any additional logic to update log view ... 
 
-    def _on_platform_changed(self, platform: str):
-        """Handle platform selection change."""
-        logger.info(f"Platform changed to: {platform}")
-        # The platform change is now handled by the tab-based approach
-        # No need to update a single builds table anymore
-        
     def show_health_settings(self):
         """Show health check settings dialog."""
         from views.health_settings_dialog import HealthSettingsDialog
@@ -784,18 +723,11 @@ class MainWindow(QMainWindow):
             self.ios_controller.build_uploaded.connect(self._handle_build_upload)
             self.ios_controller.upload_retry.connect(self._handle_upload_retry)
             
-        # Connect platform combo
-        if hasattr(self, 'platform_combo'):
-            self.platform_combo.currentTextChanged.connect(self.refresh_builds)
-
     def _handle_builds_fetched(self, builds):
         """Handle fetched builds."""
-        platform = self.platform_combo.currentText().lower()
-        if platform == "android":
-            self.android_view.update_builds(builds)
-        elif platform == "ios":
-            self.ios_view.update_builds(builds)
-        self.show_status(f"Fetched {len(builds)} {platform} builds")
+        # The builds will be automatically updated in their respective views
+        # since the controllers emit the builds_fetched signal
+        self.show_status(f"Fetched {len(builds)} builds")
         
     def _handle_build_download(self, build_id: str, local_path: str):
         """Handle build download completion."""

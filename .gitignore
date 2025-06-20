@@ -62,9 +62,8 @@ coverage.xml
 *.whl
 
 # Node.js (if needed in future)
-node_modules/
+node_modules
 package-lock.json
-yarn.lock
 
 # Test outputs
 test_*.log

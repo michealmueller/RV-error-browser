@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "QuantumOps",
+    "slug": "rosievision-mobile",
+    "owner": "ar-worx",
+    "extra": {
+      "eas": {
+        "projectId": "9821d63e-ff8d-4439-b990-9315f9f9463c"
+      }
+    }
+  }
+} 
