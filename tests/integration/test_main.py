@@ -1,13 +1,12 @@
-import pytest
-import sys
-from PySide6.QtWidgets import QApplication
-from PySide6.QtTest import QTest
-from PySide6.QtCore import Qt, QTimer
-from main_window import DatabaseApp
-from utils import create_test_database, drop_test_database, get_test_connection
-from tests.db_config import DB_CONFIG
 import os
+import sys
+
 import psycopg2
+import pytest
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication
+
+from tests.db_config import DB_CONFIG
 
 TEST_CONN = {
     "name": "TestConn",
@@ -19,6 +18,7 @@ TEST_CONN = {
     "table": DB_CONFIG["default_table"],
 }
 
+
 @pytest.fixture(scope="function", autouse=True)
 def setup_test_table():
     """Ensure the test table exists with the correct schema before each test."""
@@ -27,27 +27,31 @@ def setup_test_table():
         port=DB_CONFIG["port"],
         dbname=DB_CONFIG["database"],
         user=DB_CONFIG["username"],
-        password=DB_CONFIG["password"]
+        password=DB_CONFIG["password"],
     )
     cur = conn.cursor()
-    cur.execute(f"""
+    cur.execute(
+        f"""
         CREATE TABLE IF NOT EXISTS {DB_CONFIG['default_table']} (
             id SERIAL PRIMARY KEY,
             type VARCHAR(50),
             message TEXT,
             details TEXT
         )
-    """)
+    """
+    )
     conn.commit()
     cur.close()
     conn.close()
 
+
 @pytest.fixture(autouse=True)
 def close_app_conn(app):
     yield
-    if hasattr(app, 'conn') and app.conn:
+    if hasattr(app, "conn") and app.conn:
         app.conn.close()
         app.conn = None
+
 
 @pytest.fixture(scope="session")
 def qapp():
@@ -55,19 +59,22 @@ def qapp():
     if QApplication.instance() is None:
         app = QApplication(sys.argv)
         # Set environment variable to indicate we're running in a test environment
-        os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+        os.environ["QT_QPA_PLATFORM"] = "offscreen"
         yield app
         app.quit()
     else:
         yield QApplication.instance()
 
+
 @pytest.fixture
 def app(qapp):
     """Create a DatabaseApp instance for testing."""
     from main_window import DatabaseApp
+
     app = DatabaseApp()
     yield app
     app.close()
+
 
 @pytest.mark.timeout(10)
 def test_application_startup(app):
@@ -75,6 +82,7 @@ def test_application_startup(app):
     app.show()  # Ensure the window is shown
     assert app.isVisible()
     assert app.windowTitle() == "QuantumOps"
+
 
 @pytest.mark.timeout(30)
 def test_database_connection(app, qtbot):
@@ -87,6 +95,7 @@ def test_database_connection(app, qtbot):
     qtbot.mouseClick(app.connect_btn, Qt.LeftButton)
     assert app.conn is not None
 
+
 @pytest.mark.timeout(30)
 def test_query_execution(app, qtbot):
     """Test executing a query after connecting to the database."""
@@ -96,10 +105,12 @@ def test_query_execution(app, qtbot):
         port=DB_CONFIG["port"],
         dbname=DB_CONFIG["database"],
         user=DB_CONFIG["username"],
-        password=DB_CONFIG["password"]
+        password=DB_CONFIG["password"],
     )
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO {DB_CONFIG['default_table']}(type, message, details) VALUES ('test', 'test message', 'test details')")
+    cur.execute(
+        f"INSERT INTO {DB_CONFIG['default_table']}(type, message, details) VALUES ('test', 'test message', 'test details')"
+    )
     conn.commit()
     cur.close()
     conn.close()
@@ -110,11 +121,13 @@ def test_query_execution(app, qtbot):
     assert app.results_table.rowCount() > 0
     assert app.results_table.columnCount() > 0
 
+
 @pytest.mark.timeout(20)
 def test_connection_management(app, qtbot):
     """Test managing database connections via the Add button."""
     qtbot.mouseClick(app.add_conn_btn, Qt.LeftButton)
     # The dialog will appear; further dialog interaction would require more advanced qtbot usage or mocking.
+
 
 @pytest.mark.timeout(15)
 def test_error_handling(app, qtbot):
@@ -123,7 +136,7 @@ def test_error_handling(app, qtbot):
     app.host_label.setText("invalid_host")
     qtbot.mouseClick(app.connect_btn, Qt.LeftButton)
     assert "Error" in app.log_window.toPlainText()
-    
+
     # Try to execute query without connection
     qtbot.mouseClick(app.query_btn, Qt.LeftButton)
-    assert "Error" in app.log_window.toPlainText() 
+    assert "Error" in app.log_window.toPlainText()

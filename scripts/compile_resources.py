@@ -1,5 +1,6 @@
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
 
 def compile_resources():
     """Compile the Qt resource file."""
@@ -16,14 +17,17 @@ def compile_resources():
             ["pyside6-rcc", str(qrc_file), "-o", str(output_py_file)],
             check=True,
             capture_output=True,
-            text=True
+            text=True,
         )
         print("Resource file compiled successfully.")
     except subprocess.CalledProcessError as e:
         print(f"Error compiling resource file: {e}")
         print(f"Stderr: {e.stderr}")
     except FileNotFoundError:
-        print("Error: 'pyside6-rcc' command not found. Make sure PySide6 is installed and in your PATH.")
+        print(
+            "Error: 'pyside6-rcc' command not found. Make sure PySide6 is installed and in your PATH."
+        )
+
 
 if __name__ == "__main__":
     compile_resources()

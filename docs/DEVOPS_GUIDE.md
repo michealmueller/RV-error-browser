@@ -126,4 +126,4 @@ This will ensure that all code is automatically formatted and linted before it i
 - Use Azure RBAC and managed identities where possible
 
 ---
-For more, see the project overview and config reference. 
+For more, see the project overview and config reference.

@@ -1,31 +1,32 @@
 import logging
 import threading
 from functools import wraps
-from typing import Callable, Any
-from PySide6.QtCore import Signal
-import psycopg2
-import tempfile
-import os
+from typing import Any, Callable
+
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
+
 def ensure_main_thread(func: Callable) -> Callable:
     """Decorator to ensure function runs on main thread. Expects self.main_thread_signal to exist."""
+
     @wraps(func)
     def wrapper(self, *args: Any, **kwargs: Any) -> Any:
         if threading.current_thread() is threading.main_thread():
             return func(self, *args, **kwargs)
         else:
             self.main_thread_signal.emit(lambda: func(self, *args, **kwargs))
+
     return wrapper
+
 
 def log_azure_operation(operation: str) -> Callable:
     """Decorator to log Azure operations"""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -37,11 +38,15 @@ def log_azure_operation(operation: str) -> Callable:
             except Exception as e:
                 logger.error(f"Failed Azure operation {operation}: {str(e)}")
                 raise
+
         return wrapper
+
     return decorator
+
 
 def log_database_operation(operation: str) -> Callable:
     """Decorator to log database operations"""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -53,8 +58,11 @@ def log_database_operation(operation: str) -> Callable:
             except Exception as e:
                 logger.error(f"Failed database operation {operation}: {str(e)}")
                 raise
+
         return wrapper
+
     return decorator
+
 
 # Test database functions
 def create_test_database():
@@ -63,12 +71,13 @@ def create_test_database():
     # This is a placeholder implementation
     return {"test": "database"}
 
+
 def drop_test_database():
     """Drop the test database"""
     # Placeholder implementation
-    pass
+
 
 def get_test_connection():
     """Get a test database connection"""
     # Placeholder implementation - returns None for now
-    return None 
+    return None

@@ -22,4 +22,4 @@ This file is designed for AI models and future maintainers to quickly pick up wh
 - If unsure, ask for clarification or check the latest Azure/PySide6 documentation.
 
 ---
-For more, see the other docs in this directory. 
+For more, see the other docs in this directory.

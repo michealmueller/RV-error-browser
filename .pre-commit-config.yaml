@@ -34,4 +34,19 @@ repos:
     hooks:
     -   id: mypy
         additional_dependencies: [types-setuptools, types-requests]
-        args: [--ignore-missing-imports] 
+        args: [--ignore-missing-imports]
+
+-   repo: https://github.com/mpalmer/action-validator
+    rev: 'v0.5.1'  # Use a specific, stable version
+    hooks:
+    -   id: action-validator
+
+-   repo: https://github.com/PyCQA/autoflake
+    rev: v2.2.1
+    hooks:
+    -   id: autoflake
+        args:
+            - --in-place
+            - --remove-all-unused-imports
+            - --recursive
+            - .

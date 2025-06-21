@@ -43,4 +43,4 @@ QuantumOps is a desktop application for DevOps teams to streamline the managemen
 - The application follows the principle of least privilege, only requiring the necessary permissions to perform its tasks.
 
 ---
-For more detailed information on specific topics, please refer to the other documentation files in this directory. 
+For more detailed information on specific topics, please refer to the other documentation files in this directory.

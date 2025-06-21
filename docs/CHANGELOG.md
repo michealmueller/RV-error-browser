@@ -62,4 +62,4 @@ All notable changes to this project will be documented in this file.
 - Basic Azure WebApp log streaming functionality
 - Web app selection dropdown
 - Log source and system log viewers
-- Dark theme UI 
+- Dark theme UI

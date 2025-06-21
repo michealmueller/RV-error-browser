@@ -44,14 +44,14 @@ This document describes the configuration files used by QuantumOps and their str
   AZURE_STORAGE_ACCOUNT=your-storage-account-name
   AZURE_STORAGE_CONTAINER=mobile-builds
   AZURE_STORAGE_ACCOUNT_KEY=your-storage-account-key
-  
+
   # Azure Service Principal Authentication
   AZURE_CLIENT_ID=your-client-id
   AZURE_TENANT_ID=your-tenant-id
   AZURE_CLIENT_SECRET=your-client-secret
   AZURE_SUBSCRIPTION_ID=your-subscription-id
   ```
-- **Usage:** 
+- **Usage:**
   - Azure Storage operations for build upload/download
   - Service Principal authentication for Azure services
   - Health check monitoring and build management
@@ -67,4 +67,4 @@ This document describes the configuration files used by QuantumOps and their str
 - Update the application to load and save new configurations as needed
 
 ---
-For more details, see the project overview and DevOps guide. 
+For more details, see the project overview and DevOps guide.

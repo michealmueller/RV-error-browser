@@ -33,4 +33,4 @@ warn_unreachable = true
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --cov=quantumops --cov-report=term-missing"
-qt_api = "pyside6" 
+qt_api = "pyside6"

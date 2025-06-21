@@ -1,5 +1,5 @@
 ---
-description: 
+description:
 globs: *.tsx, scr/config/**/*.json, *Test.cpp,*.ts
 alwaysApply: false
 ---

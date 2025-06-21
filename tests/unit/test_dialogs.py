@@ -1,8 +1,6 @@
 # from dialogs import ConnectionDialog  # MISSING MODULE, COMMENTED OUT
-from PySide6.QtWidgets import QApplication
 import pytest
-from PySide6.QtTest import QTest
-from PySide6.QtCore import Qt
+
 
 @pytest.fixture
 def dialog(qtbot):
@@ -11,7 +9,8 @@ def dialog(qtbot):
     qtbot.addWidget(dialog)
     return dialog
 
-@pytest.mark.skip(reason='Skipped: depends on missing dialogs/ConnectionDialog')
+
+@pytest.mark.skip(reason="Skipped: depends on missing dialogs/ConnectionDialog")
 def test_dialog_initialization(dialog):
     """Test that the dialog initializes correctly."""
     assert dialog.windowTitle() == "Add Connection"
@@ -23,7 +22,8 @@ def test_dialog_initialization(dialog):
     assert dialog.password_input.text() == ""
     assert dialog.table_input.text() == ""
 
-@pytest.mark.skip(reason='Skipped: depends on missing dialogs/ConnectionDialog')
+
+@pytest.mark.skip(reason="Skipped: depends on missing dialogs/ConnectionDialog")
 def test_connection_data(dialog):
     """Test getting connection data."""
     # Set test data
@@ -34,10 +34,10 @@ def test_connection_data(dialog):
     dialog.username_input.setText("test_user")
     dialog.password_input.setText("test_pass")
     dialog.table_input.setText("test_table")
-    
+
     # Get connection data
     data = dialog.get_connection()
-    
+
     # Verify data
     assert data["name"] == "Test Connection"
     assert data["host"] == "localhost"
@@ -47,7 +47,8 @@ def test_connection_data(dialog):
     assert data["password"] == "test_pass"
     assert data["default_table"] == "test_table"
 
-@pytest.mark.skip(reason='Skipped: depends on missing dialogs/ConnectionDialog')
+
+@pytest.mark.skip(reason="Skipped: depends on missing dialogs/ConnectionDialog")
 def test_edit_existing_connection(qtbot):
     """Test editing an existing connection."""
     # Create test connection data
@@ -58,13 +59,13 @@ def test_edit_existing_connection(qtbot):
         "database": "test_db",
         "username": "test_user",
         "password": "test_pass",
-        "default_table": "test_table"
+        "default_table": "test_table",
     }
-    
+
     # Create dialog with existing connection
     dialog = ConnectionDialog(connection=test_data)
     qtbot.addWidget(dialog)
-    
+
     # Verify fields are populated
     assert dialog.windowTitle() == "Edit Connection"
     assert dialog.name_input.text() == "Existing Connection"
@@ -75,30 +76,32 @@ def test_edit_existing_connection(qtbot):
     assert dialog.password_input.text() == "test_pass"
     assert dialog.table_input.text() == "test_table"
 
-@pytest.mark.skip(reason='Skipped: depends on missing dialogs/ConnectionDialog')
+
+@pytest.mark.skip(reason="Skipped: depends on missing dialogs/ConnectionDialog")
 def test_dialog_validation(dialog):
     """Test dialog validation."""
     # Try to accept with empty fields
     dialog.accept()
     assert dialog.result() == 0  # Dialog should not be accepted
-    
+
     # Fill in required fields
     dialog.name_input.setText("Test Connection")
     dialog.host_input.setText("localhost")
     dialog.database_input.setText("test_db")
     dialog.username_input.setText("test_user")
-    
+
     # Try to accept again
     dialog.accept()
     assert dialog.result() == 1  # Dialog should be accepted
 
-@pytest.mark.skip(reason='Skipped: depends on missing dialogs/ConnectionDialog')
+
+@pytest.mark.skip(reason="Skipped: depends on missing dialogs/ConnectionDialog")
 def test_dialog_cancel(dialog):
     """Test dialog cancellation."""
     # Fill in some fields
     dialog.name_input.setText("Test Connection")
     dialog.host_input.setText("localhost")
-    
+
     # Cancel the dialog
     dialog.reject()
-    assert dialog.result() == 0  # Dialog should be rejected 
+    assert dialog.result() == 0  # Dialog should be rejected

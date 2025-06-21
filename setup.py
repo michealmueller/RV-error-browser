@@ -1,8 +1,9 @@
 """
 Setup script for QuantumOps package.
 """
-from setuptools import setup, find_packages
 from pathlib import Path
+
+from setuptools import find_packages, setup
 
 # Read version from config file
 version_file = Path("config") / "version.txt"
@@ -11,7 +12,9 @@ with open(version_file, "r") as f:
 
 # Read requirements from requirements.txt
 with open("requirements.txt", "r") as f:
-    requirements = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+    requirements = [
+        line.strip() for line in f if line.strip() and not line.startswith("#")
+    ]
 
 setup(
     name="quantumops",
@@ -35,4 +38,4 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Topic :: Software Development :: Build Tools",
     ],
-) 
+)

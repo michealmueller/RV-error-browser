@@ -13,12 +13,12 @@ data_files = []
 data_files += collect_data_files('PySide6')
 data_files += collect_data_files('azure')
 
-# Add project data files (if present)
+# Add necessary config files
 project_data = [
-    ('app.json', '.'),
-    ('eas.json', '.'),
-    ('requirements.txt', '.'),
-    ('README.md', '.'),
+    ('config/eas.json', 'config'),
+    ('config/health_endpoints.json', 'config'),
+    ('config/version.txt', 'config'),
+    ('resources.qrc', '.'),
 ]
 for src, dest in project_data:
     data_files.append((src, dest))
@@ -28,7 +28,7 @@ block_cipher = None
 # Main analysis
 
 a = Analysis(
-    ['app.py'],
+    ['main.py'],
     pathex=[],
     binaries=None,
     datas=data_files,
@@ -64,4 +64,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-) 
+)

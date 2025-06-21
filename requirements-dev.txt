@@ -24,4 +24,4 @@ twine>=4.0.2
 build>=1.0.3
 
 # Development tools
-pre-commit>=3.3.3 
+pre-commit>=3.3.3

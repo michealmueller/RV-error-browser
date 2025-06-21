@@ -54,4 +54,4 @@ jobs:
           echo "Test coverage ($COVERAGE%) is below the required 80%"
           exit 1
         fi
-        echo "Test coverage: $COVERAGE%" 
+        echo "Test coverage: $COVERAGE%"

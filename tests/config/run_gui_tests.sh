@@ -12,4 +12,4 @@ export QT_QPA_PLATFORM="offscreen"
 python -m pytest tests/unit/test_app.py -v -m "gui"
 
 # Cleanup
-kill $XVFB_PID 
+kill $XVFB_PID
