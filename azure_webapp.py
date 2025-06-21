@@ -13,7 +13,6 @@ from urllib.parse import urljoin
 
 import requests
 from azure.core.exceptions import (
-    ClientAuthenticationError,
     HttpResponseError,
     ResourceNotFoundError,
 )
@@ -57,65 +56,133 @@ class LogBuffer:
             gc.collect()
 
 
-class AzureWebApp:
-    def __init__(self, tenant_id: str, client_id: str, client_secret: str):
-        """Initialize Azure WebApp client with service principal credentials."""
-        if not all([tenant_id, client_id, client_secret]):
-            raise ValueError("Missing required Azure credentials")
+class AzureCreds:
+    """Class to hold Azure credentials."""
 
-        self.tenant_id = tenant_id
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.credential = None
-        self.web_client = None
-        self._initialize_clients()
+    def __init__(self):
+        self.AZURE_STORAGE_ACCOUNT = os.getenv("AZURE_STORAGE_ACCOUNT")
+        self.AZURE_STORAGE_CONTAINER = os.getenv("AZURE_STORAGE_CONTAINER")
+        self.AZURE_STORAGE_ACCOUNT_KEY = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
+        self.AZURE_SUBSCRIPTION_ID = os.getenv("AZURE_SUBSCRIPTION_ID")
+        self.AZURE_TENANT_ID = os.getenv("AZURE_TENANT_ID")
+        self.AZURE_CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
+        self.AZURE_CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET")
+
+
+class AzureWebApp:
+    def __init__(self, app_name, resource_group):
+        self.creds = AzureCreds()
+        self.app_name = app_name
+        self.resource_group = resource_group
+        self.credential = ClientSecretCredential(
+            tenant_id=self.creds.AZURE_TENANT_ID,
+            client_id=self.creds.AZURE_CLIENT_ID,
+            client_secret=self.creds.AZURE_CLIENT_SECRET,
+        )
+        self.web_client = WebSiteManagementClient(
+            self.credential, self.creds.AZURE_SUBSCRIPTION_ID
+        )
         self.active_streams = 0
         self.stream_lock = threading.Lock()
         self.log_buffer = LogBuffer()
 
-    @classmethod
-    def from_dict(cls, data: dict):
-        """Create an AzureWebApp instance from a dictionary."""
-        # Extract credentials from environment variables as a fallback
-        tenant_id = data.get("tenant_id") or os.getenv("AZURE_TENANT_ID")
-        client_id = data.get("client_id") or os.getenv("AZURE_CLIENT_ID")
-        client_secret = data.get("client_secret") or os.getenv("AZURE_CLIENT_SECRET")
+    def get_properties(self):
+        """Get web app properties."""
+        return self.web_client.web_apps.get(self.resource_group, self.app_name)
 
-        # Create instance
-        instance = cls(tenant_id, client_id, client_secret)
+    def get_app_settings(self):
+        """Get web app settings."""
+        return self.web_client.web_apps.list_application_settings(
+            self.resource_group, self.app_name
+        )
 
-        # Set additional attributes if present
-        if "name" in data:
-            instance.name = data["name"]
-        if "health_check_url" in data:
-            instance.health_check_url = data["health_check_url"]
-        if "resource_group" in data:
-            instance.resource_group = data["resource_group"]
+    def update_app_settings(self, settings):
+        """Update web app settings."""
+        return self.web_client.web_apps.update_application_settings(
+            self.resource_group, self.app_name, settings
+        )
 
-        return instance
+    def restart(self):
+        """Restart web app."""
+        self.web_client.web_apps.restart(self.resource_group, self.app_name)
 
-    def _initialize_clients(self) -> None:
-        """Initialize Azure clients with service principal credentials."""
-        try:
-            logger.info("Using ClientSecretCredential for authentication")
-            self.credential = ClientSecretCredential(
-                tenant_id=self.tenant_id,
-                client_id=self.client_id,
-                client_secret=self.client_secret,
-            )
-            logger.info("Successfully authenticated with ClientSecretCredential")
+    def start(self):
+        """Start web app."""
+        self.web_client.web_apps.start(self.resource_group, self.app_name)
 
-            self.web_client = WebSiteManagementClient(
-                credential=self.credential,
-                subscription_id="df158c1b-098f-466c-bf92-c03a57898df0",
-            )
-            logger.info("Successfully created WebSiteManagementClient")
-        except ClientAuthenticationError as e:
-            logger.error(f"Authentication failed: {str(e)}")
-            raise RuntimeError(f"Failed to authenticate with Azure: {str(e)}")
-        except Exception as e:
-            logger.error(f"Failed to initialize Azure clients: {str(e)}")
-            raise RuntimeError(f"Failed to initialize Azure clients: {str(e)}")
+    def stop(self):
+        """Stop web app."""
+        self.web_client.web_apps.stop(self.resource_group, self.app_name)
+
+    def get_publishing_user(self):
+        """Get publishing user."""
+        return self.web_client.get_publishing_user()
+
+    def list_source_controls(self):
+        """List source controls."""
+        return self.web_client.list_source_controls()
+
+    def get_source_control(self):
+        """Get source control."""
+        return self.web_client.web_apps.get_source_control(
+            self.resource_group, self.app_name
+        )
+
+    def sync_repository(self):
+        """Sync repository."""
+        self.web_client.web_apps.sync_repository(self.resource_group, self.app_name)
+
+    def list_publishing_credentials(self):
+        """List publishing credentials."""
+        return self.web_client.web_apps.list_publishing_credentials(
+            self.resource_group, self.app_name
+        ).result()
+
+    def stream_logs(self, duration_minutes=5):
+        """Stream logs for a given duration."""
+        # This is a simplified example. In a real application, you would use
+        # the 'requests' library to stream the logs from the SCM endpoint.
+        scm_url = f"https://{self.app_name}.scm.azurewebsites.net/api/logstream"
+        print(f"Streaming logs from {scm_url} for {duration_minutes} minutes.")
+        # Example of how you might stream with requests:
+        # with requests.get(scm_url, auth=(user, password), stream=True) as r:
+        #     for chunk in r.iter_content(chunk_size=1024):
+        #         if chunk:
+        #             print(chunk.decode('utf-8'), end='')
+
+    def get_scm_url(self):
+        """
+        Constructs the SCM (Kudu) URL for the web app.
+        """
+        return f"https://{self.app_name}.scm.azurewebsites.net"
+
+    def _get_auth(self):
+        """
+        Retrieves publishing credentials and returns a tuple for basic auth.
+        """
+        creds = self.list_publishing_credentials()
+        return (creds.publishing_user_name, creds.publishing_password)
+
+    def stream_live_logs(self, log_output_widget):
+        """
+        Streams live logs from the Kudu log stream endpoint.
+        """
+        scm_url = f"{self.get_scm_url()}/api/logstream"
+        auth = self._get_auth()
+
+        def stream():
+            try:
+                with requests.get(scm_url, auth=auth, stream=True, timeout=300) as r:
+                    r.raise_for_status()
+                    for chunk in r.iter_content(chunk_size=1024):
+                        if chunk:
+                            log_output_widget.append(chunk.decode("utf-8"))
+            except requests.exceptions.RequestException as e:
+                log_output_widget.append(f"\\nError streaming logs: {e}")
+
+        thread = threading.Thread(target=stream)
+        thread.daemon = True
+        thread.start()
 
     def get_web_apps(self) -> List[Dict[str, Any]]:
         """Get list of web apps in the subscription."""
