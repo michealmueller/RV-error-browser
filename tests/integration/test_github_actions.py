@@ -1,7 +1,6 @@
 from pathlib import Path
 
 
-
 def test_workflow_file_exists():
     """Test that the GitHub workflow file exists."""
     workflow_file = Path(".github/workflows/build.yml")

@@ -3,7 +3,6 @@ import threading
 from functools import wraps
 from typing import Any, Callable
 
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"

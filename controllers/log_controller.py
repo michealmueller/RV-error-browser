@@ -7,7 +7,6 @@ from datetime import datetime
 from PySide6.QtCore import QObject, Signal, Slot
 from PySide6.QtWidgets import QTextEdit
 
-
 logger = logging.getLogger(__name__)
 
 

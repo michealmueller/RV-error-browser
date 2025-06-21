@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 
 
-
 def test_build_script():
     """Test that the build script runs without errors."""
     # Run the build script

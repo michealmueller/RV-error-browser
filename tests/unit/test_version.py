@@ -1,7 +1,6 @@
 from pathlib import Path
 
 
-
 def test_version_file_exists():
     """Test that the version file exists."""
     version_file = Path("version.txt")

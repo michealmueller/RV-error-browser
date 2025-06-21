@@ -1,4 +1,3 @@
-
 import pytest
 
 from main_window import DatabaseApp

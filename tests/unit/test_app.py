@@ -1,4 +1,3 @@
-
 # from theming import BRANDING_THEMES, get_current_brand_colors  # MISSING MODULE, COMMENTED OUT
 from unittest.mock import MagicMock, patch
 

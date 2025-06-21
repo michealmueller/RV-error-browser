@@ -6,10 +6,7 @@ import os
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from azure.core.exceptions import (
-    AzureError,
-    ResourceNotFoundError,
-)
+from azure.core.exceptions import AzureError, ResourceNotFoundError
 from azure.storage.blob import BlobServiceClient
 
 logger = logging.getLogger(__name__)
@@ -17,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 class AzureServiceError(Exception):
     """Custom exception for Azure service errors."""
-
 
 
 class AzureService:

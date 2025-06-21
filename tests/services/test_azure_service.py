@@ -6,10 +6,7 @@ from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
-from azure.core.exceptions import (
-    ResourceNotFoundError,
-    ServiceRequestError,
-)
+from azure.core.exceptions import ResourceNotFoundError, ServiceRequestError
 
 from services.azure_service import AzureService, AzureServiceError
 

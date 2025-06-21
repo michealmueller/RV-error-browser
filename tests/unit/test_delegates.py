@@ -1,11 +1,7 @@
 import pytest
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import (
-    QStyleOptionViewItem,
-    QTableWidget,
-    QTableWidgetItem,
-)
+from PySide6.QtWidgets import QStyleOptionViewItem, QTableWidget, QTableWidgetItem
 
 # from delegates import DetailsDelegate  # MISSING MODULE, COMMENTED OUT
 

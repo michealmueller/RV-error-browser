@@ -1,7 +1,6 @@
 from pathlib import Path
 
 
-
 def test_package_structure():
     """Test that the package has the correct structure."""
     # Check main package files

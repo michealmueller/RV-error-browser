@@ -34,12 +34,15 @@ repos:
     hooks:
     -   id: mypy
         additional_dependencies: [types-setuptools, types-requests]
-        args: [--ignore-missing-imports]
+        args: [--namespace-packages, --explicit-package-bases]
+        files: ^quantumops/
 
 -   repo: https://github.com/mpalmer/action-validator
-    rev: 'v0.5.1'  # Use a specific, stable version
+    rev: 'v0.5.1'
     hooks:
     -   id: action-validator
+        language: node
+        types: [yaml]
 
 -   repo: https://github.com/PyCQA/autoflake
     rev: v2.2.1
