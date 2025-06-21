@@ -12,10 +12,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional
 from urllib.parse import urljoin
 
 import requests
-from azure.core.exceptions import (
-    HttpResponseError,
-    ResourceNotFoundError,
-)
+from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 from azure.identity import ClientSecretCredential
 from azure.mgmt.web import WebSiteManagementClient
 from requests.adapters import HTTPAdapter

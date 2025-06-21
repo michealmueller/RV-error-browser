@@ -41,8 +41,10 @@ repos:
     rev: 'v0.5.1'
     hooks:
     -   id: action-validator
+        entry: action-validator
         language: node
         types: [yaml]
+        additional_dependencies: ['@action-validator/cli']
 
 -   repo: https://github.com/PyCQA/autoflake
     rev: v2.2.1
