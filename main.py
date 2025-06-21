@@ -13,6 +13,8 @@ sys.path.insert(0, str(project_root))
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 
+import resources_rc
+from logging_utils import setup_logging
 from views.main_window import MainWindow
 from controllers.build_controller import BuildController
 from controllers.database_controller import DatabaseController
@@ -28,6 +30,9 @@ from services.azure_service import AzureService
 
 def main():
     """Main application entry point."""
+    # Set up logging
+    setup_logging()
+
     # Load environment variables from .env file
     try:
         from dotenv import load_dotenv
@@ -50,10 +55,6 @@ def main():
     
     # Create main window
     window = MainWindow()
-    
-    # Create model and controller
-    model = BuildManager()
-    controller = MainController(model, window)
     
     # Show window
     window.show()

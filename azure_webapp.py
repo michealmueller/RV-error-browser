@@ -70,6 +70,27 @@ class AzureWebApp:
         self.stream_lock = threading.Lock()
         self.log_buffer = LogBuffer()
 
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Create an AzureWebApp instance from a dictionary."""
+        # Extract credentials from environment variables as a fallback
+        tenant_id = data.get('tenant_id') or os.getenv('AZURE_TENANT_ID')
+        client_id = data.get('client_id') or os.getenv('AZURE_CLIENT_ID')
+        client_secret = data.get('client_secret') or os.getenv('AZURE_CLIENT_SECRET')
+
+        # Create instance
+        instance = cls(tenant_id, client_id, client_secret)
+        
+        # Set additional attributes if present
+        if 'name' in data:
+            instance.name = data['name']
+        if 'health_check_url' in data:
+            instance.health_check_url = data['health_check_url']
+        if 'resource_group' in data:
+            instance.resource_group = data['resource_group']
+            
+        return instance
+
     def _initialize_clients(self) -> None:
         """Initialize Azure clients with service principal credentials."""
         try:

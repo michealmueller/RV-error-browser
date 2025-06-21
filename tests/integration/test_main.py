@@ -3,9 +3,9 @@ import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtTest import QTest
 from PySide6.QtCore import Qt, QTimer
-from app import DatabaseApp
+from main_window import DatabaseApp
 from utils import create_test_database, drop_test_database, get_test_connection
-from db_config import DB_CONFIG
+from tests.db_config import DB_CONFIG
 import os
 import psycopg2
 
@@ -64,7 +64,7 @@ def qapp():
 @pytest.fixture
 def app(qapp):
     """Create a DatabaseApp instance for testing."""
-    from app import DatabaseApp
+    from main_window import DatabaseApp
     app = DatabaseApp()
     yield app
     app.close()

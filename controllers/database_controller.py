@@ -28,6 +28,10 @@ class DatabaseController(QObject):
         
         logger.info("Database controller initialized")
         
+    def show_view(self):
+        """Show the database view."""
+        self._view.show()
+        
     def cleanup(self):
         """Clean up resources."""
         if self._model.is_connected:

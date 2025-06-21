@@ -65,6 +65,7 @@ class DatabaseView(QWidget):
         # Query interface
         self.query_input = QTextEdit()
         self.query_input.setPlaceholderText("Enter your SQL query here...")
+        self.query_input.setText("SELECT * FROM error_logs")
         self.query_input.setMaximumHeight(100)
         
         self.execute_button = QPushButton("Execute Query")
@@ -144,6 +145,11 @@ class DatabaseView(QWidget):
         # Resize columns to content
         self.results_table.resizeColumnsToContents()
         
+    def closeEvent(self, event):
+        """Handle window close event."""
+        self.disconnect_requested.emit()
+        super().closeEvent(event)
+
     def show_error(self, message: str):
         """Show error message."""
         QMessageBox.critical(self, "Error", message) 

@@ -1,149 +1,93 @@
 # QuantumOps
 
-A modern build management and deployment tool for mobile applications, built with PySide6.
+**QuantumOps** is a powerful and intuitive desktop application designed to streamline the management of mobile application builds from Expo Application Services (EAS). It provides a centralized dashboard for DevOps engineers and developers to view, download, and manage Android and iOS builds, monitor the health of web services, and track build history, all from a single, cross-platform interface.
 
-## Feature Table
+## Key Features
 
-| Feature                                      | Description                                                      | Status        |
-|----------------------------------------------|------------------------------------------------------------------|---------------|
-| Fetch and manage mobile builds (Android/iOS) | View, filter, and manage builds for Android and iOS              | Implemented   |
-| Download builds from Azure DevOps            | Download build artifacts from Azure DevOps pipelines              | Implemented   |
-| Upload builds to Azure Blob Storage          | Upload Android/iOS builds to Azure Blob Storage from the UI       | Implemented   |
-| Preview build metadata and artifacts         | View build details and metadata in the UI                         | Implemented   |
-| Direct installation to connected devices     | Install builds directly to connected Android/iOS devices          | Implemented   |
-| Service Principal authentication for Azure   | Secure authentication for Azure services                          | Implemented   |
-| Modern, responsive UI                        | User-friendly, modern interface                                   | Implemented   |
-| Build history tracking and export            | Track and export build history                                    | Implemented   |
-| Configurable Azure Web App log streaming     | Real-time log streaming from Azure Web Apps                       | Implemented   |
-| Share build URLs                             | Generate and share URLs for builds                                | Implemented   |
-| Config-driven design                         | Use JSON for environments, web apps, and build settings           | Implemented   |
-| Security best practices                      | Environment variables, least privilege, DevSecOps                 | Implemented   |
-| Extensibility for new providers/stores       | Design allows adding new cloud providers and artifact stores      | Planned       |
-| Automated tests and CI                       | Comprehensive unit tests and CI integration                       | Implemented   |
-| Documentation and guides                     | User and developer documentation                                  | Implemented   |
+- **Unified Build Dashboard:** View and manage all your Android and iOS builds from EAS in a clean, side-by-side layout.
+- **Real-time Service Health:** Monitor the health of your RosieVision and ProjectFlow services with real-time status indicators.
+- **EAS Integration:** Fetch the latest builds for both Android and iOS platforms directly from the EAS API.
+- **Dynamic Filtering:** Quickly find the builds you're looking for by filtering by version number.
+- **Azure Blob Storage Integration:** Download build artifacts and push them directly to your configured Azure Blob Storage container, with in-place progress bars to track the status.
+- **Custom File Naming:** All downloaded and uploaded artifacts are named with a clear and consistent convention: `{platform}-{profile}-v{version}-{versionCode}-{fingerprint}.{extension}`.
+- **Local Build History:** Keep a persistent, local record of all actions performed within the application, including downloads and uploads.
+- **Secure Configuration:** All sensitive credentials and configurations are managed through a simple `.env` file, keeping your secrets out of the codebase.
+- **Cross-Platform:** Built with PySide6, QuantumOps runs natively on Windows, macOS, and Linux.
 
-## Features
+## Getting Started
 
-- Fetch and manage mobile builds (Android/iOS)
-- Download builds from Azure DevOps
-- Upload builds to Azure Blob Storage (fully implemented, robust, and tested)
-- Preview build metadata and artifacts
-- Direct installation to connected devices
-- Service Principal authentication for Azure
-- Modern, responsive UI
-
-## Requirements
+### Prerequisites
 
 - Python 3.11 or higher
-- PySide6
-- Azure Identity
-- Azure Storage Blob
-- ADB (for Android builds)
-- ideviceinstaller (for iOS builds)
+- An Azure account with a configured Storage Blob container
+- An Expo account with access to EAS builds
 
-## Installation
+### Installation
 
-1. Clone the repository:
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/quantumops.git
+    cd quantumops
+    ```
+
+2.  **Create and activate a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+3.  **Install the required dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+### Configuration
+
+Before running the application, you'll need to configure your environment variables by creating a `.env` file in the root of the project.
+
+1.  **Create the `.env` file:**
+    ```bash
+    touch .env
+    ```
+
+2.  **Add your credentials to the `.env` file:**
+
+    ```dotenv
+    # Azure Storage Credentials
+    AZURE_STORAGE_ACCOUNT="your_storage_account_name"
+    AZURE_STORAGE_CONTAINER="your_container_name"
+    AZURE_STORAGE_ACCOUNT_KEY="your_storage_account_key"
+
+    # EAS Credentials
+    EAS_ACCOUNT_NAME="your_expo_account_name"
+    EAS_PROJECT_ID="your_expo_project_id"
+    ```
+
+3.  **Configure the health check endpoints:**
+
+    Open `config/health_endpoints.json` and add the health check URLs for your RosieVision and ProjectFlow services:
+
+    ```json
+    {
+      "endpoints": {
+        "RV-Dev-api": "https://your-rosievision-api.com/health",
+        "PF-Dev-api": "https://your-projectflow-api.com/health"
+      }
+    }
+    ```
+
+### Running the Application
+
+Once your configuration is complete, you can launch the application by running:
+
 ```bash
-git clone https://github.com/rosievision/quantumops.git
-cd quantumops
+python main.py
 ```
 
-2. Create and activate a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-# or
-.\venv\Scripts\activate  # Windows
-```
+## Development
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Install the package:
-```bash
-pip install -e .
-```
-
-## Configuration
-
-1. Set up Azure Service Principal:
-   - Create a service principal in Azure AD
-   - Assign appropriate RBAC roles
-   - Configure environment variables:
-     ```
-     AZURE_TENANT_ID=your_tenant_id
-     AZURE_CLIENT_ID=your_client_id
-     AZURE_CLIENT_SECRET=your_client_secret
-     ```
-
-2. Configure build settings in `config/eas.json`
-
-## Usage
-
-Run the application:
-```bash
-quantumops
-```
-
-### Build Management
-
-- View available builds
-- Download builds
-- Upload builds to Azure Blob Storage (Android/iOS) directly from the UI
-- Preview build metadata
-- Install to connected devices
-- Share build URLs
-
-### Development
-
-1. Install development dependencies:
-```bash
-pip install -r requirements-dev.txt
-```
-
-2. Run tests:
-```bash
-python tests/config/run_tests.py
-```
-
-3. Run GUI tests:
-```bash
-./tests/config/run_gui_tests.sh
-```
-
-## Project Structure
-
-```
-quantumops/
-├── config/                 # Configuration files
-├── docs/                   # Documentation
-├── scripts/               # Build and utility scripts
-├── tests/                 # Test files and configuration
-├── quantumops/           # Main package
-│   ├── models/           # Data models
-│   ├── views/            # UI components
-│   └── controllers/      # Business logic
-└── ...
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+For information on contributing to the project, running tests, and understanding the project structure, please see the [DevOps Guide](DEVOPS_GUIDE.md).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Implementation Notes
-
-- The Azure Blob Storage upload feature is now fully implemented and integrated from the UI to the backend.
-- Upload actions in the UI for both Android and iOS builds now trigger the backend upload logic, with progress and error handling.
-- The backend logic is robust, with comprehensive unit tests covering all edge cases and error scenarios.
-- The test suite is in sync with the code, ensuring future changes are caught by CI.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

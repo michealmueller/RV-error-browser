@@ -3,7 +3,7 @@ import logging
 from PySide6.QtWidgets import QApplication
 from PySide6.QtTest import QTest
 from PySide6.QtCore import Qt
-from app import DatabaseApp
+from main_window import DatabaseApp
 
 @pytest.fixture
 def app(qtbot):

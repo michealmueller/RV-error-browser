@@ -3,5 +3,7 @@
     <qresource prefix="/">
         <file>images/projectflow_logo.png</file>
         <file>images/rosievision_logo.png</file>
+        <file>images/icons/download.svg</file>
+        <file>images/icons/upload.svg</file>
     </qresource>
 </RCC>

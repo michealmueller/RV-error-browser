@@ -2,7 +2,7 @@
 Main window view for QuantumOps.
 """
 import logging
-from typing import Optional
+from typing import Optional, List
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QTextEdit, QComboBox,
@@ -10,8 +10,8 @@ from PySide6.QtWidgets import (
     QTableWidget, QTableWidgetItem, QMenuBar, QFileDialog,
     QStatusBar, QProgressBar, QDialog, QLineEdit, QSizePolicy
 )
-from PySide6.QtCore import Qt, Signal, QSize, QTimer
-from PySide6.QtGui import QColor, QPalette, QAction
+from PySide6.QtCore import Qt, Signal, QSize, QTimer, QThread, Slot
+from PySide6.QtGui import QColor, QPalette, QAction, QIcon
 from controllers.log_controller import LogController
 from controllers.health_controller import HealthController
 from controllers.database_controller import DatabaseController
@@ -28,6 +28,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 import os
+from services.azure_service import AzureService
 
 logger = logging.getLogger(__name__)
 
@@ -93,60 +94,49 @@ class MainWindow(QMainWindow):
         """Initialize main window."""
         super().__init__()
         
-        # Set up build managers first
-        self._setup_build_managers()
-        
-        # Initialize webapps and selected_webapp before controllers
+        # Core application attributes
+        self.azure_service = AzureService()
         self.webapps = self._load_webapps()
         self.selected_webapp = self.webapps[0] if self.webapps else None
-        
-        # Initialize controllers
-        self._setup_controllers()
-        
-        # Initialize UI
-        self._init_ui()
-        
-        # Connect signals
-        self._connect_signals()
-        
-        self.health_statuses = {}  # Store health statuses
+        self.all_versions = set()
+        self.health_statuses = {}
         self.history_manager = HistoryManager()
         self._progress_dialog = None
-        logger.info("Main window initialized")
         
+        # Set up the UI, create controllers, and then connect signals
+        self._init_ui()
+        self._setup_controllers()
+        self._connect_signals()
+
+        logger.info("Main window initialized")
+        self.log_controller.add_log("Application started successfully.", "INFO")
+        
+        # Start monitoring and fetch initial data
+        self.health_controller.start_monitoring()
+        self.refresh_builds()
+
+        # Adjust window size after initial data load
+        QTimer.singleShot(1000, self._adjust_window_size)
+
     def _init_ui(self):
         """Initialize the UI components with a simplified, user-friendly design."""
         self.setWindowTitle("QuantumOps - Mobile Build Manager")
         self.setMinimumSize(1400, 900)
-        
+
+        # Set up build views before creating main content
+        self._setup_build_managers()
+
         # Create central widget and main layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
         main_layout.setSpacing(10)
         main_layout.setContentsMargins(15, 15, 15, 15)
-        
-        # Create header section
-        self._create_header(main_layout)
-        
-        # Create tab widget for build views
-        tab_widget = QTabWidget()
-        tab_widget.addTab(self.android_view, "Android Builds")
-        tab_widget.addTab(self.ios_view, "iOS Builds")
-        main_layout.addWidget(tab_widget)
-        
-        # Create bottom panels for health status and logs
-        self._create_bottom_panels(main_layout)
-        
-        # Create status bar
-        self._setup_status_bar()
-        
-        # Create menu bar
-        self._create_menu_bar()
-        
-        # Connect signals
-        self._connect_ui_signals()
-        
+
+        # Create and set up the main content
+        self.main_splitter = self._create_main_content()
+        main_layout.addWidget(self.main_splitter)
+
         # Set application-wide stylesheet for light theme
         self.setStyleSheet("""
             QMainWindow {
@@ -246,79 +236,67 @@ class MainWindow(QMainWindow):
                 background-color: #e9ecef;
             }
         """)
+
+        # Setup status bar and menu bar
+        self._setup_status_bar()
+        self._create_menu_bar()
         
-    def _create_header(self, parent_layout):
-        """Create the header section with platform selector and main actions."""
-        header_widget = QWidget()
-        header_layout = QHBoxLayout(header_widget)
-        header_layout.setContentsMargins(0, 0, 0, 0)
-        
-        # App title
-        title_label = QLabel("QuantumOps")
-        title_label.setStyleSheet("""
-            QLabel {
-                font-size: 24px;
-                font-weight: bold;
-                color: #2c3e50;
-                padding: 10px;
-            }
-        """)
-        header_layout.addWidget(title_label)
-        
-        # Platform selector and actions
-        controls_layout = QHBoxLayout()
-        
-        # Refresh button
-        refresh_button = QPushButton("🔄 Refresh")
-        refresh_button.setStyleSheet("""
-            QPushButton {
-                background-color: #007bff;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                padding: 8px 16px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #0056b3;
-            }
-            QPushButton:pressed {
-                background-color: #004085;
-            }
-        """)
-        refresh_button.clicked.connect(self.refresh_builds)
-        controls_layout.addWidget(refresh_button)
-        
-        controls_layout.addStretch()
-        
-        # Add controls to header
-        header_layout.addLayout(controls_layout)
-        
-        parent_layout.addWidget(header_widget)
-        
-    def _create_main_content(self, parent_layout):
+    def _create_main_content(self) -> QSplitter:
         """Create the main content area with builds table and controls."""
-        # Create main content widget
-        content_widget = QWidget()
-        content_layout = QVBoxLayout(content_widget)
-        content_layout.setSpacing(15)
+        self.main_splitter = QSplitter(Qt.Vertical)
+
+        # Top section for controls and build views
+        top_widget = QWidget()
+        top_layout = QVBoxLayout(top_widget)
+        top_layout.setContentsMargins(0, 0, 0, 0)
+        top_layout.setSpacing(15)
+
+        self._create_controls_section(top_layout)
+
+        # Horizontal splitter for Android and iOS views
+        build_splitter = QSplitter(Qt.Horizontal)
+
+        # Android view container
+        android_container = QWidget()
+        android_layout = QVBoxLayout(android_container)
+        android_layout.setContentsMargins(0, 0, 0, 0)
+        android_label = QLabel("Android Builds")
+        android_label.setStyleSheet("font-weight: bold; padding: 5px;")
+        android_layout.addWidget(android_label)
+        android_layout.addWidget(self.android_view)
+        build_splitter.addWidget(android_container)
+
+        # iOS view container
+        ios_container = QWidget()
+        ios_layout = QVBoxLayout(ios_container)
+        ios_layout.setContentsMargins(0, 0, 0, 0)
+        ios_label = QLabel("iOS Builds")
+        ios_label.setStyleSheet("font-weight: bold; padding: 5px;")
+        ios_layout.addWidget(ios_label)
+        ios_layout.addWidget(self.ios_view)
+        build_splitter.addWidget(ios_container)
+
+        top_layout.addWidget(build_splitter)
         
-        # Create controls section
-        self._create_controls_section(content_layout)
-        
-        # Create builds table section
-        self._create_builds_section(content_layout)
-        
-        # Create bottom panels
-        self._create_bottom_panels(content_layout)
-        
-        parent_layout.addWidget(content_widget, 1)  # Give it most of the space
-        
+        # Bottom section for health status and logs
+        self._create_bottom_panels()
+
+        self.main_splitter.addWidget(top_widget)
+        self.main_splitter.addWidget(self.bottom_panels)
+
+        # Set initial sizes for the main splitter
+        self.main_splitter.setSizes([600, 200])
+        self.main_splitter.setCollapsible(0, False)
+        self.main_splitter.setCollapsible(1, False)
+
+        return self.main_splitter
+
     def _create_controls_section(self, parent_layout):
         """Create the controls section with search and filters."""
-        controls_widget = QWidget()
-        controls_layout = QHBoxLayout(controls_widget)
-        controls_layout.setContentsMargins(0, 0, 0, 0)
+        controls_group = QGroupBox("Controls")
+        controls_group.setMaximumHeight(100)  # Constrain the height of the controls area
+        controls_layout = QHBoxLayout(controls_group)
+        controls_layout.setContentsMargins(10, 10, 10, 10)
         
         # Search input
         search_label = QLabel("Search:")
@@ -366,9 +344,8 @@ class MainWindow(QMainWindow):
         
         self.status_filter = QComboBox()
         self.status_filter.addItem("All Statuses", "")
-        self.status_filter.addItem("Available", "available")
-        self.status_filter.addItem("Downloaded", "downloaded")
-        self.status_filter.addItem("Uploaded", "uploaded")
+        self.status_filter.addItem("Finished", "finished")
+        self.status_filter.addItem("Canceled", "canceled")
         self.status_filter.setStyleSheet("""
             QComboBox {
                 padding: 8px;
@@ -379,127 +356,119 @@ class MainWindow(QMainWindow):
             }
         """)
         controls_layout.addWidget(self.status_filter)
+        status_label.setVisible(False)
+        self.status_filter.setVisible(False)
         
-        parent_layout.addWidget(controls_widget)
-        
-    def _create_bottom_panels(self, parent_layout):
-        """Create the bottom panels for health status and logs."""
-        bottom_widget = QWidget()
-        bottom_layout = QHBoxLayout(bottom_widget)
-        bottom_layout.setSpacing(15)
-        
-        # Health status panel
-        health_group = QGroupBox("System Health")
-        health_group.setStyleSheet("""
-            QGroupBox {
-                font-weight: bold;
-                font-size: 14px;
-                color: #2c3e50;
+        # Refresh button
+        self.refresh_button = QPushButton("Refresh")
+        self.refresh_button.setStyleSheet("""
+            QPushButton {
+                padding: 8px;
                 border: 2px solid #bdc3c7;
                 border-radius: 6px;
-                margin-top: 10px;
-                padding-top: 10px;
+                background: white;
+                min-width: 120px;
+            }
+            QPushButton:hover {
+                background-color: #e9ecef;
+            }
+            QPushButton:pressed {
+                background-color: #dee2e6;
             }
         """)
-        health_layout = QVBoxLayout(health_group)
+        controls_layout.addWidget(self.refresh_button)
+
+        parent_layout.addWidget(controls_group)
         
-        self.health_status = QLabel("Checking system health...")
-        self.health_status.setStyleSheet("padding: 10px; background-color: #f8f9fa; border-radius: 4px;")
-        health_layout.addWidget(self.health_status)
-        
-        bottom_layout.addWidget(health_group)
-        
+    def _create_bottom_panels(self):
+        """Create the bottom panels for health status and logs."""
+        self.bottom_panels = QWidget()
+        bottom_layout = QHBoxLayout(self.bottom_panels)
+        bottom_layout.setSpacing(15)
+        bottom_layout.setContentsMargins(0, 0, 0, 0)
+
+        health_container = QWidget()
+        health_layout = QVBoxLayout(health_container)
+        health_layout.setSpacing(10)
+
+        # RosieVision health status panel
+        rosievision_health_group = QGroupBox("RosieVision Health")
+        rosievision_health_layout = QVBoxLayout(rosievision_health_group)
+        self.rosievision_health_status = QLabel("Checking...")
+        self.rosievision_health_status.setStyleSheet("padding: 10px; background-color: #f8f9fa; border-radius: 4px;")
+        self.rosievision_health_status.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        rosievision_health_layout.addWidget(self.rosievision_health_status)
+        health_layout.addWidget(rosievision_health_group)
+
+        # ProjectFlow health status panel
+        projectflow_health_group = QGroupBox("ProjectFlow Health")
+        projectflow_health_layout = QVBoxLayout(projectflow_health_group)
+        self.projectflow_health_status = QLabel("Checking...")
+        self.projectflow_health_status.setStyleSheet("padding: 10px; background-color: #f8f9fa; border-radius: 4px;")
+        self.projectflow_health_status.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        projectflow_health_layout.addWidget(self.projectflow_health_status)
+        health_layout.addWidget(projectflow_health_group)
+
+        bottom_layout.addWidget(health_container)
+
         # Log panel
         log_group = QGroupBox("System Log")
-        log_group.setStyleSheet("""
-            QGroupBox {
-                font-weight: bold;
-                font-size: 14px;
-                color: #2c3e50;
-                border: 2px solid #bdc3c7;
-                border-radius: 6px;
-                margin-top: 10px;
-                padding-top: 10px;
-            }
-        """)
         log_layout = QVBoxLayout(log_group)
-        
         self.log_area = QTextEdit()
         self.log_area.setReadOnly(True)
-        self.log_area.setMinimumHeight(200)  # Set minimum height for better visibility
-        self.log_area.setStyleSheet("""
-            QTextEdit {
-                background-color: #f8f9fa;
-                border: 1px solid #dee2e6;
-                border-radius: 4px;
-                padding: 8px;
-                font-family: 'Courier New', monospace;
-                font-size: 12px;
-            }
-        """)
         log_layout.addWidget(self.log_area)
-        
-        # Set the log group to expand vertically
-        log_group.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        
         bottom_layout.addWidget(log_group, 1)  # Give logs more space
-        
-        parent_layout.addWidget(bottom_widget)
-        
-    def _connect_ui_signals(self):
-        """Connect UI signals."""
-        # Connect search and filter signals
-        self.search_input.textChanged.connect(self._on_search_changed)
-        self.status_filter.currentTextChanged.connect(self._on_filter_changed)
-        
-    def _on_search_changed(self, text: str):
-        """Handle search input changes."""
-        logger.debug(f"Search text changed: {text}")
-        # TODO: Implement search functionality
-        
-    def _on_filter_changed(self):
-        """Handle filter changes."""
-        logger.debug("Filters changed")
-        # TODO: Implement filter functionality
-        
+
     def _setup_controllers(self):
-        """Set up controllers."""
-        # Health controller
-        self.health_controller = HealthController()
-        self.health_controller.status_updated.connect(self._update_health_status)
-        self.health_controller.error_occurred.connect(self._append_log)  # Connect error signal to log
-        self.health_controller.start_monitoring()  # Start health monitoring
-        
-        # Log controller
-        self.log_controller = LogController(self.selected_webapp)
-        self.log_controller.log_message.connect(self._append_log)
-        
-        # Database controller (for error browser functionality)
-        self.database_model = DatabaseModel()
-        self.database_view = DatabaseView()
-        self.database_controller = DatabaseController(self.database_model, self.database_view)
+        """Set up the controllers."""
+        # Main controllers
+        self.log_controller = LogController(self.log_area)
+        self.health_controller = HealthController(self.webapps, self)
         
         # Build controllers
-        self.android_controller = BuildController(self.android_model, self.android_view)
-        self.ios_controller = BuildController(self.ios_model, self.ios_view)
+        self.android_build_controller = BuildController(self.android_build_manager, self.android_view)
+        self.ios_build_controller = BuildController(self.ios_build_manager, self.ios_view)
         
-        # Connect upload signals
-        self.android_view.upload_requested.connect(self._handle_android_upload)
-        self.ios_view.upload_requested.connect(self._handle_ios_upload)
+        # Database controller and view
+        self.db_model = DatabaseModel()
+        self.db_view = DatabaseView()
+        self.db_controller = DatabaseController(self.db_model, self.db_view)
+        
+    def _connect_signals(self):
+        """Connect all signals after UI and controllers are initialized."""
+        # UI component signals
+        self.refresh_button.clicked.connect(self.refresh_builds)
+        self.search_input.textChanged.connect(self._on_search_changed)
+        self.version_filter.currentIndexChanged.connect(self._on_search_changed)
+
+        # Menu actions
+        self.settings_action.triggered.connect(self.show_health_settings)
+        self.error_browser_action.triggered.connect(self.show_error_browser)
+        
+        # Health controller signals
+        self.health_controller.status_updated.connect(self._update_health_status)
+        self.health_controller.error_occurred.connect(lambda error: self.log_controller.add_log(error, "ERROR"))
+        
+        # Build controller signals
+        self.android_build_controller.builds_fetched.connect(self._update_version_filter)
+        self.ios_build_controller.builds_fetched.connect(self._update_version_filter)
+        self.android_build_controller.error_occurred.connect(self._handle_error)
+        self.ios_build_controller.error_occurred.connect(self._handle_error)
+
+    def _on_search_changed(self):
+        """Handle changes in search or filter inputs."""
+        filters = {
+            "search": self.search_input.text(),
+            "version": self.version_filter.currentData() or ""
+        }
+        self.android_build_manager.filter_builds("android", filters)
+        self.ios_build_manager.filter_builds("ios", filters)
         
     def _setup_build_managers(self):
-        """Set up build managers and controllers."""
+        """Set up the build managers."""
         # Create models
-        self.android_model = BuildManager()
-        self.ios_model = BuildManager()
-        
-        # Initialize Azure for both models
-        try:
-            container_name = os.getenv("AZURE_STORAGE_CONTAINER", "builds")
-            self.android_model.initialize_azure(container_name)
-            self.ios_model.initialize_azure(container_name)
-        except Exception as e:
-            self._handle_error(f"Failed to initialize Azure service: {e}")
+        self.android_build_manager = BuildManager(self.azure_service)
+        self.ios_build_manager = BuildManager(self.azure_service)
         
         # Create build views for each platform
         self.android_view = BuildView("android")
@@ -526,15 +495,13 @@ class MainWindow(QMainWindow):
         history_action = view_menu.addAction("Build History")
         history_action.triggered.connect(self.show_history)
         
-        error_browser_action = view_menu.addAction("Error Browser")
-        error_browser_action.triggered.connect(self.show_error_browser)
-        
+        self.error_browser_action = view_menu.addAction("Error Browser")
+
         # Settings menu
         settings_menu = menubar.addMenu("Settings")
         
         # Add Health Check Settings action
-        health_settings_action = settings_menu.addAction("Health Check Settings")
-        health_settings_action.triggered.connect(self.show_health_settings)
+        self.settings_action = settings_menu.addAction("Health Check Settings")
         
         settings_menu.addSeparator()
         
@@ -543,30 +510,24 @@ class MainWindow(QMainWindow):
         settings_menu.addAction(sp_info_action)
         
     def _update_health_status(self, webapp: str, is_healthy: bool):
-        """Update health status display."""
-        # Update the status in our dictionary
+        """Update health status in the UI."""
         self.health_statuses[webapp] = is_healthy
+
+        rosievision_html = ""
+        projectflow_html = ""
+
+        for app, healthy in sorted(self.health_statuses.items()):
+            color = "#28a745" if healthy else "#dc3545"
+            status_text = "Healthy" if healthy else "Unhealthy"
+            status_line = f'<div><b>{app}:</b> <span style="color: {color};">{status_text}</span></div>'
+            
+            if "rosievision" in app.lower() or "rv-" in app.lower():
+                rosievision_html += status_line
+            elif "projectflow" in app.lower() or "pf-" in app.lower():
+                projectflow_html += status_line
         
-        # Create the status text with all services
-        status_lines = []
-        for app, healthy in self.health_statuses.items():
-            color = "#28a745" if healthy else "#dc3545"  # Bootstrap success/danger colors
-            status = "Healthy" if healthy else "Unhealthy"
-            status_lines.append(f'<div style="margin: 4px 0;"><span style="color: {color};">●</span> {app}: {status}</div>')
-        
-        # Update the label with all statuses
-        self.health_status.setText(f"""
-            <div style="
-                background-color: #f8f9fa;
-                border-radius: 4px;
-                padding: 8px;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-                font-size: 13px;
-                line-height: 1.4;
-            ">
-                {"".join(status_lines)}
-            </div>
-        """)
+        self.rosievision_health_status.setText(rosievision_html if rosievision_html else "Checking...")
+        self.projectflow_health_status.setText(projectflow_html if projectflow_html else "Checking...")
         
     def _append_log(self, message: str):
         """Append message to log area with timestamp."""
@@ -588,7 +549,7 @@ class MainWindow(QMainWindow):
         
     def show_error_browser(self):
         """Show the error browser dialog."""
-        self.database_view.show()
+        self.db_view.show()
         
     def _handle_android_upload(self, build_id: str, local_path: str):
         """Handle Android build upload request."""
@@ -607,10 +568,10 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         """Handle window close event."""
         # Clean up controllers
-        self.database_controller.cleanup()
+        self.db_controller.cleanup()
         self.health_controller.cleanup()
-        self.android_controller.cleanup()
-        self.ios_controller.cleanup()
+        self.android_build_controller.cleanup()
+        self.ios_build_controller.cleanup()
         event.accept()
         
     def show_history(self):
@@ -622,8 +583,8 @@ class MainWindow(QMainWindow):
         """Refresh build list for both platforms."""
         try:
             # Refresh both Android and iOS builds
-            self.android_controller.fetch_builds("android", force_refresh=True)
-            self.ios_controller.fetch_builds("ios", force_refresh=True)
+            self.android_build_controller.fetch_builds()
+            self.ios_build_controller.fetch_builds()
             self.show_status("Refreshing builds...")
         except Exception as e:
             self._handle_error(f"Failed to refresh builds: {e}")
@@ -638,18 +599,32 @@ class MainWindow(QMainWindow):
             "© 2024 Rosie Vision"
         )
         
-    def _load_webapps(self):
-        config_path = Path("config/webapps.json")
-        if config_path.exists():
-            with open(config_path) as f:
-                return json.load(f)
-        return []
+    def _load_webapps(self) -> List[AzureWebApp]:
+        """Load webapp configurations from webapps.json."""
+        try:
+            config_path = Path("config/webapps.json")
+            if not config_path.exists():
+                logger.warning("webapps.json not found. Health checks will rely on health_endpoints.json.")
+                return []
+            
+            with open(config_path, 'r') as f:
+                webapp_data = json.load(f)
+            
+            webapps = []
+            for data in webapp_data:
+                # The from_dict method will now pull credentials from os.environ
+                webapps.append(AzureWebApp.from_dict(data))
+            return webapps
+        except Exception as e:
+            self._handle_error(f"Failed to load webapps from {config_path}: {e}")
+            return []
         
     def _on_webapp_changed(self, idx):
-        self.selected_webapp = self.webapp_combo.currentData()
-        # Re-instantiate LogController with new webapp
-        self.log_controller = LogController(self.selected_webapp)
-        # ... any additional logic to update log view ... 
+        if 0 <= idx < len(self.webapps):
+            self.selected_webapp = self.webapps[idx]
+            # Re-instantiate LogController with new webapp
+            self.log_controller = LogController(self.selected_webapp)
+            # ... any additional logic to update log view ... 
 
     def show_health_settings(self):
         """Show health check settings dialog."""
@@ -677,6 +652,7 @@ class MainWindow(QMainWindow):
     def _handle_error(self, error_message: str):
         """Central error handler for all controllers."""
         logger.error(f"Error occurred: {error_message}")
+        self.log_controller.add_log(error_message, "ERROR")
         
         # Show error in status bar
         self.error_label.setText(error_message)
@@ -687,7 +663,7 @@ class MainWindow(QMainWindow):
         error_dialog.setWindowTitle("Error")
         error_dialog.setText("An error occurred")
         error_dialog.setInformativeText(error_message)
-        error_dialog.setDetailedText(f"Error details:\n{error_message}")
+        error_dialog.setDetailedText(f"Error details:\\n{error_message}")
         error_dialog.setStandardButtons(QMessageBox.Ok)
         error_dialog.exec()
         
@@ -700,29 +676,70 @@ class MainWindow(QMainWindow):
         """Clear the error message from the status bar."""
         self.error_label.clear()
         
-    def _connect_signals(self):
-        """Connect all controller signals to their handlers."""
-        # Connect error signals from all controllers
-        if hasattr(self, 'main_controller'):
-            self.main_controller.error_occurred.connect(self._handle_error)
-        if hasattr(self, 'log_controller'):
-            self.log_controller.error_occurred.connect(self._handle_error)
-        if hasattr(self, 'build_controller'):
-            self.build_controller.error_occurred.connect(self._handle_error)
+    def _update_version_filter(self, builds: list):
+        """Update the version filter with unique versions from builds."""
+        current_versions = {build.get("appVersion") for build in builds if build.get("appVersion")}
+        
+        if not self.all_versions:
+            self._adjust_window_size()
+
+        if not current_versions.issubset(self.all_versions):
+            self.all_versions.update(current_versions)
             
-        # Connect build operation signals
-        if hasattr(self, 'android_controller'):
-            self.android_controller.builds_fetched.connect(self._handle_builds_fetched)
-            self.android_controller.build_downloaded.connect(self._handle_build_download)
-            self.android_controller.build_uploaded.connect(self._handle_build_upload)
-            self.android_controller.upload_retry.connect(self._handle_upload_retry)
+            # Repopulate the dropdown
+            self.version_filter.clear()
+            self.version_filter.addItem("All Versions", "")
+            sorted_versions = sorted(list(self.all_versions), reverse=True)
+            for version in sorted_versions:
+                self.version_filter.addItem(version, version)
+
+    def _handle_builds_fetched(self, builds):
+        """Handle fetched builds."""
+        # The builds will be automatically updated in their respective views
+        # since the controllers emit the builds_fetched signal
+        self.show_status(f"Fetched {len(builds)} builds")
+        
+    def _handle_build_download(self, build_id: str, local_path: str):
+        """Handle build download completion."""
+        if self._progress_dialog:
+            self._progress_dialog.update_progress(100, f"Downloaded to: {local_path}")
+            QTimer.singleShot(2000, self._progress_dialog.close)
+        self.show_status(f"Downloaded build {build_id}")
+        
+    def _handle_build_upload(self, build_id: str, blob_url: str):
+        """Handle build upload completion."""
+        if self._progress_dialog:
+            self._progress_dialog.update_progress(100, f"Uploaded to: {blob_url}")
+            QTimer.singleShot(2000, self._progress_dialog.close)
+        self.show_status(f"Uploaded build {build_id}")
+        
+    def _handle_upload_retry(self, build_id: str, local_path: str, attempt: int):
+        """Handle upload retry attempt."""
+        if self._progress_dialog:
+            self._progress_dialog.update_progress(
+                0, f"Retrying upload of build {build_id} (attempt {attempt})"
+            )
+        self.show_status(f"Retrying upload of build {build_id} (attempt {attempt})")
+
+    def _adjust_window_size(self):
+        """Adjust window size to fit the tables."""
+        try:
+            # Calculate the required width for both tables
+            android_width = self.android_view.table.horizontalHeader().length() + self.android_view.table.verticalHeader().width()
+            ios_width = self.ios_view.table.horizontalHeader().length() + self.ios_view.table.verticalHeader().width()
             
-        if hasattr(self, 'ios_controller'):
-            self.ios_controller.builds_fetched.connect(self._handle_builds_fetched)
-            self.ios_controller.build_downloaded.connect(self._handle_build_download)
-            self.ios_controller.build_uploaded.connect(self._handle_build_upload)
-            self.ios_controller.upload_retry.connect(self._handle_upload_retry)
+            # Account for the splitter handle
+            total_width = android_width + ios_width + self.main_splitter.handleWidth()
             
+            # Add some padding
+            total_width += 50
+            
+            # Set the new minimum width and resize the window
+            self.setMinimumWidth(total_width)
+            self.resize(total_width, self.height())
+        except Exception as e:
+            logger.error(f"Error adjusting window size: {e}")
+
     def _handle_builds_fetched(self, builds):
         """Handle fetched builds."""
         # The builds will be automatically updated in their respective views

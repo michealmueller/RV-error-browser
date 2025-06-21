@@ -40,7 +40,7 @@ class MainController(QObject):
     def refresh_builds(self):
         """Refresh build list."""
         try:
-            platform = self.view.platform_combo.currentText().lower()
+            platform = 'android'  # or another default, or pass as argument
             self.model.fetch_builds(platform, force_refresh=True)
         except Exception as e:
             logger.error(f"Failed to refresh builds: {e}")
@@ -50,7 +50,7 @@ class MainController(QObject):
     def download_builds(self, build_ids: list):
         """Download selected builds."""
         try:
-            platform = self.view.platform_combo.currentText()
+            platform = 'android'  # or another default, or pass as argument
             for build_id in build_ids:
                 self.model.download_build(build_id, platform)
         except Exception as e:
@@ -61,7 +61,7 @@ class MainController(QObject):
     def upload_builds(self, build_ids: list):
         """Upload selected builds."""
         try:
-            platform = self.view.platform_combo.currentText()
+            platform = 'android'  # or another default, or pass as argument
             for build_id in build_ids:
                 self.model.upload_build(build_id, platform)
         except Exception as e:
@@ -72,7 +72,7 @@ class MainController(QObject):
     def install_build(self, build_id: str, device_id: Optional[str] = None):
         """Install build on device."""
         try:
-            platform = self.view.platform_combo.currentText()
+            platform = 'android'  # or another default, or pass as argument
             self.model.install_build(build_id, platform, device_id)
         except Exception as e:
             logger.error(f"Failed to install build: {e}")
@@ -82,7 +82,7 @@ class MainController(QObject):
     def share_build(self, build_id: str):
         """Share build URL."""
         try:
-            platform = self.view.platform_combo.currentText()
+            platform = 'android'  # or another default, or pass as argument
             self.model.share_build(build_id, platform)
         except Exception as e:
             logger.error(f"Failed to share build: {e}")

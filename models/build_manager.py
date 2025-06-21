@@ -2,12 +2,14 @@
 Build manager for handling mobile builds.
 """
 import logging
+import requests
 from typing import Dict, List, Optional, Callable
 from datetime import datetime
 from pathlib import Path
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, Slot
 
 from services.azure_service import AzureService, AzureServiceError
+from services.eas_service import EasService
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +23,7 @@ class BuildManager(QObject):
     build_list_updated = Signal(list)  # List of build metadata
     build_status_changed = Signal(str, str)  # build_id, new_status
 
-    def __init__(self):
+    def __init__(self, azure_service: AzureService):
         super().__init__()
         self._builds: Dict[str, List[Dict]] = {
             "android": [],
@@ -29,170 +31,105 @@ class BuildManager(QObject):
         }
         self._download_dir = Path.home() / ".quantumops" / "downloads"
         self._download_dir.mkdir(parents=True, exist_ok=True)
-        self._azure_service = AzureService()
+        self._azure_service = azure_service
+        self._eas_service = EasService()
         
-        # Auto-initialize Azure service
+    @Slot(str, bool)
+    def fetch_builds(self, platform: str, force_refresh: bool = False):
+        """Fetch builds from EAS."""
+        if not force_refresh and self._builds.get(platform):
+            self.builds_fetched.emit(self._builds[platform])
+            self.build_list_updated.emit(self._builds[platform])
+            return
+            
         try:
-            self._azure_service.initialize()
-        except Exception as e:
-            logger.warning(f"Azure service initialization failed: {e}")
-            # Continue without Azure - mock mode will be used
-        
-    def initialize_azure(self, container_name: str) -> None:
-        """Initialize Azure service."""
-        try:
-            self._azure_service.initialize(container_name)
-        except AzureServiceError as e:
-            logger.error(f"Failed to initialize Azure service: {e}")
-            raise
-            
-    def download_build(
-        self,
-        build_id: str,
-        platform: str,
-        progress_callback: Optional[Callable[[int, str], None]] = None
-    ) -> str:
-        """Download a build and return local path."""
-        try:
-            build = next(
-                (b for b in self._builds[platform] if b["id"] == build_id),
-                None
-            )
-            if not build:
-                raise ValueError(f"Build {build_id} not found")
-                
-            # Create platform-specific directory
-            platform_dir = self._download_dir / platform
-            platform_dir.mkdir(exist_ok=True)
-            
-            # Determine file extension
-            ext = ".apk" if platform == "android" else ".ipa"
-            local_path = platform_dir / f"{build_id}{ext}"
-            
-            # Download from Azure
-            self._azure_service.download_file(
-                blob_name=build_id,
-                destination_path=str(local_path),
-                progress_callback=progress_callback
-            )
-            
-            # Update build status
-            build["status"] = "downloaded"
-            build["local_path"] = str(local_path)
-            self.build_downloaded.emit(build_id, str(local_path))
-            self.build_status_changed.emit(build_id, "downloaded")
-            
-            return str(local_path)
-            
-        except AzureServiceError as e:
-            logger.error(f"Azure error downloading build {build_id}: {e}")
-            self.error_occurred.emit(str(e))
-            raise
-        except Exception as e:
-            logger.error(f"Error downloading build {build_id}: {e}")
-            self.error_occurred.emit(str(e))
-            raise
-            
-    def upload_build(
-        self,
-        build_id: str,
-        local_path: str,
-        platform: str,
-        progress_callback: Optional[Callable[[int, str], None]] = None
-    ) -> str:
-        """Upload a build and return blob URL."""
-        try:
-            build = next(
-                (b for b in self._builds[platform] if b["id"] == build_id),
-                None
-            )
-            if not build:
-                raise ValueError(f"Build {build_id} not found")
-                
-            if not Path(local_path).exists():
-                raise ValueError(f"Build file not found: {local_path}")
-                
-            # Upload to Azure
-            blob_url = self._azure_service.upload_file(
-                file_path=local_path,
-                blob_name=build_id,
-                metadata={
-                    "platform": platform,
-                    "build_id": build_id,
-                    "upload_date": datetime.now().isoformat()
-                },
-                progress_callback=progress_callback
-            )
-            
-            # Update build status
-            build["status"] = "uploaded"
-            build["blob_url"] = blob_url
-            self.build_uploaded.emit(build_id, blob_url)
-            self.build_status_changed.emit(build_id, "uploaded")
-            
-            return blob_url
-            
-        except AzureServiceError as e:
-            logger.error(f"Azure error uploading build {build_id}: {e}")
-            self.error_occurred.emit(str(e))
-            raise
-        except Exception as e:
-            logger.error(f"Error uploading build {build_id}: {e}")
-            self.error_occurred.emit(str(e))
-            raise
-            
-    def fetch_builds(
-        self,
-        platform: str,
-        force_refresh: bool = False,
-        progress_callback: Optional[Callable[[int, str], None]] = None
-    ) -> List[Dict]:
-        """Fetch builds for a platform."""
-        try:
-            if not force_refresh and self._builds[platform]:
-                self.builds_fetched.emit(self._builds[platform])
-                self.build_list_updated.emit(self._builds[platform])
-                return self._builds[platform]
-                
-            if progress_callback:
-                progress_callback(0, "Fetching builds...")
-                
-            # List files in Azure container
-            files = self._azure_service.list_files(prefix=platform)
-            
-            # Get metadata for each file
-            builds = []
-            for i, file_name in enumerate(files):
-                if progress_callback:
-                    progress = int((i / len(files)) * 100)
-                    progress_callback(progress, f"Processing build {i+1}/{len(files)}")
-                    
-                metadata = self._azure_service.get_file_metadata(file_name)
-                builds.append({
-                    "id": file_name,
-                    "version": metadata["metadata"].get("version", "unknown"),
-                    "status": "available",
-                    "size": metadata["size"],
-                    "date": metadata["last_modified"].isoformat()
-                })
-                
-            if progress_callback:
-                progress_callback(100, "Builds fetched successfully")
-                
+            builds = self._eas_service.fetch_builds(platform)
             self._builds[platform] = builds
             self.builds_fetched.emit(builds)
             self.build_list_updated.emit(builds)
-            return builds
-            
-        except AzureServiceError as e:
-            logger.error(f"Azure error fetching builds: {e}")
-            self.error_occurred.emit(str(e))
-            raise
         except Exception as e:
-            logger.error(f"Error fetching builds: {e}")
+            logger.error(f"Failed to fetch builds from EAS: {e}")
             self.error_occurred.emit(str(e))
-            raise
             
+    def get_builds(self, platform: str) -> List[Dict]:
+        """Get the last fetched builds for a platform."""
+        return self._builds.get(platform, [])
+
+    def _get_filename(self, build: Dict, platform: str) -> str:
+        """Construct the filename based on the new naming scheme."""
+        build_id = build.get("id", "")
+        profile = build.get("buildProfile", "development") 
+        version = build.get("appVersion", "0.0.0")
+        version_code = build.get("appBuildVersion", "0")
+        fingerprint = build_id[:7]
+        extension = "apk" if platform == "android" else "ipa"
+        
+        return f"{platform}-{profile}-v{version}-{version_code}-{fingerprint}.{extension}"
+
+    @Slot(str, str)
+    def download_build(self, build_id: str, platform: str, progress_callback: Optional[Callable] = None):
+        """Download a build from its URL."""
+        build = self._find_build(build_id, platform)
+        if not build:
+            self.error_occurred.emit(f"Build {build_id} not found.")
+            return
+
+        url = build.get("artifacts", {}).get("buildUrl")
+        if not url:
+            self.error_occurred.emit(f"No download URL for build {build_id}.")
+            return
+            
+        filename = self._get_filename(build, platform)
+        local_path = self._download_dir / filename
+        
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded_size = 0
+            
+            with open(local_path, "wb") as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+                    if total_size > 0:
+                        downloaded_size += len(chunk)
+                        progress = int((downloaded_size / total_size) * 100)
+                        if progress_callback:
+                            progress_callback(build_id, progress)
+            
+            logger.info(f"Build {build_id} downloaded to {local_path}")
+            self.build_downloaded.emit(build_id, str(local_path))
+            
+        except requests.RequestException as e:
+            logger.error(f"Failed to download build {build_id}: {e}")
+            self.error_occurred.emit(str(e))
+            
+    @Slot(str, str)
+    def push_to_azure(self, build_id: str, platform: str, local_path: str):
+        """Upload a build to Azure."""
+        try:
+            build = self._find_build(build_id, platform)
+            if not build:
+                self.error_occurred.emit(f"Build {build_id} not found.")
+                return
+
+            filename = self._get_filename(build, platform)
+            blob_name = f"{platform}-builds/{filename}"
+            blob_url = self._azure_service.upload_file(
+                file_path=local_path,
+                blob_name=blob_name,
+                metadata={"build_id": build_id, "uploaded_at": datetime.now().isoformat()}
+            )
+            self.build_uploaded.emit(build_id, blob_url)
+        except AzureServiceError as e:
+            logger.error(f"Failed to upload build {build_id} to Azure: {e}")
+            self.error_occurred.emit(str(e))
+            
+    def _find_build(self, build_id: str, platform: str) -> Optional[Dict]:
+        """Find a build by its ID."""
+        return next((b for b in self._builds.get(platform, []) if b.get("id") == build_id), None)
+
     def filter_builds(self, platform: str, filters: Dict) -> List[Dict]:
         """Filter builds based on criteria."""
         try:
@@ -212,6 +149,15 @@ class BuildManager(QObject):
                         for value in build.values()
                     )
                 ]
+
+            # Apply version filter
+            version = filters.get("version", "")
+            if version:
+                filtered_builds = [
+                    build for build in filtered_builds
+                    if build.get("appVersion") == version
+                ]
+
             # Emit updated list
             self.build_list_updated.emit(filtered_builds)
             return filtered_builds
@@ -233,17 +179,6 @@ class BuildManager(QObject):
                 self.build_status_changed.emit(build_id, status)
         except Exception as e:
             logger.error(f"Error updating build status: {e}")
-            
-    def get_builds(self, platform: str = None) -> List[Dict]:
-        """Get builds for a specific platform or all platforms."""
-        if platform:
-            return self._builds.get(platform, [])
-        else:
-            # Return all builds from all platforms
-            all_builds = []
-            for builds in self._builds.values():
-                all_builds.extend(builds)
-            return all_builds
             
     def get_local_path(self, build_id: str, platform: str) -> Optional[str]:
         """Get the local path for a specific build."""

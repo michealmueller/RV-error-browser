@@ -3,6 +3,9 @@ import threading
 from functools import wraps
 from typing import Callable, Any
 from PySide6.QtCore import Signal
+import psycopg2
+import tempfile
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -51,4 +54,21 @@ def log_database_operation(operation: str) -> Callable:
                 logger.error(f"Failed database operation {operation}: {str(e)}")
                 raise
         return wrapper
-    return decorator 
+    return decorator
+
+# Test database functions
+def create_test_database():
+    """Create a test database for testing purposes"""
+    # For testing, we'll use a simple in-memory approach or mock
+    # This is a placeholder implementation
+    return {"test": "database"}
+
+def drop_test_database():
+    """Drop the test database"""
+    # Placeholder implementation
+    pass
+
+def get_test_connection():
+    """Get a test database connection"""
+    # Placeholder implementation - returns None for now
+    return None 

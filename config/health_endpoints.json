@@ -1,7 +1,7 @@
 {
   "endpoints": {
     "RV-Dev-api": "https://moapidev.rosievision.ai/health",
-    "RV-Staging-api": "https://moapistage.rosievision.ai/health",    
+    "RV-Staging-api": "https://moapistage.rosievision.ai/health",
     "PF-Dev-api": "https://devapi.projectflow.ai/health",
     "PF-Staging-api": "https://stageapi.projectflow.ai/health"
   }

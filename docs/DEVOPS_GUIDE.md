@@ -1,4 +1,100 @@
-# DevOps & Engineering Guide
+# QuantumOps - DevOps Guide
+
+This guide provides detailed information for developers and DevOps engineers working on the QuantumOps project. It covers the project structure, development environment, testing procedures, and CI/CD pipeline.
+
+## Project Structure
+
+The QuantumOps repository is organized into the following directories:
+
+```
+quantumops/
+├── config/                 # User-facing configuration files
+│   ├── eas.json            # Configuration for the EAS service
+│   └── health_endpoints.json # Health check URLs for monitored services
+├── docs/                   # Project documentation
+├── quantumops/             # Main application source code
+│   ├── controllers/      # Application logic and event handling
+│   ├── models/           # Data models and business logic
+│   ├── services/         # Clients for interacting with external APIs (EAS, Azure)
+│   ├── ui_components/    # Reusable UI components
+│   └── views/            # Main application views and dialogs
+├── scripts/                # Utility and build scripts
+├── tests/                  # Unit and integration tests
+│   ├── config/             # Test configuration and runners
+│   ├── data/               # Test data, including logs and uploads
+│   ├── integration/        # Integration tests for services and controllers
+│   └── unit/               # Unit tests for individual components
+├── .github/                # GitHub Actions workflows
+│   └── workflows/
+│       ├── build.yml       # CI workflow for building the application
+│       └── test.yml        # CI workflow for running tests and checking coverage
+├── .env                    # Local environment variables (not version controlled)
+├── requirements.txt        # Production dependencies
+└── requirements-dev.txt    # Development and testing dependencies
+```
+
+## Development Environment
+
+To set up a local development environment, follow these steps:
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/quantumops.git
+    cd quantumops
+    ```
+
+2.  **Create and activate a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+3.  **Install all dependencies:**
+    ```bash
+    pip install -r requirements.txt -r requirements-dev.txt
+    ```
+
+4.  **Configure your local environment:**
+
+    Create a `.env` file in the project root and add the necessary credentials for Azure and EAS, as described in the main [README.md](README.md).
+
+## Testing
+
+The project includes a comprehensive suite of unit and integration tests to ensure code quality and stability.
+
+### Running Tests
+
+-   **Run all tests:**
+    ```bash
+    pytest
+    ```
+
+-   **Run tests with coverage:**
+    ```bash
+    pytest --cov=quantumops
+    ```
+
+### Test Structure
+
+-   **Unit Tests (`tests/unit`):** These tests focus on individual components in isolation, such as UI widgets, data models, and utility functions.
+-   **Integration Tests (`tests/integration`):** These tests verify the interactions between different components, such as the controllers and services.
+
+## CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration and continuous delivery. The workflows are defined in the `.github/workflows` directory.
+
+-   **`test.yml`:** This workflow is triggered on every push to the `main` branch and on all pull requests. It installs the dependencies, runs the full test suite, and checks for test coverage.
+-   **`build.yml`:** This workflow is also triggered on every push to the `main` branch. It builds the application for Windows, macOS, and Linux, and uploads the resulting artifacts to be used for releases.
+
+## Code Style and Linting
+
+The project uses `black` for code formatting and `flake8` for linting. These tools are enforced through a pre-commit hook, which can be set up by running:
+
+```bash
+pre-commit install
+```
+
+This will ensure that all code is automatically formatted and linted before it is committed, maintaining a consistent code style across the project.
 
 ## DevOps Best Practices
 - **Infrastructure-as-Code:** All environments and web apps are config-driven (see `config/`)

@@ -4,6 +4,7 @@ Health check controller for QuantumOps.
 import logging
 from typing import Optional
 from PySide6.QtCore import QObject, Slot, Signal
+from PySide6.QtWidgets import QTableWidget
 from models.health_check import HealthCheckModel
 
 logger = logging.getLogger(__name__)
@@ -15,27 +16,14 @@ class HealthController(QObject):
     status_updated = Signal(str, bool)  # webapp, is_healthy
     error_occurred = Signal(str)
     
-    def __init__(self):
-        super().__init__()
-        self.model = HealthCheckModel()
-        self._setup_connections()
+    def __init__(self, webapps: list, parent):
+        super().__init__(parent)
+        self._webapps = webapps
+        self.model = HealthCheckModel(self._webapps)
         
-    def _setup_connections(self) -> None:
-        """Set up signal connections between model and UI."""
-        self.model.status_updated.connect(self._handle_status_update)
-        self.model.error_occurred.connect(self._handle_error)
-        
-    @Slot(str, bool)
-    def _handle_status_update(self, webapp: str, is_healthy: bool) -> None:
-        """Handle a health status update from the model."""
-        logger.debug(f"Health status update for {webapp}: {'Healthy' if is_healthy else 'Unhealthy'}")
-        self.status_updated.emit(webapp, is_healthy)
-        
-    @Slot(str)
-    def _handle_error(self, error: str) -> None:
-        """Handle an error from the model."""
-        logger.error(f"Health check error: {error}")
-        self.error_occurred.emit(error)
+        # Connect model signals to controller's signals
+        self.model.status_updated.connect(self.status_updated)
+        self.model.error_occurred.connect(self.error_occurred)
         
     def start_monitoring(self) -> None:
         """Start health check monitoring."""
@@ -66,4 +54,9 @@ class HealthController(QObject):
     def cleanup(self) -> None:
         """Clean up resources when the controller is being destroyed."""
         logger.info("Cleaning up health controller")
-        self.stop_monitoring() 
+        self.stop_monitoring()
+
+    def show_settings_dialog(self):
+        """Show the health check settings dialog."""
+        dialog = HealthSettingsDialog(self.model, self.parent())
+        dialog.exec() 

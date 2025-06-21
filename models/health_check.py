@@ -38,10 +38,19 @@ class HealthCheckModel(QObject):
     status_updated = Signal(str, bool)  # webapp_name, is_healthy
     error_occurred = Signal(str)  # error message
     
-    def __init__(self):
+    def __init__(self, webapps: list):
         super().__init__()
         self.config_file = Path("config/health_endpoints.json")
+        
+        # Always load the default/fallback endpoints first
         self.webapps = self._load_endpoints()
+        
+        # Then, update or merge with any webapps passed from the main config
+        if webapps:
+            for app in webapps:
+                if hasattr(app, 'name') and hasattr(app, 'health_check_url') and app.health_check_url:
+                    self.webapps[app.name] = app.health_check_url
+
         self.health_status: Dict[str, bool] = {}
         self.last_check: Dict[str, datetime] = {}
         self._timer = QTimer()
@@ -58,6 +67,7 @@ class HealthCheckModel(QObject):
                     return data.get("endpoints", {})
             else:
                 # Default endpoints if config file doesn't exist
+                logger.info("Health endpoints config file not found, using and saving default endpoints.")
                 default_endpoints = {
                     "RV-Dev-api": "https://rv-dev-api.azurewebsites.net/health",
                     "RV-Staging-api": "https://rv-staging-api.azurewebsites.net/health",
@@ -85,10 +95,6 @@ class HealthCheckModel(QObject):
         except Exception as e:
             logger.error(f"Failed to save health endpoints: {e}")
             
-    def save_endpoints(self) -> None:
-        """Save current endpoints to configuration file."""
-        self._save_endpoints(self.webapps)
-        
     def start_monitoring(self) -> None:
         """Start health check monitoring."""
         self._timer.start(self._interval)

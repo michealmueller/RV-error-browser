@@ -1,28 +1,29 @@
-from PySide6.QtCore import QResource
-import os
+from pathlib import Path
+import subprocess
 
 def compile_resources():
-    # Create a temporary resource file with the logos
-    with open('quantumops/resources.qrc', 'w') as f:
-        f.write('''<!DOCTYPE RCC>
-<RCC version="1.0">
-    <qresource prefix="/">
-        <file>images/projectflow_logo.png</file>
-        <file>images/rosievision_logo.png</file>
-    </qresource>
-</RCC>''')
+    """Compile the Qt resource file."""
+    qrc_file = Path("icons.qrc")
+    output_py_file = Path("resources_rc.py")
 
-    # Create images directory if it doesn't exist
-    os.makedirs('quantumops/images', exist_ok=True)
+    if not qrc_file.exists():
+        print(f"Error: Resource file not found at {qrc_file}")
+        return
 
-    # Create placeholder logos
-    with open('quantumops/images/projectflow_logo.png', 'wb') as f:
-        f.write(b'')  # Empty file for now
-    with open('quantumops/images/rosievision_logo.png', 'wb') as f:
-        f.write(b'')  # Empty file for now
+    print(f"Compiling {qrc_file} to {output_py_file}...")
+    try:
+        subprocess.run(
+            ["pyside6-rcc", str(qrc_file), "-o", str(output_py_file)],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        print("Resource file compiled successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error compiling resource file: {e}")
+        print(f"Stderr: {e.stderr}")
+    except FileNotFoundError:
+        print("Error: 'pyside6-rcc' command not found. Make sure PySide6 is installed and in your PATH.")
 
-    # Compile resources
-    QResource.registerResource('quantumops/resources.qrc')
-
-if __name__ == '__main__':
-    compile_resources() 
+if __name__ == "__main__":
+    compile_resources()
